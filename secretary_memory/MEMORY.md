@@ -4,6 +4,7 @@
 - [CEO夫妻の食事の制約](ceo-gluten-free-diet.md) — 店探し・旅行先選定の基準に含める(内容はローカル限定・Git非同期)
 - [TODOに一回きりの項目を入れない](todo-no-one-off-items.md) — 部署ファイルのTODOは繰り返し発生する項目のみ
 - [作成・チェック担当の分離](checker-agent-separation.md) — 動画部の字幕チェック運用(2026-08-15導入)
+- [機密解除でも部署分離は維持](department-separation-survives-declassification.md) — 振り分けは作業の性質ではなく「所管部署はどこか」で決める
 - [秘書は実装せず部署に振る](secretary-delegates-not-implements.md) — 秘書は要件整理・取次ぎに徹し、コーディング等は各部署のサブエージェントに委譲する
 - [待ちが出るときは必ずETAを伝える](always-give-eta.md) — アバウトでいいので所要時間の目安を都度添える
 - [部署ファイルはプロジェクト単位で切り出す](department-file-project-split.md) — 概要+リンクのみ本体に残し、詳細は専用ファイルへ(全部署共通ルール)
