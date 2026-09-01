@@ -5,7 +5,7 @@ tools/
 # ローカル権限設定(端末ごとの許可設定。共有しない)
 .claude/settings.local.json
 
-# 機密のためGitに載せないもの(CEO判断済み)。顧問部はWindows据え置きのため運ばない。
+# 機密のためGitに載せないもの(CEO判断済み)。advisory.md等はLocalSendで別途Macへ移送する(advisory_usda_mac_migration.md参照)。life_team.mdはMac側でCEOに改めてヒアリングして新規作成する(mac_migration_phase2.md参照)。
 advisory.md
 advisory_usda_project.md
 .claude/agent-memory/advisory-team/
