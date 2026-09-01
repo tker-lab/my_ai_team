@@ -14,16 +14,22 @@ whoami
 
 ---
 
-## 0. 事前に用意するもの:USBメモリ
+## 0. ファイル転送の手段:LocalSend
 
-この手順書では複数回(手順3・4・7)USBメモリを使ってファイルを運びます。合計するとそれなりの容量になるため、**32GB以上のUSBメモリを用意しておくことを推奨**します。
+この手順書では手順3で少量のファイル(秘書メモリの機微2件・効果音mp3 2件)をWindowsからMacへ運びます。CEOはクラウドドライブもUSBメモリも使わないため、**LocalSend**(同じWi-Fi上にある2台の間でファイルを直接送れる無料アプリ。クラウドを経由しないので登録や容量制限がありません)を使います。
 
-- USDA_PSD_Data(顧問部データ、手順4):実測約7.1GB
-- 秘書メモリ・会話ログ(手順3):約134MB
-- 機密ファイル4件・効果音素材(手順4):数十MB程度
-- whisperモデル(手順7、USBでコピーする場合):約3GB
+### 0-1. 両OSへの導入
+- Windows: https://localsend.org/ からWindows版をダウンロードしてインストール
+- Mac: 同じく https://localsend.org/ からMac版をダウンロードしてインストール(Mac App Storeからも入手できます)
 
-**参考:** 古い形式のUSBメモリ(FAT32形式)は1ファイルあたり4GB未満という制限がありますが、今回運ぶファイルはUSDA_PSD_Data側で確認されている最大の単体ファイルが約0.39GB、whisperのモデルファイルでも約3GBと、いずれもこの制限より小さいため、FAT32のままで問題ありません。
+### 0-2. 送り方(共通の流れ)
+1. WindowsとMac両方でLocalSendを起動する(同じWi-Fiに両方が繋がっていることを確認)
+2. 起動しているMacが、Windows側の画面に「端末一覧」として自動的に出てくる
+3. Windows側でLocalSendの画面に送りたいファイルをドラッグ&ドロップ(または「ファイルを選択」)する
+4. 送り先としてMacの端末名を選び、送信する
+5. Mac側に受信の確認ポップアップが出るので「承認」する。保存先は既定で「ダウンロード」フォルダになります
+
+前提として、2台が同じWi-Fiルーターに繋がっている必要があります(スマホのテザリングなど別回線だと端末が見えません)。
 
 ---
 
@@ -53,8 +59,11 @@ npm install -g @anthropic-ai/claude-code
 ```
 `npm install -g` の `-g` は「このMac全体で使えるようにインストールする」という意味です。
 
-### 1-4. Pythonとライブラリのインストール
-顧問部(advisory-team)が使うUSDA_PSD_Dataのスクリプトは、Pythonというプログラミング言語で書かれており、`pandas`(表計算処理)・`openpyxl`(Excelファイル操作)・`requests`(インターネット通信)・`python-dotenv`(設定ファイルの読み込み)・`comtradeapicall`(貿易統計データ取得)という追加ライブラリ(拡張機能)を使います。macOS標準のPythonにはこれらが入っていないため、インストールが必要です。これを飛ばすと**顧問部の実務がMac初日から動きません**。
+### 1-4. Pythonとライブラリのインストール(顧問部を使う場合のみ)
+
+**方針:顧問部(advisory-team)の作業は今後もWindows側に据え置きます。** データ量(約7.1GB)が大きく同期に向かないため、顧問部だけは「担当マシン固定」の運用としました。したがってMac側でこの1-4を行う必要は基本的にありません。将来Mac側でも顧問部の作業をする方針に変わった場合にのみ、以下を実施してください。
+
+顧問部が使うUSDA_PSD_Dataのスクリプトは、Pythonというプログラミング言語で書かれており、`pandas`(表計算処理)・`openpyxl`(Excelファイル操作)・`requests`(インターネット通信)・`python-dotenv`(設定ファイルの読み込み)・`comtradeapicall`(貿易統計データ取得)という追加ライブラリ(拡張機能)を使います。
 
 ```
 brew install python
@@ -69,13 +78,13 @@ source ~/my_ai_team_venv/bin/activate
 pip install pandas openpyxl requests python-dotenv comtradeapicall
 ```
 
-「仮想環境(venv)」とは、このプロジェクト専用のPython環境を他と分けて作る仕組みです。他のアプリ用に別のバージョンのライブラリを入れても影響し合わないようにするためのものです。`source ~/my_ai_team_venv/bin/activate` を実行すると、以後そのターミナルではこの専用環境が使われます(ターミナルを閉じるともとに戻るので、USDA_PSD_Dataのスクリプトを使う前には毎回このコマンドを実行してください)。
+「仮想環境(venv)」とは、このプロジェクト専用のPython環境を他と分けて作る仕組みです。他のアプリ用に別のバージョンのライブラリを入れても影響し合わないようにするためのものです。`source ~/my_ai_team_venv/bin/activate` を実行すると、以後そのターミナルではこの専用環境が使われます(ターミナルを閉じるともとに戻るので、使う前には毎回このコマンドを実行してください)。
 
 ---
 
 ## 2. リポジトリのpublishとMacへのclone
 
-GitHub Desktopを使って、Windows側で作ったGitリポジトリ(バージョン管理された`my_ai_team`フォルダ)をGitHub経由でMacに持っていきます。
+GitHub Desktopを使って、Windows側で作ったGitリポジトリ(バージョン管理された`my_ai_team`フォルダ)をGitHub経由でMacに持っていきます。**秘書メモリ(`secretary_memory`フォルダ)もリポジトリの中にあるため、このcloneで一緒にMacへ来ます**(機微な2ファイルだけは除く。手順3で別途運びます)。
 
 ### 2-1. Windows側:publish前に、全ての変更をコミットする
 GitHub Desktopを開き、左側の「Changes」欄に変更中のファイルが残っていないか確認してください。残っている場合は、下部にコミットメッセージ(変更内容の一言メモ)を入力し、「Commit to main」ボタンを押してコミットを完了させてください。**publishは「最後にコミットした内容」をアップロードする操作**なので、直した内容がコミットされていないと、その修正が反映されないままGitHubに公開されてしまいます。
@@ -100,100 +109,106 @@ GitHub Desktopを開き、左側の「Changes」欄に変更中のファイル�
 
 ---
 
-## 3. 秘書メモリ・会話ログの移送(最重要)
+## 3. 秘書メモリ(機微2件)・効果音mp3のLocalSend移送
 
-秘書(CLAUDE.mdに基づくAIチームの司令塔役)がこれまで覚えてきた記憶や会話履歴は、Gitリポジトリの**外側**、`C:\Users\PC_User\.claude\projects\` の中にあります。ここはGit管理していないので、USBメモリなど物理メディアで手動コピーする必要があります。
+Windows・Macの2台を同じように使えるようにする設計では、次の4層に分けて扱っています。
 
-### 3-1. Windows側:USBへコピー
-以下のフォルダを丸ごとUSBメモリにコピーしてください。
+- 層1(ルール・スキル・部署ファイル・部署メモリ)と層2(秘書メモリ)→ GitHubで同期(手順2のcloneで完了)
+- 層3(大容量データ)→ 同期せず、部署ごとに担当マシンを固定(詳細は手順4)
+- 層4(会話ログ)→ 同期しない(割り切り)
 
-```
-C:\Users\PC_User\.claude\projects\c--Users-PC-User-my-ai-team
-```
+このうち、**秘書メモリの中の機微な2ファイルだけは `.gitignore` でGitから除外している**ため、cloneでは来ません。この手順でLocalSendを使って個別に運びます。運ぶのはこの2件と、動画部が選定中の効果音mp3 2件だけです。
 
-### 3-2. Mac側:フォルダ名を変えて配置
-USBがMacに挿さると `/Volumes/USBの名前` として認識されます。以下のコマンドでコピーします(`USBの名前` の部分は実際の名前に置き換えてください)。
-
-```
-mkdir -p ~/.claude/projects
-```
-```
-cp -R "/Volumes/USBの名前/c--Users-PC-User-my-ai-team" ~/.claude/projects/-Users-takahashitakayuki-my-ai-team
-```
-
-**なぜフォルダ名が重要か:** Claude Codeは、プロジェクトの記憶を「プロジェクトの絶対パスを元にした名前」のフォルダに保存する仕組みです。Windows側では `C:\Users\PC_User\my_ai_team` というパスが `c--Users-PC-User-my-ai-team` という名前に変換されていました。Mac側では `/Users/takahashitakayuki/my_ai_team` というパスになるので、変換後の名前は `-Users-takahashitakayuki-my-ai-team` になります。**この名前が1文字でもズレると、秘書は過去の記憶を一切読み込めず、初対面の状態からやり直しになります。** コピー後、フォルダ名を目視で再確認してください。
-
----
-
-## 4. 機密ファイル・USDA_PSD_Data・効果音素材のUSBでの運搬
-
-以下は「機密のためGitに載せていない」ファイル・フォルダ、および`.gitignore`で除外した`tools/`配下の素材です。Windows側でUSBにコピーし、Mac側の対応する場所に置いてください。
-
-**Finderで隠しフォルダを表示する:** `.claude` から始まるフォルダは名前が「.」(ドット)で始まる「隠しフォルダ」で、Finderには初期状態では表示されません。対象のフォルダをFinderで開いた状態で `Cmd + Shift + .` を押すと表示/非表示が切り替わります(下記はターミナルのコマンドで完結するので、この操作自体は無くても進められます)。
-
-### 4-1. Windows側:USBへコピー(PowerShellで実行)
-USBのドライブレターは実際の値に置き換えてください(下記は `E:` の例)。
+### 3-1. Windows側:LocalSendで送る
+LocalSendを起動し、以下の4ファイルを選んでMacへ送信してください(手順0参照)。
 
 ```
-Copy-Item "C:\Users\PC_User\my_ai_team\advisory.md" "E:\advisory.md"
-```
-```
-Copy-Item "C:\Users\PC_User\my_ai_team\advisory_usda_project.md" "E:\advisory_usda_project.md"
-```
-```
-Copy-Item -Recurse "C:\Users\PC_User\my_ai_team\.claude\agent-memory\advisory-team" "E:\advisory-team"
-```
-```
-Copy-Item "C:\Users\PC_User\my_ai_team\life_team.md" "E:\life_team.md"
-```
-```
-Copy-Item -Recurse "C:\Users\PC_User\Desktop\USDA_PSD_Data" "E:\USDA_PSD_Data"
-```
-```
-Copy-Item "C:\Users\PC_User\.claude\keybindings.json" "E:\keybindings.json"
-```
-```
-Copy-Item -Recurse "C:\Users\PC_User\my_ai_team\tools\sound_effects" "E:\sound_effects"
+C:\Users\PC_User\my_ai_team\secretary_memory\ceo-home-address.md
+C:\Users\PC_User\my_ai_team\secretary_memory\ceo-gluten-free-diet.md
+C:\Users\PC_User\my_ai_team\tools\sound_effects\cutin_bell.mp3
+C:\Users\PC_User\my_ai_team\tools\sound_effects\ending_bgm.mp3
 ```
 
-### 4-2. Mac側:配置(ターミナルで実行)
-USBが `/Volumes/USBの名前` として認識されている前提です(`USBの名前` は実際の名前に置き換えてください)。
+### 3-2. Mac側:受信したファイルを正しい場所に配置
+LocalSendで受信したファイルは既定で「ダウンロード」フォルダに保存されます。ターミナルで以下を実行し、正しい置き場所に移動してください。
 
 ```
-cp "/Volumes/USBの名前/advisory.md" ~/my_ai_team/advisory.md
+mv ~/Downloads/ceo-home-address.md ~/my_ai_team/secretary_memory/ceo-home-address.md
 ```
 ```
-cp "/Volumes/USBの名前/advisory_usda_project.md" ~/my_ai_team/advisory_usda_project.md
+mv ~/Downloads/ceo-gluten-free-diet.md ~/my_ai_team/secretary_memory/ceo-gluten-free-diet.md
 ```
 ```
-mkdir -p ~/my_ai_team/.claude/agent-memory
+mkdir -p ~/my_ai_team/tools/sound_effects
 ```
 ```
-cp -R "/Volumes/USBの名前/advisory-team" ~/my_ai_team/.claude/agent-memory/advisory-team
+mv ~/Downloads/cutin_bell.mp3 ~/my_ai_team/tools/sound_effects/cutin_bell.mp3
 ```
 ```
-cp "/Volumes/USBの名前/life_team.md" ~/my_ai_team/life_team.md
-```
-```
-cp -R "/Volumes/USBの名前/USDA_PSD_Data" ~/Desktop/USDA_PSD_Data
-```
-```
-cp "/Volumes/USBの名前/keybindings.json" ~/.claude/keybindings.json
-```
-```
-mkdir -p ~/my_ai_team/tools
-```
-```
-cp -R "/Volumes/USBの名前/sound_effects" ~/my_ai_team/tools/sound_effects
+mv ~/Downloads/ending_bgm.mp3 ~/my_ai_team/tools/sound_effects/ending_bgm.mp3
 ```
 
-これらはリポジトリに含めていないため、`git clone`(手順2)では一切コピーされません。配置し忘れると、顧問部が機能しなくなる・USDA_PSD_Dataのリポジトリ履歴が失われる・動画部が選定中の効果音素材(`cutin_bell.mp3`・`ending_bgm.mp3`)を失う、といったことが起きるので注意してください。
+配置し忘れると、秘書がCEOの自宅住所・食事制限を思い出せない状態になる、動画部が選定中の効果音素材を失う、といったことが起きるので注意してください。
 
-USDA_PSD_Data内のWindows専用パスの直し方は手順8で扱います。
+**秘書メモリのリンクを張る手順は手順5で扱います(先に手順4のリポジトリ配置を終えてから行ってください)。**
 
 ---
 
-## 5. グローバル設定の再現
+## 4. 顧問部データはWindowsに据え置き(何もしなくてよい)
+
+**顧問部(advisory-team)の作業は今後もWindows側で行う方針に決まりました。** 理由は、扱うデータ(`Desktop\USDA_PSD_Data`、実測約7.1GB)が大きく、2台の同期対象にすると管理が煩雑になるためです。
+
+そのため、以下はMacに一切運びません。今後もWindows側にのみ存在し続けます。
+
+- `C:\Users\PC_User\Desktop\USDA_PSD_Data`(顧問部の作業データ、別のGitリポジトリ)
+- `advisory.md`・`advisory_usda_project.md`(顧問部の機密ファイル)
+- `.claude\agent-memory\advisory-team\`(顧問部のメモリ)
+- `life_team.md`(ライフサポート部の機密ファイル。こちらは層3ではなくCEO判断による機密扱いですが、同様にWindows限定です)
+
+Mac側でこれらのファイルやフォルダを探しても存在しないのが正しい状態です。顧問部・ライフサポート部の作業をしたい時は、この2部署に関してはWindows機を開いてください。
+
+---
+
+## 5. 秘書メモリのリンクを張る(Mac側)
+
+秘書(CLAUDE.mdに基づくAIチームの司令塔役)の記憶は、Windows側では次の2箇所を「ジャンクション」という仕組みでつないでいます。
+
+- 実体:リポジトリの中の `secretary_memory` フォルダ(Gitで同期される)
+- リンク:Claude Codeが実際に記憶を読みに行く `C:\Users\PC_User\.claude\projects\c--Users-PC-User-my-ai-team\memory`
+
+Macでも同じ考え方で、**シンボリックリンク**(Macでのジャンクションに相当する仕組み。あるフォルダを、実体は別の場所にありながら、あたかもそこにあるかのように見せかける機能)を張ります。
+
+### 5-1. リンク先の親フォルダを作る
+シンボリックリンクを作るコマンドは、リンクを置く場所の「親フォルダ」が先に存在している必要があります(手順2のcloneで `~/my_ai_team` はできていますが、`~/.claude/projects/` 配下のプロジェクトフォルダはまだ無いので、これを先に作ります)。
+
+```
+mkdir -p ~/.claude/projects/-Users-takahashitakayuki-my-ai-team
+```
+
+**なぜこの名前か:** Claude Codeは、プロジェクトの記憶を「プロジェクトの絶対パスを元にした名前」のフォルダに保存する仕組みです。Mac側のプロジェクトパス `/Users/takahashitakayuki/my_ai_team` を変換すると `-Users-takahashitakayuki-my-ai-team` になります(Windows側で `C:\Users\PC_User\my_ai_team` が `c--Users-PC-User-my-ai-team` になっていたのと同じ規則です)。**この名前が1文字でもズレると、秘書は過去の記憶を一切読み込めません。**
+
+### 5-2. シンボリックリンクを作る
+```
+ln -s /Users/takahashitakayuki/my_ai_team/secretary_memory /Users/takahashitakayuki/.claude/projects/-Users-takahashitakayuki-my-ai-team/memory
+```
+
+`ln -s リンク先の実体 作るリンクの場所` という書式です。実行後、以下のコマンドでリンクが正しく張れているか確認してください。
+
+```
+ls -la ~/.claude/projects/-Users-takahashitakayuki-my-ai-team/
+```
+
+`memory -> /Users/takahashitakayuki/my_ai_team/secretary_memory` のような行が表示されれば成功です。さらに次のコマンドで、リンク経由できちんと中身が読めるかも確認してください。
+
+```
+cat ~/.claude/projects/-Users-takahashitakayuki-my-ai-team/memory/MEMORY.md
+```
+
+手順3で配置した `ceo-home-address.md` の内容を含む一覧が表示されれば、リンクとファイル配置の両方が成功しています。
+
+---
+
+## 6. グローバル設定の再現
 
 Claude Code全体の設定ファイル `~/.claude/settings.json` をMac側に新規作成します。ターミナルで以下のコマンドを実行してください(Windows側の設定と同じ内容がファイルとして作られます)。
 
@@ -208,13 +223,13 @@ EOF
 
 `cat > ファイル名 << 'EOF' ... EOF` は、`<< 'EOF'` と `EOF` の間に書いた文字列をそのままファイルに書き込むコマンドです。
 
-キーバインドについては手順4で運搬済みです。
+**注記:** Windows側にあった `.claude/settings.local.json`(プロジェクトごとのローカル権限設定)は`.gitignore`で除外しており、Macには引き継がれません。実害は小さいですが、**Mac側でClaude Codeを使い始めると、これまで許可済みだった操作の確認プロンプトが再び表示される**ことがあります。心当たりのない確認が出ても異常ではないので、内容を見て許可するかどうか判断してください。
 
-**注記:** Windows側にあった `.claude/settings.local.json`(プロジェクトごとのローカル権限設定。Windows専用のPowerShell許可ルール1件と、WebSearch・WebFetchの許可1件が入っていました)は`.gitignore`で除外しており、Macには引き継がれません。実害は小さいですが、**Mac側でClaude Codeを使い始めると、これまで許可済みだった操作の確認プロンプトが再び表示される**ことがあります。心当たりのない確認が出ても異常ではないので、内容を見て許可するかどうか判断してください。
+なお、キーバインド(`~/.claude/keybindings.json`)についてはこの移行では対象外としています。必要であればCEOに個別に確認してください。
 
 ---
 
-## 6. 移せないので再実行が必要なもの
+## 7. 移せないので再実行が必要なもの
 
 以下はセキュリティ上の理由(認証情報を平文でファイルに残さない設計)によりファイルコピーでは引き継げません。Mac側で最初に `claude` を起動した後、それぞれ再実行してください。
 
@@ -224,19 +239,15 @@ EOF
 
 ---
 
-## 7. Whisper(音声文字起こしAI)のMac向け再構築
+## 8. Whisper(音声文字起こしAI)のMac向け再構築
 
 `tools/whisper/` にあった `ggml-large-v3.bin`(約3GB)・`ggml-small.bin`(488MB)は、**whisper.cpp**(Whisperを軽量・高速に動かすための実装。Apple Siliconの高速化機能(Metal)に対応)用のモデルファイルです。秘書が公式README(https://github.com/ggml-org/whisper.cpp)で確認済みの、現行の正しい手順です。
 
-### 7-1. モデルファイルの入手方法(2択・USBでのコピーを推奨)
-ggml形式のモデルファイルはOS非依存(WindowsでもMacでもそのまま使えるファイル形式)のため、**Windows側の実物をUSBでコピーする方法を推奨します**(再ダウンロードより早く、通信量もかかりません)。
-
-- **推奨:USBでコピー** — `C:\Users\PC_User\my_ai_team\tools\whisper\ggml-large-v3.bin`(約3GB)と `ggml-small.bin`(488MB)をUSBにコピーし、Mac側の `~/my_ai_team/tools/whisper.cpp/models/` に配置(このフォルダは次の7-2のcloneで作られます)
-- **代替:再ダウンロード** — 7-3のコマンドでネットから再取得
+**方針変更:モデルファイルはMac側で再ダウンロードします。** クラウドドライブもUSBも使わない前提のため、約3GBのファイルをLocalSend経由で送るのは現実的ではありません。幸い、ネットからの再取得手順が確立しているため、そちらを使います。
 
 **重要:モデルファイルの置き場所が変わります。** 旧:`tools/whisper/ggml-large-v3.bin` → 新:`tools/whisper.cpp/models/ggml-large-v3.bin`。
 
-### 7-2. whisper.cppの取得とビルド
+### 8-1. whisper.cppの取得とビルド
 ```
 brew install cmake
 ```
@@ -251,22 +262,22 @@ cd ~/my_ai_team/tools/whisper.cpp && cmake --build build -j --config Release
 ```
 `cmake` は、ソースコードからMac(Apple Silicon)向けの実行ファイルを組み立てるツールです。Apple Siliconでは高速化機能(Metal)が既定で自動的に有効になります。ビルドが完了すると、実行ファイルは `./build/bin/whisper-cli` に作られます(古い手順にあった `./main` ではありません)。
 
-### 7-3. モデルファイルの再ダウンロード(USBでコピーしなかった場合のみ)
+### 8-2. モデルファイルの再ダウンロード
 ```
 cd ~/my_ai_team/tools/whisper.cpp && sh ./models/download-ggml-model.sh large-v3
 ```
 ```
 cd ~/my_ai_team/tools/whisper.cpp && sh ./models/download-ggml-model.sh small
 ```
-ダウンロードされたモデルは `whisper.cpp/models/` フォルダに保存されます。
+ダウンロードされたモデルは `whisper.cpp/models/` フォルダに保存されます。合計約3.5GBのダウンロードになるため、Wi-Fi環境で数分〜数十分程度かかる想定です。
 
 **注意:** 具体的な呼び出しコマンド(実際に文字起こしを実行する際のオプション等)は動画部のメモやワークフローに依存します。動作しない場合は動画部に確認のうえ調整してください。
 
 ---
 
-## 8. Windows専用パスの置換(全18箇所・17ファイル)
+## 9. Windows専用パスの置換(全18箇所・17ファイル)
 
-**調査済み事実では「17箇所・16ファイル」とされていましたが、実際にgrepし直したところ `ai_team_operation_design.md` にも1箇所見つかり、正しくは合計18箇所・17ファイルでした。** 以下がその全リストです(Git管理外の顧問部ファイル分も、手順4でUSB移送した後にMac側で直す前提で含めています)。
+**調査済み事実では「17箇所・16ファイル」とされていましたが、実際にgrepし直したところ `ai_team_operation_design.md` にも1箇所見つかり、正しくは合計18箇所・17ファイルでした。** 以下がその全リストです。
 
 置換の考え方:`C:\Users\PC_User\...`(バックスラッシュ区切り)→ `/Users/takahashitakayuki/...`(スラッシュ区切り)。
 
@@ -281,82 +292,58 @@ cd ~/my_ai_team/tools/whisper.cpp && sh ./models/download-ggml-model.sh small
 
 ### Git管理外(顧問部)のファイル(14ファイル・14箇所、`.claude/agent-memory/advisory-team/` 配下)
 
-すべて `C:\Users\PC_User\Desktop\USDA_PSD_Data`(一部は末尾にサブパスが付く)を `/Users/takahashitakayuki/Desktop/USDA_PSD_Data` に置き換えます。
+**この節は参考情報です。方針変更により顧問部データはWindowsに据え置くため、これらのファイルはMacに存在せず、置換作業自体が不要になりました。** 将来的に顧問部データをMacへ移す方針に変わった場合に備えて、対象箇所の記録だけ残します。
 
-| ファイル:行 | 置換前 | 置換後 |
-|---|---|---|
-| `project_mla_chunk_progress.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` | `/Users/takahashitakayuki/Desktop/USDA_PSD_Data` |
-| `project_mla_comtrade_report1_verification.md:12` | `C:\Users\PC_User\Desktop\USDA_PSD_Data\_検証_mla_report1\` | `/Users/takahashitakayuki/Desktop/USDA_PSD_Data/_検証_mla_report1/` |
-| `project_frequency_column_addition.md:10` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` | `/Users/takahashitakayuki/Desktop/USDA_PSD_Data` |
-| `project_brazil_format13col.md:9` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` | `/Users/takahashitakayuki/Desktop/USDA_PSD_Data` |
-| `project_freshness_timing_survey.md:10` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` | `/Users/takahashitakayuki/Desktop/USDA_PSD_Data` |
-| `project_mla_translation_completion.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` | `/Users/takahashitakayuki/Desktop/USDA_PSD_Data` |
-| `project_mla_headcount_r67_delete.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` | `/Users/takahashitakayuki/Desktop/USDA_PSD_Data` |
-| `project_psd_config_and_update_policy.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` | `/Users/takahashitakayuki/Desktop/USDA_PSD_Data` |
-| `project_mla_dedup_scope_narrowing.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` | `/Users/takahashitakayuki/Desktop/USDA_PSD_Data` |
-| `project_mla_unit_matrix.md:10` | `C:\Users\PC_User\Desktop\USDA_PSD_Data\MLA指標別_集計単位一覧.xlsx` | `/Users/takahashitakayuki/Desktop/USDA_PSD_Data/MLA指標別_集計単位一覧.xlsx` |
-| `project_psd_format2_conversion.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` | `/Users/takahashitakayuki/Desktop/USDA_PSD_Data` |
-| `project_run_all_psd_gap.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` | `/Users/takahashitakayuki/Desktop/USDA_PSD_Data` |
-| `project_mla_report4_country_agg.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` | `/Users/takahashitakayuki/Desktop/USDA_PSD_Data` |
-| `project_term_master_final_check.md:9` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` | `/Users/takahashitakayuki/Desktop/USDA_PSD_Data` |
+すべて `C:\Users\PC_User\Desktop\USDA_PSD_Data`(一部は末尾にサブパスが付く)を `/Users/takahashitakayuki/Desktop/USDA_PSD_Data` に置き換えるものでした。
+
+| ファイル:行 | 置換前 |
+|---|---|
+| `project_mla_chunk_progress.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` |
+| `project_mla_comtrade_report1_verification.md:12` | `C:\Users\PC_User\Desktop\USDA_PSD_Data\_検証_mla_report1\` |
+| `project_frequency_column_addition.md:10` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` |
+| `project_brazil_format13col.md:9` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` |
+| `project_freshness_timing_survey.md:10` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` |
+| `project_mla_translation_completion.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` |
+| `project_mla_headcount_r67_delete.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` |
+| `project_psd_config_and_update_policy.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` |
+| `project_mla_dedup_scope_narrowing.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` |
+| `project_mla_unit_matrix.md:10` | `C:\Users\PC_User\Desktop\USDA_PSD_Data\MLA指標別_集計単位一覧.xlsx` |
+| `project_psd_format2_conversion.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` |
+| `project_run_all_psd_gap.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` |
+| `project_mla_report4_country_agg.md:8` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` |
+| `project_term_master_final_check.md:9` | `C:\Users\PC_User\Desktop\USDA_PSD_Data` |
 
 これらのファイルはテキストエディタ(VS Code等)で開いて手動置換するか、VS Codeの「フォルダ内で検索・置換」機能で `C:\Users\PC_User` → `/Users/takahashitakayuki` の一括置換をかけたうえで、バックスラッシュがスラッシュに変わっていない箇所が残っていないか目視確認する方法でも構いません。
 
-### USDA_PSD_Data側のパス置換(Pythonスクリプトが確実に失敗するため必須)
-
-USBで運んだ `USDA_PSD_Data`(手順4)の中にも、Pythonスクリプトなどに `C:\Users\PC_User\...` のパスが直書きされています。**これを直さずにスクリプトを実行すると確実に失敗します。**
-
-実測で判明している主な該当ファイル(件数が多いため代表例。同一内容のコピーが複数の出力フォルダに存在するものもあります):
-- `build_freshness_report.py:13`
-- `country_master.py:33`
-- `freshness_timing_analysis.py:20`
-- `_検証_mla_report1\compare.py:14`
-- `README.txt:11`、`country_master.txt:33`(複数の出力フォルダに同一コピーあり)
-- `引き継ぎメモ_20260823.md:4,11`
-- `Codexレビュー_やり取りメモ.md:4`
-- `ams_convert_log*.txt` などのログファイル群
-
-件数が多いため、1件ずつ手で直すのではなく一括置換で対応します。**実行前に必ずUSDA_PSD_Dataフォルダ全体のバックアップ(コピー)を取ってください**(置換に失敗した場合に元へ戻せるようにするためです)。バックアップには元と同じ**約7.1GBの空き容量**が必要です。Macの空き容量(Appleメニュー→「このMacについて」→「ストレージ」で確認できます)が足りない場合は、外付けドライブなど別の場所にバックアップしてください。
-
-```
-cp -R ~/Desktop/USDA_PSD_Data ~/Desktop/USDA_PSD_Data_backup_before_replace
-```
-
-対象ファイルの一覧を確認します(このコマンドではファイルは変更されません)。`--exclude-dir=.git` はGitの内部管理フォルダを検索対象から外す指定、`-I` はバイナリファイル(csv/xlsx等の一部やコンパイル済みファイルなど、文字として読めないファイル)を対象から外す指定です。**この2つが無いと、後述の一括置換コマンドがUSDA_PSD_Dataのリポジトリ履歴を破損させたり、意図しないファイルの中身を壊したりする恐れがあるため必須です。**
-```
-grep -rlF --exclude-dir=.git -I 'C:\Users\PC_User\Desktop\USDA_PSD_Data' ~/Desktop/USDA_PSD_Data
-```
-
-一括置換を実行します:
-```
-grep -rlF --exclude-dir=.git -I 'C:\Users\PC_User\Desktop\USDA_PSD_Data' ~/Desktop/USDA_PSD_Data | while IFS= read -r f; do sed -i '' 's#C:\\Users\\PC_User\\Desktop\\USDA_PSD_Data#/Users/takahashitakayuki/Desktop/USDA_PSD_Data#g' "$f"; done
-```
-
-**macOSのsedは `-i` の直後に空文字の引数(`''`)を書く必要があります**(Linuxとは書き方が違うので注意。`-i ''` を書き忘れるとエラーになります)。置換後、上でリストされたファイルのうち何個かを開き、バックスラッシュ(`\`)がすべてスラッシュ(`/`)に変わっていることを目視確認してください。
-
-**注意:大文字・小文字の違いは拾えません。** 上記のコマンドは大文字・小文字を区別するため、`c:\users\pc_user\...` のような小文字表記(このドキュメントの手順8冒頭にある `ai_team_operation_design.md:222` の実例のように、実際に小文字表記が使われているケースがあります)は検出できません。念のため、次のコマンドで小文字表記が無いか事前に洗い出しておくと安心です(`-i` は大文字小文字を区別しないという意味で、上のバックアップの`-i`とは無関係です)。
-
-```
-grep -rliF --exclude-dir=.git -I 'c:\users\pc_user' ~/Desktop/USDA_PSD_Data
-```
-
-ヒットするファイルがあれば、その表記に合わせて個別に確認・置換してください。
-
-**注記:** `.xlsx` などのExcelファイルの中に数式や外部リンクとしてパスが埋め込まれている可能性がありますが、これは未確認です。Excelファイルが正しく開けない・リンク切れになる場合は、そのファイルをExcelで開いて手動確認してください。
-
 ---
 
-## 9. 動作確認チェックリスト
+## 10. 動作確認チェックリスト
 
 Mac側ですべての手順が終わったら、以下を確認してください。
 
 - [ ] ターミナルで `cd ~/my_ai_team && claude` を実行し、Claude Codeが起動する
 - [ ] 秘書としての挨拶メッセージが表示される(secretary.mdの内容に基づく振る舞いをしている)
 - [ ] `knowledge.md`・`status.md` の内容を秘書が把握している(例:「今どの部署にフォーカスしていますか」と聞いて status.md の内容と一致する回答が返る)
-- [ ] 秘書の過去の記憶が引き継がれている(例:秘書に「私の自宅住所は?」と聞き、正しく答えられるかCEO自身で確認する。正解はこの手順書には書きません。答えられれば手順3のメモリ移送が成功している証拠です)
+- [ ] 秘書の過去の記憶が引き継がれている(例:秘書に「私の自宅住所は?」と聞き、正しく答えられるかCEO自身で確認する。正解はこの手順書には書きません。答えられれば手順3・5の秘書メモリ移送とリンク作成が成功している証拠です)
 - [ ] `/agents` コマンドで5部署(advisory-team, app-team, life-team, pr-team, youtube-team)が一覧に表示される
-- [ ] `/mcp` でNotion連携が「接続済み」になっている(手順6の再認証後)
-- [ ] 移行完了後、秘書からCEOに自宅住所と勤務先を改めて口頭で確認し、秘書メモリ(リポジトリ外)にのみ記録する
+- [ ] `/mcp` でNotion連携が「接続済み」になっている(手順7の再認証後)
+- [ ] 移行完了後、秘書からCEOに自宅住所と勤務先を改めて口頭で確認し、秘書メモリ(機微ファイルなのでGit同期対象外)にのみ記録する
+
+### 部署ごとの担当マシン一覧
+- **アプリ開発部・動画部** → Mac(開発機材・動画編集環境がMac側にあるため)
+- **顧問部** → Windows据え置き(USDA_PSD_Dataが約7.1GBと大きく、同期しない方針のため)
+- **広報部・ライフサポート部** → どちらでも可(大容量データを扱わないため)
+
+---
+
+## 11. 2台での日常運用
+
+Windows・Macの2台を切り替えて使う際の運用ルールです。
+
+- **作業開始時**:秘書が自動で `git pull`(GitHub上の最新の内容を手元に取り込む操作)を行います。CEOが意識して何かする必要はありません。
+- **作業終了時**:秘書が自動で `git add`(変更をGitに記録する準備)→ `commit`(記録の確定)→ `push`(GitHubへのアップロード)を行います。これもCEOが意識する必要はありません。
+- **唯一の注意点:2台を同時に使わないこと。** 例えばWindowsで作業中に、その変更をpushする前にMacでも同じファイルを編集してしまうと、どちらの内容を正とするか(「衝突」と呼ばれる状態)が発生し、手作業での解決が必要になります。1台を使い終えて閉じてから、もう1台を開くようにしてください。
+- 顧問部・ライフサポート部の機密ファイルはそもそも同期対象外(手順4参照)なので、この衝突の心配はありません。
 
 ---
 

@@ -4,12 +4,20 @@
 
 ## 運用方針
 - 5部署を同時並行では進めない。CEOの本業(フルタイム勤務)・育児(生後7ヶ月のお子さん)を踏まえ、メイン部署を絞って進める
+- **2台運用(Windows / MacBook)。大容量データは同期せず、部署ごとに担当マシンを固定する**
+
+| 部署 | 担当マシン | 理由 |
+|---|---|---|
+| アプリ開発部 | MacBook | iPhoneアプリはMacでしか作れない |
+| 動画部 | MacBook | whisperがApple Siliconで速い |
+| 顧問部 | **Windows据え置き** | USDAデータ7.1GBと機密ファイルがここにある。Macには運ばない |
+| 広報部・ライフサポート部 | どちらでも | テキストのみでGitHub同期される |
 
 ## 現在のフォーカス(2026-08-22時点)
 - **メイン**:動画部(1本目を完成させる段階)
 - **進行中**:顧問(海外畜産統計の自動取得基盤づくり。9ソース実装済み) → 詳細は [advisory_usda_project.md](advisory_usda_project.md)
 - **サブ・ぼちぼち相談**:ライフサポート部(都度カジュアルに相談に乗る程度)
-- **進行中**:MacBookへの環境移行(2026-09-01にMacBook到着)。手順書は [mac_migration.md](mac_migration.md)。GitHubプライベートリポジトリ+USBの併用で移送する
+- **進行中**:MacBookへの環境移行(2026-09-01にMacBook到着)。手順書は [mac_migration.md](mac_migration.md)
 - **一時停止・移行完了待ち**:アプリ開発部(MacBook移行が終わり次第、本格着手)
 - **一時停止**:広報部(発信するアウトプットが揃ってから本格稼働)
 - **将来構想・未着手**:コミュニケーション基盤(Discord構想) → 詳細は [communication_plan.md](communication_plan.md)

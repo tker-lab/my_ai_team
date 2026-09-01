@@ -11,6 +11,10 @@ advisory_usda_project.md
 .claude/agent-memory/advisory-team/
 life_team.md
 
+# 秘書メモリのうち機微な2件(マシンごとローカル保存。LocalSendで個別に運ぶ)
+secretary_memory/ceo-home-address.md
+secretary_memory/ceo-gluten-free-diet.md
+
 # 一般的なノイズ
 __pycache__/
 *.pyc
