@@ -71,8 +71,8 @@
 ※私と妻の対比が上から順番に対応するように並べている(メンタル→共感→考え方の傾向)。妻のみ4行目に「鬱の罹患歴あり」が入る
 
 **素材ファイル**
-- 完成画像:`C:\Users\PC_User\Desktop\チャンネル素材\intro_slide_couple.png`
-- デザイン元データ:`C:\Users\PC_User\Desktop\チャンネル素材\intro_slide_design.html`
+- 完成画像:`/Users/takahashitakayuki/Desktop/チャンネル素材/intro_slide_couple.png`
+- デザイン元データ:`/Users/takahashitakayuki/Desktop/チャンネル素材/intro_slide_design.html`
 
 ## TODO(1本目を完成させるまでの個別タスク)
 - カットイン用の効果音素材の選定・入手
