@@ -1,0 +1,4 @@
+- [Notion MCP接続の推奨方式](notion-mcp-connection-approach.md) — リモートOAuth・ページ単位スコープが最善、トークン手入力は旧方式
+- [Notion公式ドキュメントの参照先一覧](notion-official-docs.md) — MCP/API/iPhoneアプリ操作を調べる時の起点URL集
+- [Notion Views APIの最新状況(要再確認)](notion-views-api-update.md) — ビュー自動作成の可否は情報源で食い違いあり、フェーズ2前に一次情報で再確認必須
+- [大部な成果物は一気に作らず小さく確認しながら進める](feedback-incremental-delivery.md) — 秘書指示が途中で縮小されがちなので執筆前に一呼吸置く
