@@ -11,7 +11,7 @@ CEOの新しいMacBookへ、AIチーム拠点フォルダ `my_ai_team` を移行
 
 - **あなたはまだ秘書ではありません。** `CLAUDE.md` に書かれた秘書としての振る舞い(部署への委譲ルールなど)はまだ適用しません。環境構築が終わるまでは、この手順書の実行役に徹してください。
 - **上から順に実行し、各手順が完了したことを実際のコマンド出力で確認してから次に進んでください。** 手順を飛ばさないでください。
-- **CEOはIT初心者です。** 専門用語には一言説明を添えてください。CEO自身の操作が必要な箇所(サインイン、LocalSendでの送信、ブラウザでの認証など)では、何をどう操作すればよいかを具体的に示したうえで、CEOの操作完了を待ってから次に進んでください。
+- **CEOはIT初心者です。** 専門用語には一言説明を添えてください。CEO自身の操作が必要な箇所(サインイン、ブラウザでの認証、質問への回答など)では、何をどう操作すればよいかを具体的に示したうえで、CEOの操作完了を待ってから次に進んでください。
 - **勝手にやってはいけないこと**: `git push`(必ずCEOの確認を得てから)、`~/my_ai_team` の外にあるファイルの削除、Windows側への変更。
 - **環境構築が完了したら**、手順書の最後にある「動作確認チェックリスト」を実施し、結果をCEOに報告してから、秘書としての振る舞いを開始してください。
 - **作業中に詰まったら、勝手に回避策を試さず、CEOに状況を報告して指示を仰いでください。**
@@ -29,28 +29,9 @@ whoami
 
 ---
 
-## 0. ファイル転送の手段:LocalSend
-
-この手順書では手順3で少量のファイル(秘書メモリの機微2件・効果音mp3 2件)をWindowsからMacへ運びます。CEOはクラウドドライブもUSBメモリも使わないため、**LocalSend**(同じWi-Fi上にある2台の間でファイルを直接送れる無料アプリ。クラウドを経由しないので登録や容量制限がありません)を使います。
-
-### 0-1. 両OSへの導入
-- Windows: https://localsend.org/ からWindows版をダウンロードしてインストール
-- Mac: 同じく https://localsend.org/ からMac版をダウンロードしてインストール(Mac App Storeからも入手できます)
-
-### 0-2. 送り方(共通の流れ)
-1. WindowsとMac両方でLocalSendを起動する(同じWi-Fiに両方が繋がっていることを確認)
-2. 起動しているMacが、Windows側の画面に「端末一覧」として自動的に出てくる
-3. Windows側でLocalSendの画面に送りたいファイルをドラッグ&ドロップ(または「ファイルを選択」)する
-4. 送り先としてMacの端末名を選び、送信する
-5. Mac側に受信の確認ポップアップが出るので「承認」する。保存先は既定で「ダウンロード」フォルダになります
-
-前提として、2台が同じWi-Fiルーターに繋がっている必要があります(スマホのテザリングなど別回線だと端末が見えません)。
-
----
-
 ## 1. Macの下準備(Homebrew・Node.js・Claude Code)
 
-VS Codeと拡張機能は導入済みとのことなので、ここでは残り3つを入れます。
+VS Codeと拡張機能は導入済みとのことなので、ここでは残り3つを入れます。**先に行った棚卸しで既に入っていることが分かったものは、この節を飛ばして構いません。**
 
 ### 1-1. Homebrewのインストール
 Homebrewとは、Macでソフトウェアをコマンド一発でインストールできるようにする「アプリストアのコマンド版」のようなツールです。この後のNode.jsのインストールに使います。
@@ -97,34 +78,27 @@ pip install pandas openpyxl requests python-dotenv comtradeapicall
 
 ---
 
-## 2. リポジトリのpublishとMacへのclone
+## 2. リポジトリの確認(Windows側の作業は完了済み)
 
-GitHub Desktopを使って、Windows側で作ったGitリポジトリ(バージョン管理された`my_ai_team`フォルダ)をGitHub経由でMacに持っていきます。**秘書メモリ(`secretary_memory`フォルダ)もリポジトリの中にあるため、このcloneで一緒にMacへ来ます**(機微な2ファイルだけは除く。手順3で別途運びます)。
+**Windows側での作業はすでに完了しています。** GitHubへの公開(publish)も、その後の更新のアップロード(push)もWindows側で済んでおり、GitHub上にあるのが最新版です。あなた(Mac側のClaude)がこのファイルを読めているということは、CEOがすでにGitHub Desktop経由で `my_ai_team` リポジトリをMacに clone(GitHub上のリポジトリをそのままダウンロードしてくる操作)済みという前提です。改めてWindows側で何か操作する必要はありません。**CEOに「Publish repository」を押すよう案内しないでください。押すとGitHub上に別のリポジトリが2つ目できてしまいます。**
 
-### 2-1. Windows側:publish前に、全ての変更をコミットする
-GitHub Desktopを開き、左側の「Changes」欄に変更中のファイルが残っていないか確認してください。残っている場合は、下部にコミットメッセージ(変更内容の一言メモ)を入力し、「Commit to main」ボタンを押してコミットを完了させてください。**publishは「最後にコミットした内容」をアップロードする操作**なので、直した内容がコミットされていないと、その修正が反映されないままGitHubに公開されてしまいます。
+> **重要:** Gitは「今のファイル」だけでなく「過去の全ての状態」を記録して持っています。一度コミットしたものは、後からファイルを直しても履歴からは消えません。機密情報を含む状態でコミットしてしまった場合は、ファイルを直すだけでは不十分で、履歴そのものを作り直す必要があります(今後Mac側で作業する際も、この点は覚えておいてください)。
 
-> **重要:** Gitは「今のファイル」だけでなく「過去の全ての状態」を記録して持っていきます。一度コミットしたものは、後からファイルを直しても履歴からは消えません。機密情報を含む状態でコミットしてしまった場合は、ファイルを直すだけでは不十分で、履歴そのものを作り直す必要があります。
+### 整合性の確認
+念のため、Mac側で以下を実行し、正しいリポジトリを見ていること・最新のコミットを取得できていることを確認してCEOに報告してください。
 
-### 2-2. Windows側:GitHubにpublish(アップロード)
-1. GitHub Desktopを開く
-2. 左上の「Current Repository」から `my_ai_team` を選ぶ(一覧に無ければ「Add Local Repository」で `C:\Users\PC_User\my_ai_team` を追加)
-3. 「Publish repository」ボタンを押す
-4. **ダイアログの「Keep this code private」に必ずチェックが入っていることを確認してから** Publish を実行
+```
+cd ~/my_ai_team && git remote -v
+```
+```
+cd ~/my_ai_team && git log --oneline -1
+```
 
-「publish」は、手元のGitリポジトリの複製をGitHub上に作ってアップロードする操作です。「private」にしておかないとCEO以外の誰でも見られる状態になってしまうため、ここは特に確認してください。
-
-### 2-3. Mac側:GitHub Desktopをインストールしてclone
-1. https://desktop.github.com/ からGitHub Desktopをダウンロード・インストール
-2. CEOのGitHubアカウントでログイン
-3. 「Clone a repository from the Internet」を選び、`my_ai_team` を選択
-4. 保存先(Local Path)を `/Users/takahashitakayuki/my_ai_team` に指定してClone
-
-「clone」は、GitHub上にあるリポジトリをそのままMacにダウンロードしてくる操作です。
+`git remote -v` で `origin` の参照先が `https://github.com/takataka0307/my_ai_team.git` になっていること、`git log --oneline -1` で何らかのコミットが表示されることを確認できれば十分です。**秘書メモリ(`secretary_memory`フォルダ)もリポジトリの中にあるため、このclone で一緒にMacへ来ています**(機微な2ファイルだけは`.gitignore`で除外されているため来ません。手順3で扱います)。
 
 ---
 
-## 3. 秘書メモリ(機微2件)・効果音mp3のLocalSend移送
+## 3. 秘書メモリ(機微2件)の作成と、効果音mp3の扱い
 
 Windows・Macの2台を同じように使えるようにする設計では、次の4層に分けて扱っています。
 
@@ -132,40 +106,33 @@ Windows・Macの2台を同じように使えるようにする設計では、次
 - 層3(大容量データ)→ 同期せず、部署ごとに担当マシンを固定(詳細は手順4)
 - 層4(会話ログ)→ 同期しない(割り切り)
 
-このうち、**秘書メモリの中の機微な2ファイルだけは `.gitignore` でGitから除外している**ため、cloneでは来ません。この手順でLocalSendを使って個別に運びます。運ぶのはこの2件と、動画部が選定中の効果音mp3 2件だけです。
+このうち、**秘書メモリの中の機微な2ファイルだけは `.gitignore` でGitから除外している**ため、cloneでは来ません。ファイル転送では運ばず、**あなた(Mac側のClaude)がCEOに直接質問して、その場で `secretary_memory/` 配下に作成**します。これがもともとの設計どおりの段取りです(機微情報は各マシンにローカル保存し、Gitには載せません)。
 
-### 3-1. Windows側:LocalSendで送る
-LocalSendを起動し、以下の4ファイルを選んでMacへ送信してください(手順0参照)。
+### 3-1. CEOに聞いて秘書メモリを作成する
 
-```
-C:\Users\PC_User\my_ai_team\secretary_memory\ceo-home-address.md
-C:\Users\PC_User\my_ai_team\secretary_memory\ceo-gluten-free-diet.md
-C:\Users\PC_User\my_ai_team\tools\sound_effects\cutin_bell.mp3
-C:\Users\PC_User\my_ai_team\tools\sound_effects\ending_bgm.mp3
-```
+CEOに、①自宅住所 ②食事に関する制約(ファイル名 `ceo-gluten-free-diet.md` から内容の見当はつきますが、詳細はCEOに直接聞いてください)の2点を口頭で確認してください。**回答内容をこのファイルや他のGit管理下のファイルに書き写さないこと**(このやり取り自体は会話ログに残りますが、会話ログはGit同期対象外です)。
 
-### 3-2. Mac側:受信したファイルを正しい場所に配置
-LocalSendで受信したファイルは既定で「ダウンロード」フォルダに保存されます。ターミナルで以下を実行し、正しい置き場所に移動してください。
+聞き終えたら、以下の2ファイルを `secretary_memory/` 配下に作成してください。
 
 ```
-mv ~/Downloads/ceo-home-address.md ~/my_ai_team/secretary_memory/ceo-home-address.md
-```
-```
-mv ~/Downloads/ceo-gluten-free-diet.md ~/my_ai_team/secretary_memory/ceo-gluten-free-diet.md
-```
-```
-mkdir -p ~/my_ai_team/tools/sound_effects
-```
-```
-mv ~/Downloads/cutin_bell.mp3 ~/my_ai_team/tools/sound_effects/cutin_bell.mp3
-```
-```
-mv ~/Downloads/ending_bgm.mp3 ~/my_ai_team/tools/sound_effects/ending_bgm.mp3
+~/my_ai_team/secretary_memory/ceo-home-address.md
+~/my_ai_team/secretary_memory/ceo-gluten-free-diet.md
 ```
 
-配置し忘れると、秘書がCEOの自宅住所・食事制限を思い出せない状態になる、動画部が選定中の効果音素材を失う、といったことが起きるので注意してください。
+**書式は、既にリポジトリに入っている他の秘書メモリファイルに揃えてください。** 実際に `~/my_ai_team/secretary_memory/always-give-eta.md` を開いて中身を確認し、同じ構成(フロントマターの `name` / `description` / `metadata.type` と、本文の「事実」「**Why:**」「**How to apply:**」の構成)で作成してください。`type` はいずれも `user` としてください(住所・食事制約はCEO自身に関する情報のため)。
 
-**秘書メモリのリンクを張る手順は手順5で扱います(先に手順4のリポジトリ配置を終えてから行ってください)。**
+作成後、`secretary_memory/MEMORY.md`(索引ファイル)にこの2件へのリンク行が既にあることを確認してください(すでに `ceo-home-address.md`・`ceo-gluten-free-diet.md` へのリンクが載っているはずなので、通常は追記不要です)。
+
+### 3-2. 効果音mp3は後回しでよい
+
+動画部が選定中の効果音素材(`cutin_bell.mp3`・`ending_bgm.mp3`)は、**CEOが自分宛にメールで添付して送り、Mac側で手動配置する**方法に決まりました。**動画部の作業を始めるまでは不要**なので、この移行作業の中で急いで行う必要はありません。配置先だけ示しておきます。
+
+```
+~/my_ai_team/tools/sound_effects/cutin_bell.mp3
+~/my_ai_team/tools/sound_effects/ending_bgm.mp3
+```
+
+**秘書メモリのリンクを張る手順は次の手順5で扱います(先に3-1のファイル作成を終えてから行ってください)。**
 
 ---
 
@@ -258,7 +225,7 @@ EOF
 
 `tools/whisper/` にあった `ggml-large-v3.bin`(約3GB)・`ggml-small.bin`(488MB)は、**whisper.cpp**(Whisperを軽量・高速に動かすための実装。Apple Siliconの高速化機能(Metal)に対応)用のモデルファイルです。秘書が公式README(https://github.com/ggml-org/whisper.cpp)で確認済みの、現行の正しい手順です。
 
-**方針変更:モデルファイルはMac側で再ダウンロードします。** クラウドドライブもUSBも使わない前提のため、約3GBのファイルをLocalSend経由で送るのは現実的ではありません。幸い、ネットからの再取得手順が確立しているため、そちらを使います。
+**モデルファイルはMac側で再ダウンロードします。** 約3GBあり、Windowsから個別に転送する手段は用意していないため、ネットからの再取得手順を使います。
 
 **重要:モデルファイルの置き場所が変わります。** 旧:`tools/whisper/ggml-large-v3.bin` → 新:`tools/whisper.cpp/models/ggml-large-v3.bin`。
 
@@ -339,10 +306,10 @@ Mac側ですべての手順が終わったら、以下を確認してくださ�
 - [ ] ターミナルで `cd ~/my_ai_team && claude` を実行し、Claude Codeが起動する
 - [ ] 秘書としての挨拶メッセージが表示される(secretary.mdの内容に基づく振る舞いをしている)
 - [ ] `knowledge.md`・`status.md` の内容を秘書が把握している(例:「今どの部署にフォーカスしていますか」と聞いて status.md の内容と一致する回答が返る)
-- [ ] 秘書の過去の記憶が引き継がれている(例:秘書に「私の自宅住所は?」と聞き、正しく答えられるかCEO自身で確認する。正解はこの手順書には書きません。答えられれば手順3・5の秘書メモリ移送とリンク作成が成功している証拠です)
+- [ ] 秘書の過去の記憶が引き継がれている(例:秘書に「私の自宅住所は?」と聞き、正しく答えられるかCEO自身で確認する。正解はこの手順書には書きません。答えられれば手順3のファイル作成と手順5のリンク作成が成功している証拠です)
 - [ ] `/agents` コマンドで5部署(advisory-team, app-team, life-team, pr-team, youtube-team)が一覧に表示される
 - [ ] `/mcp` でNotion連携が「接続済み」になっている(手順7の再認証後)
-- [ ] 移行完了後、秘書からCEOに自宅住所と勤務先を改めて口頭で確認し、秘書メモリ(機微ファイルなのでGit同期対象外)にのみ記録する
+- [ ] 手順3で自宅住所・食事の制約は確認済みのはずなので、**勤務先の会社名だけ**改めてCEOに口頭で確認し、秘書メモリ(機微ファイルなのでGit同期対象外)にのみ記録する。手順3をまだ行っていなければ、自宅住所・食事の制約もあわせてここで確認する
 
 ### 部署ごとの担当マシン一覧
 - **アプリ開発部・動画部** → Mac(開発機材・動画編集環境がMac側にあるため)
