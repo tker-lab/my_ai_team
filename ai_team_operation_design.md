@@ -219,7 +219,7 @@ CEOから「knowledge.mdってメモリですか?」という質問が出て整�
 
 CEOから「秘書にもモデルOpusを書き込める? 基本は必ずOpusで動くようにして、こっちがSonnet/Fableに手動で切り替えた時だけ変えられるようにしたい」と依頼があった。
 
-`update-config` スキルで調査した結果、`.claude/settings.json` の `model` フィールドで「Claude Codeのデフォルトモデルを上書きする」設定が可能と判明。**`c:\Users\PC_User\my_ai_team\.claude\settings.json` に `"model": "opus"` を設定した。**
+`update-config` スキルで調査した結果、`.claude/settings.json` の `model` フィールドで「Claude Codeのデフォルトモデルを上書きする」設定が可能と判明。**`/Users/takahashitakayuki/my_ai_team/.claude/settings.json` に `"model": "opus"` を設定した。**
 
 - これにより、秘書セッションは何も指定しなければ常にOpusで起動する
 - CEOが画面上(またはコマンド)で手動でSonnet/Fableに切り替えた場合は、その回はそちらが優先される(settings.jsonの値は「起動時のデフォルト」であり、手動切り替えを上書きするものではない)
