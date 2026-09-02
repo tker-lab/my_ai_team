@@ -14,7 +14,7 @@
 - **一時停止**:顧問(海外畜産統計の自動取得基盤づくり。9ソース実装済み)。**新しいソース(サイト)から取得する必要が出た時に再開する**(2026-09-01にCEO判断) → 詳細は [advisory_usda_project.md](advisory_usda_project.md)
 - **サブ・ぼちぼち相談**:ライフサポート部(都度カジュアルに相談に乗る程度)
 - **完了**:MacBookへの環境移行(2026-09-01完了)。手順書は [mac_migration.md](mac_migration.md)
-- **着手可能**:アプリ開発部(MacBook移行完了により待ち解除。2026-09-01時点で未着手)
+- **稼働中**:アプリ開発部(2026-09-02にYouTubeネタ帳のNotion構築が完了。2アプリ本体は未着手) → 詳細は [app_team_notion_idea_db.md](app_team_notion_idea_db.md)
 - **一時停止**:広報部(発信するアウトプットが揃ってから本格稼働)
 - **将来構想・未着手**:コミュニケーション基盤(Discord構想) → 詳細は [communication_plan.md](communication_plan.md)
 - **将来構想・仕様待ち**:運営状態ダッシュボード(ルール・部署定義・メモリをPC/スマホから確認できるアプリかサイト) → 経緯は [ai_team_operation_design.md](ai_team_operation_design.md) の9章
