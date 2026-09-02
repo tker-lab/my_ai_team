@@ -20,7 +20,7 @@
 - 連携メモ:栄養関連のリサーチはライフサポート部でも活用できる可能性が高い(要ナレッジ化)
 
 ## 進行中のプロジェクト
-- **YouTubeネタ帳(notion_idea_db)**:Notion上のネタ管理データベース。2026-09-02に構築完了、CEO側の残作業3点あり → 詳細は [app_team_notion_idea_db.md](app_team_notion_idea_db.md)
+- **Notionネタ帳シリーズ(notion_idea_db)**:YouTubeネタ帳(構築完了)/ 広報ネタ帳(2026-09-02構築完了、要チェック工程)→ 詳細は [app_team_notion_idea_db.md](app_team_notion_idea_db.md)
 
 ## 優先順位
 - 未定(今後のヒアリングで決定)
