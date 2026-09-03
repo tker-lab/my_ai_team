@@ -1,0 +1,24 @@
+photofilter_01_after_start.png	t=10.5s
+photofilter_02_after_start_wait.png	t=11.6s
+photofilter_03_r2.png	t=15.9s
+photofilter_04_r4.png	t=20.2s
+photofilter_05_r6.png	t=24.5s
+photofilter_06_r8.png	t=28.7s
+photofilter_07_r10.png	t=33.0s
+photofilter_08_final.png	t=33.1s
+
+media identifiers observed (順番):
+  [0] media-photo-E1020EAD-5ED5-4D0B-8BFF-EE6EF4204A8C/L0/001
+  [1] media-photo-E1020EAD-5ED5-4D0B-8BFF-EE6EF4204A8C/L0/001
+  [2] media-photo-B3E5CC04-05DA-44F6-B2D5-A8B17DBE6577/L0/001
+  [3] media-photo-B3E5CC04-05DA-44F6-B2D5-A8B17DBE6577/L0/001
+  [4] media-photo-ED7AC36B-A150-4C38-BB8C-B6D696F4F2ED/L0/001
+  [5] (none)
+  [6] media-photo-106E99A1-4F6A-45A2-B320-B0AD4A8E8473/L0/001
+  [7] media-photo-9F983DBA-EC35-42B8-8773-B597CF782EDD/L0/001
+  [8] media-photo-9F983DBA-EC35-42B8-8773-B597CF782EDD/L0/001
+  [9] media-photo-6A653F27-3CEB-46B9-8C1C-85244DC19E6C/L0/001
+
+remaining seconds observed (順番): [25, 23, 21, 19, 16, 14, 12, 10, 8, 6]
+distinct media count: 6
+video observed: false

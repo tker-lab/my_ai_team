@@ -1,0 +1,61 @@
+name: PhotoTimer
+options:
+  bundleIdPrefix: com.aiteam
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  PhotoTimer:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: PhotoTimer
+    info:
+      path: PhotoTimer/Info.plist
+      properties:
+        CFBundleDisplayName: 写真タイマー
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSPhotoLibraryUsageDescription: "スライドショーに表示する写真・動画を読み込むために使用します。すべての処理は端末内で完結し、外部へは送信しません。"
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aiteam.PhotoTimer
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+  # 「タイマーが動きながら写真が実際に流れる」ことを人手のタップなしで自動確認するためのUIテスト。
+  # アプリ本体(PhotoTimerターゲット)は一切変更せず、操作・確認のコードのみをここに置く。
+  PhotoTimerUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: PhotoTimerUITests
+    settings:
+      base:
+        SWIFT_VERSION: "5.0"
+        PRODUCT_BUNDLE_IDENTIFIER: com.aiteam.PhotoTimerUITests
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: PhotoTimer
+schemes:
+  PhotoTimer:
+    build:
+      targets:
+        PhotoTimer: all
+        PhotoTimerUITests: [test]
+    test:
+      targets:
+        - PhotoTimerUITests
+    run:
+      config: Debug

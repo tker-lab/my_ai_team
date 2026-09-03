@@ -1,0 +1,14 @@
+# Xcodeが生成する中間ファイル(xcodegenで再生成できるので追跡しない)
+*.xcodeproj/
+DerivedData/
+build/
+*.xcuserstate
+*.xcuserdatad/
+.DS_Store
+
+# Info.plistはxcodegenが project.yml から自動生成するため追跡しない
+PhotoTimer/Info.plist
+
+# 自動確認テスト(XCUITest)が毎回上書き生成するスクリーンショット・記録。再実行すれば作り直せるため追跡しない
+verify/*.png
+verify/manifest.txt

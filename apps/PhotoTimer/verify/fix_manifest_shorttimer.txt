@@ -1,0 +1,7 @@
+shorttimer_01_wheel_set_sanity_2m15s.png	t=2.6s
+shorttimer_02_wheel_set_30s.png	t=2.8s
+shorttimer_03_after_start.png	t=5.7s
+shorttimer_04_after_start_wait.png	t=6.9s
+first remaining label: 00:28 (28秒)
+shorttimer_05_after_3s.png	t=10.1s
+later remaining label: 00:25 (25秒)

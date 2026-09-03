@@ -1,0 +1,9 @@
+videofilter_01_after_start.png	t=10.4s
+videofilter_02_r1_media-video-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462-L0-001.png	t=12.5s
+videofilter_03_r2_media-video-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462-L0-001.png	t=14.6s
+videofilter_04_r3_media-video-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462-L0-001.png	t=16.7s
+videofilter_05_r4_media-video-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462-L0-001.png	t=18.8s
+videofilter_06_r5_media-video-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462-L0-001.png	t=21.0s
+videofilter_07_r6_media-video-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462-L0-001.png	t=23.1s
+videofilter_08_r7_media-video-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462-L0-001.png	t=25.2s
+videofilter_09_r8_media-video-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462-L0-001.png	t=27.3s

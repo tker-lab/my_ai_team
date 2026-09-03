@@ -3,3 +3,7 @@
 - [Notion Views APIの最新状況(確認済み)](notion-views-api-update.md) — ボード/リスト等は自動作成可能、ただしビュー並び替え・デフォルト指定はAPI非公開
 - [Notion MCPにはページ削除ツールがない](notion-page-deletion-limitation.md) — テスト行は目印を付けてCEOに手動削除を依頼する運用
 - [大部な成果物は一気に作らず小さく確認しながら進める](feedback-incremental-delivery.md) — 秘書指示が途中で縮小されがちなので執筆前に一呼吸置く
+- [Xcodeセットアップ手順とsudo制約](xcode-setup-mac.md) — この実行環境はsudo非対話、Xcode直接DL版はiOSランタイム別ダウンロード必要、xcodegenでGUI無しにプロジェクト作成可
+- [シミュレータの写真アクセス許可ダイアログはXCUITestから自動突破できる](simulator-photos-permission-limitation.md) — CEOへの手動タップ依頼が不要に(2026-09-04解決)
+- [PHFetchOptions.predicateに定数predicateを入れるとクラッシュ](photos-fetchoptions-predicate-crash.md) — 絞り込みなし時はnilのままにする。PhotoTimerで実際に発生
+- [XCUITest+アクセシビリティIDで画面の実際の変化を自動確認する手法](xcuitest-accessibility-id-content-change-detection.md) — GUI操作不可でも「動いているか」を確認できる
