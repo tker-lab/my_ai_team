@@ -23,7 +23,10 @@ actor AnalysisCache {
     private let fileURL: URL = {
         let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return dir.appendingPathComponent("analysis_cache.json")
+        let url = dir.appendingPathComponent("analysis_cache.json")
+        // CEO判断(2026-09-04): 解析結果はiCloudバックアップの対象外にする(BackupExclusion.swift参照)
+        BackupExclusion.exclude(url)
+        return url
     }()
 
     private func loadIfNeeded() {
@@ -59,7 +62,9 @@ actor AnalysisCache {
         saveTask = Task {
             // 書き込みをまとめるため少し待ってから保存する(1枚ごとにディスクI/Oしない)
             try? await Task.sleep(nanoseconds: 2_000_000_000)
-            await self.persist()
+            // このTaskはAnalysisCacheアクター自身の中から作られているため、persist()の呼び出しに
+            // awaitは不要(不要なawaitがビルド警告になっていたのを修正)。
+            self.persist()
             self.saveTask = nil
         }
     }
@@ -69,11 +74,31 @@ actor AnalysisCache {
         isDirty = false
         guard let data = try? JSONEncoder().encode(storage) else { return }
         try? data.write(to: fileURL, options: .atomic)
+        // ファイルが存在して初めて設定できる属性のため、書き込み後にも改めて指定する
+        // (初回はファイルがまだ無い状態でこの属性を試みても効かないため)
+        BackupExclusion.exclude(fileURL)
     }
 
     /// 端末内に蓄積された解析件数(設定画面などでの表示用)
     func count() -> Int {
         loadIfNeeded()
         return storage.count
+    }
+
+    /// 削除された写真の解析結果をキャッシュから取り除く(軽微な指摘:削除済み写真の結果が
+    /// 残り続ける問題への対応)。LibraryIndexが写真ライブラリの差分検知(原則4)で
+    /// 「削除された」と分かった localIdentifier をそのまま渡す想定で、ここで新たに写真を
+    /// 探しにいくことはしない。
+    func removeAnalyses(for deletedLocalIdentifiers: [String]) {
+        guard !deletedLocalIdentifiers.isEmpty else { return }
+        loadIfNeeded()
+        var didRemove = false
+        for id in deletedLocalIdentifiers where storage.removeValue(forKey: id) != nil {
+            didRemove = true
+        }
+        if didRemove {
+            isDirty = true
+            scheduleSaveIfNeeded()
+        }
     }
 }

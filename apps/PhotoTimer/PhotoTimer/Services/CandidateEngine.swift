@@ -16,19 +16,19 @@ actor CandidateEngine {
     private var shuffledAssets: [PHAsset] = []
     private var cursor = 0
     private let settings: FilterSettings
-    private let placeClusters: [PlaceCluster]
-    /// 選択された場所クラスタとみなす半径(クラスタ生成時のマス目よりひと回り広めに取る)
-    private let placeMatchRadiusMeters: CLLocationDistance = 6000
 
     init(settings: FilterSettings, placeClusters: [PlaceCluster]) {
         self.settings = settings
-        self.placeClusters = placeClusters
+        // placeClusters は以前「場所」の一致判定(距離計算)に使っていたが、2026-09-04の修正で
+        // 「同じマス目(bucketKey)かどうか」で厳密に判定する方式に変えたため、クラスタの実体
+        // (中心座標など)はもう不要になった。呼び出し側(TimerController等)のAPIを変えずに済むよう
+        // 引数はそのまま受け取るが、ここでは使わない。
     }
 
     /// 候補プールを準備する(原則1:選択肢は固定/自動生成済みのものだけを使い、ここでは絞り込みの実行のみ)
     func prepare() {
         let assets = Self.fetchBaseAssets(settings: settings)
-        let filtered = assets.filter { Self.passesMetadataFilters($0, settings: settings, placeClusters: placeClusters, radius: placeMatchRadiusMeters) }
+        let filtered = assets.filter { Self.passesMetadataFilters($0, settings: settings) }
         shuffledAssets = filtered.shuffled()
         cursor = 0
     }
@@ -93,6 +93,10 @@ actor CandidateEngine {
         if settings.selectedAlbumIDs.isEmpty {
             appendAssets(from: PHAsset.fetchAssets(with: options))
         } else {
+            // 【指摘F関連】選んだアルバムが写真アプリ側で削除されていた場合、ここでは
+            // 単にそのIDが見つからず何も追加されない(=黙って0枚扱い)。ユーザーが
+            // 「選んだはずのアルバムが消えている」ことに気づいて解除できるようにする対応は
+            // FilterOptionsView側(表示できるアルバム一覧と選択IDを突き合わせるUI)で行っている。
             let collections = PHAssetCollection.fetchAssetCollections(withLocalIdentifiers: Array(settings.selectedAlbumIDs), options: nil)
             collections.enumerateObjects { collection, _, _ in
                 appendAssets(from: PHAsset.fetchAssets(in: collection, options: options))
@@ -137,7 +141,7 @@ actor CandidateEngine {
 
     /// mediaSubtype(スクリーンショット・Live Photo)や位置情報は、Photos側のpredicateに頼らず
     /// 取得済みのPHAssetプロパティをその場でチェックするだけ(解析ではなくメタ情報の参照なので原則2の対象外)。
-    private static func passesMetadataFilters(_ asset: PHAsset, settings: FilterSettings, placeClusters: [PlaceCluster], radius: CLLocationDistance) -> Bool {
+    private static func passesMetadataFilters(_ asset: PHAsset, settings: FilterSettings) -> Bool {
         if settings.excludeScreenshots, asset.mediaSubtypes.contains(.photoScreenshot) {
             return false
         }
@@ -145,12 +149,13 @@ actor CandidateEngine {
             return false
         }
         if !settings.selectedPlaceIDs.isEmpty {
-            guard let location = asset.location else { return false }
-            let selectedClusters = placeClusters.filter { settings.selectedPlaceIDs.contains($0.id) }
-            let matchesAnyCluster = selectedClusters.contains { cluster in
-                location.distance(from: cluster.location) <= radius
-            }
-            if !matchesAnyCluster { return false }
+            guard let coordinate = asset.location?.coordinate else { return false }
+            // 「場所」クラスタと同じマス目(bucketKey)に属するかで判定する(指摘H対応)。
+            // 以前は「クラスタ中心から半径◯km以内」という距離判定だったが、クラスタを作る時の
+            // マス目のサイズ(約5.5km四方)と半径(6km)がズレていて隣のマスまで混ざっていた。
+            // 同じマス目かどうかという厳密な判定にすれば、ズレそのものが原理的に発生しない。
+            let key = LocationClusterer.bucketKey(for: coordinate)
+            if !settings.selectedPlaceIDs.contains(key) { return false }
         }
         return true
     }

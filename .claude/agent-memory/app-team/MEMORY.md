@@ -7,3 +7,6 @@
 - [シミュレータの写真アクセス許可ダイアログはXCUITestから自動突破できる](simulator-photos-permission-limitation.md) — CEOへの手動タップ依頼が不要に(2026-09-04解決)
 - [PHFetchOptions.predicateに定数predicateを入れるとクラッシュ](photos-fetchoptions-predicate-crash.md) — 絞り込みなし時はnilのままにする。PhotoTimerで実際に発生
 - [XCUITest+アクセシビリティIDで画面の実際の変化を自動確認する手法](xcuitest-accessibility-id-content-change-detection.md) — GUI操作不可でも「動いているか」を確認できる
+- [@MainActorクラス内のTask{}は画面スレッドで動き続ける](mainactor-background-work-pattern.md) — 本当にバックグラウンド化するにはnonisolated+Task.detachedが必要
+- [写真ライブラリの差分だけ取得するAPIの動作確認済みコード](phaassetlibrary-differential-scan-api.md) — PHPersistentChangeToken/fetchPersistentChanges(since:)
+- [XCUITestのForm下部LazyVGridはスクロールしないと見つからない/シミュレータ既定写真6枚は消せない](xcuitest-lazy-form-scroll-and-simulator-seed-photos.md)

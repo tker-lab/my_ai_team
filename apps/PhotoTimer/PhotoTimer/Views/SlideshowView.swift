@@ -42,8 +42,8 @@ struct SlideshowView: View {
             VStack {
                 topBar
                 Spacer()
-                if controller.noCandidatesFound {
-                    noResultsView
+                if let reason = controller.noCandidatesReason {
+                    noResultsView(reason: reason)
                 } else if controller.phase == .finished {
                     finishedView
                 }
@@ -53,9 +53,13 @@ struct SlideshowView: View {
         .statusBarHidden()
         .onAppear {
             controller.start(totalDurationSeconds: totalSeconds, settings: settings, playbackSettings: playbackSettings, placeClusters: placeClusters)
+            // 指摘C: スライドショー中は画面の自動ロックを止める(この画面にいる間だけ)。
+            UIApplication.shared.isIdleTimerDisabled = true
         }
         .onDisappear {
             controller.stop()
+            // この画面を離れたら元に戻す(スライドショー中以外は通常どおり自動ロックさせる)。
+            UIApplication.shared.isIdleTimerDisabled = false
         }
         .animation(.easeInOut(duration: 0.4), value: controller.currentAsset?.localIdentifier)
     }
@@ -83,13 +87,16 @@ struct SlideshowView: View {
         }
     }
 
-    private var noResultsView: some View {
+    /// 指摘I対応: 「条件に合う写真が無い」のか「合う写真はあるが読み込みに失敗した」のかで
+    /// メッセージを変える(原因が分かった方がユーザーが次に何をすべきか判断しやすいため)。
+    private func noResultsView(reason: TimerController.NoCandidatesReason) -> some View {
         VStack(spacing: 12) {
-            Image(systemName: "photo.on.rectangle.angled")
+            Image(systemName: reason == .loadFailed ? "icloud.slash" : "photo.on.rectangle.angled")
                 .font(.largeTitle)
                 .foregroundStyle(.white)
-            Text("条件に合う写真・動画が見つかりませんでした")
+            Text(message(for: reason))
                 .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
             Button("閉じる") { dismiss() }
                 .buttonStyle(.borderedProminent)
         }
@@ -97,6 +104,15 @@ struct SlideshowView: View {
         .frame(maxWidth: .infinity)
         .background(.black.opacity(0.5), in: RoundedRectangle(cornerRadius: 16))
         .padding(.bottom, 40)
+    }
+
+    private func message(for reason: TimerController.NoCandidatesReason) -> String {
+        switch reason {
+        case .noMatchingPhotos:
+            return "条件に合う写真・動画が見つかりませんでした"
+        case .loadFailed:
+            return "写真・動画を読み込めませんでした\n(iCloud上にしか無い写真で、電波が届いていない可能性があります)"
+        }
     }
 
     private var finishedView: some View {

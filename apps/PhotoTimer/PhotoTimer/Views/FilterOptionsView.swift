@@ -26,8 +26,11 @@ struct FilterOptionsView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("完了") { dismiss() }
                 }
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("すべて解除") { settings = .default }
+                // 「すべて解除」は以前、画面左上の「キャンセル」の定位置(cancellationAction)に
+                // 置いていたため誤タップしやすかった(タップすると条件が全部消えてしまう)。
+                // 破壊的な操作なので、押しやすいが押し間違えにくい位置(下部ツールバー)に移した。
+                ToolbarItem(placement: .bottomBar) {
+                    Button("すべて解除", role: .destructive) { settings = .default }
                 }
             }
         }
@@ -36,7 +39,7 @@ struct FilterOptionsView: View {
     // MARK: - 日時
 
     private var dateSection: some View {
-        Section("日時") {
+        Section {
             Picker("期間", selection: dateRangeBinding) {
                 Text("すべて").tag(0)
                 Text("今年").tag(1)
@@ -46,10 +49,36 @@ struct FilterOptionsView: View {
             if case .custom = settings.dateRange {
                 DatePicker("開始", selection: $customFrom, displayedComponents: .date)
                 DatePicker("終了", selection: $customTo, displayedComponents: .date)
-                    .onChange(of: customFrom) { _, _ in settings.dateRange = .custom(from: customFrom, to: customTo) }
-                    .onChange(of: customTo) { _, _ in settings.dateRange = .custom(from: customFrom, to: customTo) }
+                    .onChange(of: customFrom) { _, newValue in applyCustomDateRange(from: newValue, to: customTo) }
+                    .onChange(of: customTo) { _, newValue in applyCustomDateRange(from: customFrom, to: newValue) }
+            }
+        } header: {
+            Text("日時")
+        } footer: {
+            if case .custom = settings.dateRange {
+                Text("開始日の0時から終了日の24時までが対象になります。")
             }
         }
+    }
+
+    /// カスタム期間(開始・終了)を確定させる。以下の2点を自動で補正する(不具合修正):
+    ///  1. 開始が終了より後になっていたら、終了を開始に合わせる(範囲が逆転しないようにする)。
+    ///  2. 開始日は0時、終了日は23:59:59として扱う。DatePickerで選ぶのは「日付」だけだが、
+    ///     内部的にはDateなので時刻の情報も持っている。何もしないと、この画面を開いた瞬間の
+    ///     現在時刻がそのまま終了日の時刻として使われてしまい、「終了日当日の夕方以降に撮った
+    ///     写真だけ対象から漏れる」という分かりにくい不具合が起きていた。
+    private func applyCustomDateRange(from: Date, to: Date) {
+        let calendar = Calendar.current
+        var to = to
+        if from > to {
+            to = from
+        }
+        customFrom = from
+        customTo = to
+
+        let startOfDay = calendar.startOfDay(for: from)
+        let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: to) ?? to
+        settings.dateRange = .custom(from: startOfDay, to: endOfDay)
     }
 
     private var dateRangeBinding: Binding<Int> {
@@ -67,7 +96,7 @@ struct FilterOptionsView: View {
                 case 0: settings.dateRange = .all
                 case 1: settings.dateRange = .thisYear
                 case 2: settings.dateRange = .thisMonth
-                default: settings.dateRange = .custom(from: customFrom, to: customTo)
+                default: applyCustomDateRange(from: customFrom, to: customTo)
                 }
             }
         )
@@ -98,6 +127,13 @@ struct FilterOptionsView: View {
 
     // MARK: - アルバム
 
+    /// 選択済みだが、もう写真アプリ側のアルバム一覧に存在しないID(=削除された等)。
+    /// 【指摘F対応】以前はこの状態になると、一覧に行が出ないため選択を解除する手段が無かった
+    /// (絞り込み条件は「アルバムN件」の表示のまま無効になり続けていた)。
+    private var missingSelectedAlbumIDs: Set<String> {
+        settings.selectedAlbumIDs.subtracting(libraryIndex.albums.map(\.id))
+    }
+
     private var albumSection: some View {
         Section {
             if libraryIndex.albums.isEmpty {
@@ -112,10 +148,21 @@ struct FilterOptionsView: View {
                     }
                 }
             }
+            if !missingSelectedAlbumIDs.isEmpty {
+                Button(role: .destructive) {
+                    settings.selectedAlbumIDs.subtract(missingSelectedAlbumIDs)
+                } label: {
+                    Text("見つからないアルバムの選択を解除(\(missingSelectedAlbumIDs.count)件)")
+                }
+            }
         } header: {
             Text("アルバム")
         } footer: {
-            Text("何も選ばない場合はすべてのアルバムが対象になります。")
+            if missingSelectedAlbumIDs.isEmpty {
+                Text("何も選ばない場合はすべてのアルバムが対象になります。")
+            } else {
+                Text("選択していたアルバムが写真アプリ側で削除されたため見つかりません。上のボタンで選択を解除できます。")
+            }
         }
     }
 

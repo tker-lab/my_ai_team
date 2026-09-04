@@ -1,5 +1,5 @@
-v3_onesecond_01_wheel_set_1s.png	t=8.3s
+v3_onesecond_01_wheel_set_1s.png	t=8.2s
 range label: 設定可能な範囲: 1秒 〜 180分
 home time label before start: 00:01
-v3_onesecond_02_after_wait.png	t=10.9s
-elapsed until finished: 2.39s
+v3_onesecond_02_after_wait.png	t=10.8s
+elapsed until finished: 2.37s

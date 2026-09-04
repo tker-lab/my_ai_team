@@ -1,0 +1,2 @@
+deny dialog found=true
+v4_denied_01_after_deny.png	t=4.2s

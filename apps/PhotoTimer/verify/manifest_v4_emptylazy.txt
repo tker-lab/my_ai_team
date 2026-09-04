@@ -1,0 +1,4 @@
+v4_emptylazy_01_mood_緑_category_花火_set.png	t=19.6s
+v4_emptylazy_02_settled_as_normal_slideshow.png	t=23.8s
+settledAs=normal_slideshow elapsed=0.8s
+v4_emptylazy_03_after_close.png	t=25.6s

@@ -2,57 +2,239 @@ import Foundation
 import Photos
 import CoreLocation
 
-/// 「場所」フィルタの選択肢を、ユーザー自身の写真の撮影地から自動生成する。
+/// 「場所」フィルタの選択肢を、ユーザー自身の写真の撮影地から自動生成・維持する。
 ///
 /// 設計書の方針:
 /// 「座標を読む(一瞬)→ 近いもの同士をクラスタリング(30〜50箇所に収束)→
 ///   かたまりの中心だけ地名変換。フリー入力不要、撮っていない場所は出ない。」
 ///
+/// 【2026-09-04大幅修正(チェック工程の指摘対応)】
+/// 修正前は「起動のたびに全写真を読み直してクラスタを作り直す」実装だった(原則4違反)。
+/// 今は状態を持つアクターにして、以下の3つを端末内に保持し、写真の増減の「差分」だけを反映する:
+///  1. マス目(バケット)ごとの緯度・経度の合計値と枚数(クラスタの中心を出すための材料)
+///  2. 「どの写真がどのマス目に属していたか」(写真が削除された時に(1)から正しく引き算するため。
+///     削除された写真そのものからは、もう緯度経度を読めないため)
+///  3. マス目ごとに一度変換した地名のキャッシュ(原則3と同じ考え方。地名変換をやり直さないことで、
+///     Apple地名変換サーバーへのリクエスト回数も最小限にする=指摘Gのレート制限対策を兼ねる)
+///
 /// 地名変換(reverse geocoding)は CLGeocoder という「OS標準機能」を使う。これは端末から
 /// Apple の地図サーバーへ座標を送って地名を受け取る仕組みだが、CEOの制約における「外部送信禁止」の
 /// 例外として明示的に許可されている(このアプリ自身が独自サーバーと通信するわけではない)。
-/// クラスタの中心1点だけを変換するので、送信されるのは「だいたいの地域の代表点」約30〜50件のみ。
-enum LocationClusterer {
+/// マス目1つにつき一度だけ変換すればよいため、送信されるのは「だいたいの地域の代表点」だけ。
+actor LocationClusterer {
+    static let shared = LocationClusterer()
 
     /// 経度・緯度をこの度数間隔(約5.5km四方)でまとめて、同じマスに入った写真を1クラスタとする。
-    /// 簡易的だが、写真ごとの解析(Vision等)を伴わないためコストはほぼゼロで、原則2の対象外(そもそも「解析」ではなくメタ情報の集計)。
     private static let gridSize = 0.05
 
-    /// PHAsset の位置情報(メタ情報。取得済みのプロパティを読むだけで解析は不要)からクラスタを作る。
-    static func buildClusters(from assets: [PHAsset]) async -> [PlaceCluster] {
-        var buckets: [String: (sumLat: Double, sumLon: Double, count: Int)] = [:]
+    /// 「場所」の絞り込み一致判定は、以前は独立した半径(6km)を使っていたが、マス目(約5.5km四方)と
+    /// サイズがズレており隣のマスまで混ざって拾ってしまう不具合があった(指摘H)。
+    /// 今は「同じマス目(bucketKey)に属するか」で厳密に判定するように変更したため、
+    /// 独立した半径パラメータ自体が不要になった(=ズレが原理的に起こらない)。
+    /// 判定の実体は `CandidateEngine` 側で `LocationClusterer.bucketKey(for:)` を直接使っている。
 
-        for asset in assets {
-            guard let location = asset.location else { continue }
-            let key = bucketKey(for: location.coordinate)
-            var bucket = buckets[key] ?? (0, 0, 0)
-            bucket.sumLat += location.coordinate.latitude
-            bucket.sumLon += location.coordinate.longitude
-            bucket.count += 1
-            buckets[key] = bucket
-        }
+    // MARK: - 永続化する内部状態
 
-        // 枚数が多い順に並べ、上限50箇所までに絞る(設計書の「30〜50箇所に収束」に合わせる)
-        let topBuckets = buckets.values.sorted { $0.count > $1.count }.prefix(50)
-
-        var clusters: [PlaceCluster] = []
-        for bucket in topBuckets where bucket.count > 0 {
-            let centerLat = bucket.sumLat / Double(bucket.count)
-            let centerLon = bucket.sumLon / Double(bucket.count)
-            let name = await reverseGeocodeName(latitude: centerLat, longitude: centerLon)
-            let id = "\(round(centerLat * 100))_\(round(centerLon * 100))"
-            clusters.append(PlaceCluster(id: id, displayName: name, centerLatitude: centerLat, centerLongitude: centerLon, assetCount: bucket.count))
-        }
-        return clusters
+    private struct BucketAggregate: Codable {
+        var sumLatitude: Double
+        var sumLongitude: Double
+        var count: Int
+        /// 一度変換できた地名のキャッシュ。あれば再変換しない(原則3 + 指摘G対策)。
+        var placeName: String?
     }
 
-    private static func bucketKey(for coordinate: CLLocationCoordinate2D) -> String {
+    private struct AssetLocation: Codable {
+        var bucketKey: String
+        var latitude: Double
+        var longitude: Double
+    }
+
+    private struct PersistedState: Codable {
+        var buckets: [String: BucketAggregate] = [:]
+        var assetLocations: [String: AssetLocation] = [:]
+    }
+
+    private var state = PersistedState()
+    private var isLoaded = false
+
+    private let fileURL: URL = {
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent("location_index.json")
+    }()
+
+    private func loadIfNeeded() {
+        guard !isLoaded else { return }
+        isLoaded = true
+        guard let data = try? Data(contentsOf: fileURL),
+              let decoded = try? JSONDecoder().decode(PersistedState.self, from: data) else {
+            return
+        }
+        state = decoded
+    }
+
+    private func persist() {
+        guard let data = try? JSONEncoder().encode(state) else { return }
+        try? data.write(to: fileURL, options: .atomic)
+        // CEO判断(2026-09-04): 場所データ(自宅周辺の座標・地名を含みうる)はバックアップ対象外にする
+        BackupExclusion.exclude(fileURL)
+    }
+
+    // MARK: - マス目の計算(純粋な関数。アクターの状態を使わないので nonisolated で呼び出し可能)
+
+    /// 緯度経度からマス目のキー文字列を作る。写真の増減があっても、その写真自身の座標が
+    /// 変わらない限りこの値は変わらない(=安定した識別子。指摘Fへの対応)。
+    nonisolated static func bucketKey(for coordinate: CLLocationCoordinate2D) -> String {
         let latBucket = (coordinate.latitude / gridSize).rounded(.down)
         let lonBucket = (coordinate.longitude / gridSize).rounded(.down)
         return "\(latBucket)_\(lonBucket)"
     }
 
-    private static func reverseGeocodeName(latitude: Double, longitude: Double) async -> String {
+    // MARK: - 差分の反映(原則4の本体)
+
+    /// 初回起動時、またはトークンが失効して差分を追えなくなった時だけ呼ぶ、全件からの再構築。
+    /// 呼び出し側(LibraryIndex)がバックグラウンドスレッドで組み立てた `[PHAsset]` を渡す想定。
+    func rebuildFully(assets: [PHAsset]) async -> [PlaceCluster] {
+        loadIfNeeded()
+        state = PersistedState()
+        for asset in assets {
+            guard let coordinate = asset.location?.coordinate else { continue }
+            addContribution(assetID: asset.localIdentifier, coordinate: coordinate)
+        }
+        return await resolveClusters()
+    }
+
+    /// 前回からの差分(追加・更新・削除)だけを反映する。これが原則4の通常経路。
+    /// 削除は localIdentifier だけで処理できる(位置は不要)。追加・更新は対象の PHAsset を渡す。
+    func applyChanges(insertedOrUpdated: [PHAsset], deletedIdentifiers: [String]) async -> [PlaceCluster] {
+        loadIfNeeded()
+        for id in deletedIdentifiers {
+            removeContribution(assetID: id)
+        }
+        for asset in insertedOrUpdated {
+            if let coordinate = asset.location?.coordinate {
+                addContribution(assetID: asset.localIdentifier, coordinate: coordinate)
+            } else {
+                // 位置情報が無い(元々無い、または編集で消えた)場合は、以前の分だけ取り消す
+                removeContribution(assetID: asset.localIdentifier)
+            }
+        }
+        return await resolveClusters()
+    }
+
+    /// 保存済みの内部状態から、今すぐ表示できる `[PlaceCluster]` を組み立てる(地名変換なし。高速)。
+    /// アプリ起動直後、写真の差分確認が終わる前でも「前回までの場所選択肢」を即座に見せるために使う。
+    func currentClustersWithoutGeocoding() async -> [PlaceCluster] {
+        loadIfNeeded()
+        return buildClusterList(resolveNewNames: false).clusters
+    }
+
+    private func addContribution(assetID: String, coordinate: CLLocationCoordinate2D) {
+        // 更新イベントで同じ写真が来ることもあるため、先に古い分があれば取り消してから入れ直す
+        removeContribution(assetID: assetID)
+        let key = Self.bucketKey(for: coordinate)
+        var bucket = state.buckets[key] ?? BucketAggregate(sumLatitude: 0, sumLongitude: 0, count: 0, placeName: nil)
+        bucket.sumLatitude += coordinate.latitude
+        bucket.sumLongitude += coordinate.longitude
+        bucket.count += 1
+        state.buckets[key] = bucket
+        state.assetLocations[assetID] = AssetLocation(bucketKey: key, latitude: coordinate.latitude, longitude: coordinate.longitude)
+    }
+
+    private func removeContribution(assetID: String) {
+        guard let loc = state.assetLocations.removeValue(forKey: assetID),
+              var bucket = state.buckets[loc.bucketKey] else { return }
+        bucket.sumLatitude -= loc.latitude
+        bucket.sumLongitude -= loc.longitude
+        bucket.count -= 1
+        if bucket.count <= 0 {
+            state.buckets.removeValue(forKey: loc.bucketKey)
+        } else {
+            state.buckets[loc.bucketKey] = bucket
+        }
+    }
+
+    // MARK: - 一覧の組み立て・地名変換
+
+    private struct BuiltList {
+        var clusters: [PlaceCluster]
+        /// 今回新しく地名変換が必要になったマス目のキー(まだ未変換のもの)
+        var pendingGeocodeKeys: [String]
+    }
+
+    /// 枚数が多い順に並べ、上限50箇所までに絞る(設計書の「30〜50箇所に収束」に合わせる)。
+    /// `resolveNewNames: false` の時は、まだ地名変換していないマス目は座標そのままのラベルにしておく
+    /// (呼び出し側が resolveClusters() で改めて解決する)。
+    private func buildClusterList(resolveNewNames: Bool) -> BuiltList {
+        let top = state.buckets.sorted { $0.value.count > $1.value.count }.prefix(50)
+        var clusters: [PlaceCluster] = []
+        var pending: [String] = []
+        for (key, bucket) in top {
+            guard bucket.count > 0 else { continue }
+            let centerLat = bucket.sumLatitude / Double(bucket.count)
+            let centerLon = bucket.sumLongitude / Double(bucket.count)
+            if let name = bucket.placeName {
+                clusters.append(PlaceCluster(id: key, displayName: name, centerLatitude: centerLat, centerLongitude: centerLon, assetCount: bucket.count))
+            } else {
+                pending.append(key)
+                let placeholder = String(format: "北緯%.1f, 東経%.1f 付近", centerLat, centerLon)
+                clusters.append(PlaceCluster(id: key, displayName: placeholder, centerLatitude: centerLat, centerLongitude: centerLon, assetCount: bucket.count))
+            }
+        }
+        return BuiltList(clusters: clusters.sorted { $0.assetCount > $1.assetCount }, pendingGeocodeKeys: pending)
+    }
+
+    /// 一覧を組み立て、まだ地名変換していないマス目だけレート制限をかけながら変換し、結果をキャッシュに保存する。
+    private func resolveClusters() async -> [PlaceCluster] {
+        let built = buildClusterList(resolveNewNames: true)
+        guard !built.pendingGeocodeKeys.isEmpty else {
+            persist()
+            return built.clusters
+        }
+
+        for key in built.pendingGeocodeKeys {
+            guard var bucket = state.buckets[key] else { continue }
+            let centerLat = bucket.sumLatitude / Double(bucket.count)
+            let centerLon = bucket.sumLongitude / Double(bucket.count)
+            let name = await reverseGeocodeNameRateLimited(latitude: centerLat, longitude: centerLon)
+            bucket.placeName = name
+            state.buckets[key] = bucket
+        }
+        persist()
+        return buildClusterList(resolveNewNames: true).clusters
+    }
+
+    // MARK: - 地名変換(レート制限つき。指摘G対応)
+
+    /// CLGeocoderは短時間に連続で呼ぶとレート制限にかかり、失敗が増える(指摘G)。
+    /// 呼び出し間隔を約1.1秒空け、失敗時は少し待って1回だけ再試行する。
+    /// マス目ごとに一度変換すれば以後は再利用する(このメソッド自体が呼ばれるのは「新しいマス目」の時だけ)ので、
+    /// 通常運用でこの間隔が問題になるのは初回起動時などまとまった数の新しい場所が一度に出た時だけ。
+    private var lastGeocodeAt: Date?
+    private static let minGeocodeInterval: TimeInterval = 1.1
+
+    private func reverseGeocodeNameRateLimited(latitude: Double, longitude: Double) async -> String {
+        if let lastGeocodeAt {
+            let elapsed = Date().timeIntervalSince(lastGeocodeAt)
+            if elapsed < Self.minGeocodeInterval {
+                try? await Task.sleep(nanoseconds: UInt64((Self.minGeocodeInterval - elapsed) * 1_000_000_000))
+            }
+        }
+        lastGeocodeAt = Date()
+
+        if let name = await reverseGeocodeName(latitude: latitude, longitude: longitude) {
+            return name
+        }
+        // レート制限・電波不良などの一時的な失敗を想定し、少し間を置いて1回だけ再試行する
+        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        lastGeocodeAt = Date()
+        if let name = await reverseGeocodeName(latitude: latitude, longitude: longitude) {
+            return name
+        }
+        return String(format: "北緯%.1f, 東経%.1f 付近", latitude, longitude)
+    }
+
+    private func reverseGeocodeName(latitude: Double, longitude: Double) async -> String? {
         let geocoder = CLGeocoder()
         let location = CLLocation(latitude: latitude, longitude: longitude)
         do {
@@ -62,8 +244,8 @@ enum LocationClusterer {
                 return place.locality ?? place.administrativeArea ?? place.country ?? "不明な場所"
             }
         } catch {
-            // ネットワーク不通・レート制限などで失敗しても、座標そのままより分かりやすい表示にフォールバック
+            // 呼び出し側でリトライ、それでも失敗すれば座標表示にフォールバックする
         }
-        return String(format: "北緯%.1f, 東経%.1f 付近", latitude, longitude)
+        return nil
     }
 }
