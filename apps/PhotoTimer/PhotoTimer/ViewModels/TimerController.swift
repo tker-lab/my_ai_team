@@ -10,8 +10,12 @@ import AudioToolbox
 ///  - 全体のカウントダウン(ユーザーが設定した時間。例:10分)
 ///  - 1枚あたりの表示時間(写真は設定した秒数。動画は「最後まで再生」か「指定秒数で切り上げ」を設定で選べる)
 /// カウントダウンが0になったら、今の1枚を最後にスライドショーを止め、アラーム音を鳴らす。
+///
+/// 【NSObjectを継承している理由】AVAudioPlayerの再生終了通知(AVAudioPlayerDelegate)を
+/// 直接このクラスで受け取るため。AVAudioPlayerDelegateはNSObjectProtocolを前提とする
+/// (Objective-C由来の)プロトコルのため、これに準拠するにはNSObjectのサブクラスである必要がある。
 @MainActor
-final class TimerController: ObservableObject {
+final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
     enum Phase: Equatable {
         case idle
         case running
@@ -41,16 +45,22 @@ final class TimerController: ObservableObject {
     /// その場合でも「切り替わった」ことが自動テスト(XCUITest)から見分けられるようにするための値。
     /// 画面の見た目には一切影響しない(アクセシビリティIDの一部としてのみ使う)。
     @Published private(set) var displayToken: Int = 0
+    /// アラームが今まさに鳴っている(振動含む)かどうか。SlideshowViewが「アラームを止める」ボタンを
+    /// 出すかどうかの判断に使う。CEO要望(2026-09-05):止めるまで鳴り続けるパターンを追加したため、
+    /// 「今鳴っているか」を画面側が知る手段が必要になった。
+    @Published private(set) var isAlarmSounding: Bool = false
 
     /// 写真1枚あたりの表示秒数・動画の再生時間の扱い。CEO要望(2026-09-04)によりユーザー設定可能。
     /// `start(...)` の呼び出し時に渡された値をここに保持する(既定値は元の固定値と同じ)。
     private var playbackSettings: PlaybackSettings = .default
+    /// アラームの鳴らし方(音色・n回/止めるまで・バイブレーション)。CEO要望(2026-09-05)によりユーザー設定可能。
+    private var alarmSettings: AlarmSettings = .default
 
     private var engine: CandidateEngine?
     private var runLoopTask: Task<Void, Never>?
     private var countdownTask: Task<Void, Never>?
 
-    func start(totalDurationSeconds: Int, settings: FilterSettings, playbackSettings: PlaybackSettings, placeClusters: [PlaceCluster]) {
+    func start(totalDurationSeconds: Int, settings: FilterSettings, playbackSettings: PlaybackSettings, alarmSettings: AlarmSettings, placeClusters: [PlaceCluster]) {
         stop()
 
         phase = .running
@@ -58,6 +68,15 @@ final class TimerController: ObservableObject {
         totalSeconds = totalDurationSeconds
         remainingSeconds = totalDurationSeconds
         self.playbackSettings = playbackSettings
+        self.alarmSettings = alarmSettings
+
+        // 【2026-09-05追加:マナーモードで鳴らなかった不具合の対策の1つ】
+        // 以前はタイマー終了の瞬間(finish())に初めて音声セッションのカテゴリを設定していた。
+        // ここでカテゴリだけ先に"予約"しておく(setActiveはまだ呼ばない=他アプリの音楽を邪魔しない。
+        // カテゴリを設定するだけでは他アプリの再生を止めない・ダッキングもしないため副作用が無い)。
+        // こうすることで、実際にアラームを鳴らす瞬間に「初めてカテゴリを切り替える」という
+        // 状態変化が起きなくなり、切り替え直後の一瞬だけ音が出ない可能性を減らす狙い。
+        try? AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
 
         let engine = CandidateEngine(settings: settings, placeClusters: placeClusters)
         self.engine = engine
@@ -89,9 +108,8 @@ final class TimerController: ObservableObject {
         // (機能上の実害は無いが、使い終わった実体を持ち続けない、という後始末を明確にする)。
         engine = nil
         phase = .idle
-        alarmPlayer = nil
-        // 動画再生中に閉じられた場合に備え、念のため音声セッションも手放しておく(指摘D関連)。
-        deactivateAudioSessionIfNeeded()
+        // アラーム(音・バイブレーション)が鳴っている途中で閉じられた場合に備え、必ず止める。
+        stopAlarm()
     }
 
     /// 【軽微指摘対応: カウントダウンが実時間からズレていく不具合】
@@ -112,43 +130,113 @@ final class TimerController: ObservableObject {
 
     /// 鳴らしている間、参照を保持しておくためのプレイヤー(手放すと即座に無音で止まってしまうため)。
     private var alarmPlayer: AVAudioPlayer?
+    /// バイブレーションを繰り返すためのTask(止めるまで鳴り続ける/n回パターンの間、一定間隔で振動させる)。
+    private var vibrationTask: Task<Void, Never>?
 
     private func finish() {
         guard phase == .running else { return }
         phase = .finished
         runLoopTask?.cancel()
         currentPlayer?.pause()
-        // カウントダウン終了を知らせる(仮:動画の音を止めてアラーム音のみ鳴らす。詳細はCEO確認事項)
-        //
-        // 【2026-09-04再調査: マナーモード(消音スイッチ)でアラームが聞こえない不具合が直っていなかった件】
-        // 前回、「アラームを鳴らす直前に音声セッションを.playbackへ切り替える」という対応をしたが、
-        // 実機では効かなかった。原因を調べた結果、そもそも `AudioServicesPlaySystemSound`
-        // (キーボード音や送信音のような「短い操作音」向けのAPI。System Sound Services)は、
-        // アプリの音声セッションの種類(カテゴリ)を一切見ない仕様だと判明した。つまり直前に
-        // .playbackへ切り替えても、このAPIを使っている限りは消音スイッチの影響を受け続けてしまう
-        // (Appleの技術文書QA1631にも「このAPIは消音スイッチを無視させたい音には向かない」という
-        // 趣旨の記載がある)。
-        // 消音スイッチを無視して確実に鳴らすには、実際の音声データを AVAudioPlayer で
-        // (.playback カテゴリのセッションの下で)再生する必要がある。外部の音声ファイルを
-        // 追加で同梱する代わりに、短いビープ音をその場で生成して鳴らす方式にした
-        // (AlarmTone.swift。外部通信・追加素材なしで完結させるため)。
-        try? AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
-        try? AVAudioSession.sharedInstance().setActive(true)
-        isAudioSessionActive = true
-        if let player = try? AVAudioPlayer(data: AlarmTone.data) {
+        playAlarm()
+    }
+
+    /// アラーム(音・バイブレーション)を鳴らし始める。
+    ///
+    /// 【2026-09-04再調査 → 2026-09-05再々調査:マナーモード(消音スイッチ)でアラームが聞こえない件】
+    /// 1回目の調査で、`AudioServicesPlaySystemSound`(短い操作音向けのAPI)はアプリの音声セッションの
+    /// 種類(カテゴリ)を一切見ない仕様だと判明し、実際の音声データを `AVAudioPlayer` で
+    /// (.playback カテゴリのセッションの下で)再生する方式に変更した。ここまでは正しい対応だったが、
+    /// それでも実機でまだ鳴らないというCEOからの再報告を受け、さらに以下の2点を強化した。
+    ///  1. カテゴリの設定自体は `start()` の時点(タイマー開始時)で先に済ませておき、ここでは
+    ///     `setActive(true)`(実際に音を出す権利を得る操作)だけを行うようにした。実機では
+    ///     「カテゴリの切り替え」と「アクティブ化」を同時に行うと、ハードウェア側の準備が
+    ///     間に合わず最初の一瞬だけ無音になることがある、という報告が実際にあるため、
+    ///     切り替えのタイミングを早めることでこのリスクを下げる狙い。
+    ///  2. `try?` で例外を握りつぶさず、失敗した場合はコンソールログに理由を残すようにした
+    ///     (次にまだ鳴らない場合の切り分けを速くするため)。
+    ///  3. 今回追加した「n回鳴って終わる/止めるまで鳴り続ける」機能により、音を1回きりではなく
+    ///     繰り返し再生するようになった。仮に最初の1回に何らかの再生開始の遅延があっても、
+    ///     2回目以降は音声セッションが安定した状態で再生されるため、結果的に「聞こえない」
+    ///     状況そのものが起こりにくくなる。
+    private func playAlarm() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
+            try AVAudioSession.sharedInstance().setActive(true)
+            isAudioSessionActive = true
+        } catch {
+            NSLog("[PhotoTimer] アラーム用の音声セッションの設定に失敗しました: \(error)")
+        }
+
+        if let player = try? AVAudioPlayer(data: AlarmTone.data(for: alarmSettings.tone)) {
+            player.delegate = self
+            switch alarmSettings.repeatMode {
+            case .untilStopped:
+                player.numberOfLoops = -1 // 負の値 = 明示的に止めるまで無限に繰り返す
+            case .times(let count):
+                player.numberOfLoops = max(0, count - 1) // numberOfLoops=0で「1回だけ」再生される
+            }
+            player.volume = 1.0
             player.prepareToPlay()
             player.play()
             alarmPlayer = player
+            isAlarmSounding = true
         } else {
             // 万一 AVAudioPlayer の生成に失敗した場合の保険。マナーモード次第では聞こえないが、
-            // 何も鳴らないよりはまし、という位置づけで従来のシステムサウンドも鳴らしておく。
+            // 何も鳴らないよりはまし、という位置づけで従来のシステムサウンドを1回だけ鳴らしておく。
+            NSLog("[PhotoTimer] AVAudioPlayerの生成に失敗したため、フォールバックのシステムサウンドを再生します")
             AudioServicesPlaySystemSound(1005)
         }
-        // バイブレーションも併用する(指摘: バイブレーションの併用が無かった)。
-        // 【実機確認事項への回答】バイブレーションは消音スイッチの影響を受けない
-        // (影響するのは「設定→サウンドと触覚→消音時のバイブレーション」がオフの場合のみで、
-        // これは端末側の任意設定でありアプリからは検知・変更できない。報告書のCEO確認依頼を参照)。
-        AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+
+        if alarmSettings.useVibration {
+            startVibrationLoop()
+        }
+    }
+
+    /// バイブレーションを一定間隔(音のワンサイクルに近い長さ)で繰り返す。
+    /// 【実機確認事項への回答】バイブレーションは消音スイッチの影響を受けない
+    /// (影響するのは「設定→サウンドと触覚→消音時のバイブレーション」がオフの場合のみで、
+    /// これは端末側の任意設定でありアプリからは検知・変更できない)。
+    private func startVibrationLoop() {
+        stopVibrationLoop()
+        vibrationTask = Task { [weak self] in
+            while let self, !Task.isCancelled {
+                AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+                try? await Task.sleep(nanoseconds: 1_300_000_000)
+            }
+        }
+    }
+
+    private func stopVibrationLoop() {
+        vibrationTask?.cancel()
+        vibrationTask = nil
+    }
+
+    /// アラーム(音・バイブレーション)を止める。CEO要望(2026-09-05):
+    /// 「止めるまで鳴り続ける」パターンを止めるための操作として、SlideshowViewのボタンから呼ばれる。
+    /// タイマーを終了させずに閉じた時(stop())からも呼ばれる、後始末の共通口。
+    func stopAlarm() {
+        alarmPlayer?.stop()
+        alarmPlayer = nil
+        isAlarmSounding = false
+        stopVibrationLoop()
+        deactivateAudioSessionIfNeeded()
+    }
+
+    /// AVAudioPlayerDelegate: 「n回鳴って終わる」パターンで、ユーザーが止める前に指定回数を
+    /// 再生し終えて自然に音が止まった時に呼ばれる(手動でstop()した時はこのメソッドは呼ばれない。
+    /// Appleの仕様どおり)。ここで isAlarmSounding を false に戻すことで、
+    /// SlideshowView側のボタン表示が「アラームを止める」から「閉じる」へ自動的に切り替わる。
+    /// AVAudioPlayerDelegateはNSObjectProtocol由来でMainActor隔離が付いていないプロトコルのため、
+    /// `nonisolated` にした上で内部で明示的にMainActorへ処理を渡す。
+    nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        Task { @MainActor [weak self] in
+            guard let self, self.alarmPlayer === player else { return }
+            self.isAlarmSounding = false
+            self.stopVibrationLoop()
+            self.deactivateAudioSessionIfNeeded()
+            self.alarmPlayer = nil
+        }
     }
 
     /// スライドショーの本体ループ。

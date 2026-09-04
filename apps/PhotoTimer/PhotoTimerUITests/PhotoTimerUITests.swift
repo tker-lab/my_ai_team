@@ -28,12 +28,24 @@ import XCTest
 ///      (実行方法は該当テストの直前のコメント参照)。
 ///
 /// v5シナリオ(2026-09-04 チェック工程2回目の指摘対応の検証。証跡は verify/ に v5_ 接頭辞で保存):
-///  12. testImmediateDismiss_DuringLazyEvaluation_NoBackgroundHang … 雰囲気・カテゴリの遅延評価が
-///      決着する前に✕で閉じても、素早くホーム画面に戻れ、その後の操作が遅延しないことを確認
-///      (指摘A: ✕で閉じても裏で解析が走り続ける不具合の回帰テスト)。
+///  12. testImmediateDismiss_DuringLazyEvaluation_NoBackgroundHang … 雰囲気・カテゴリの絞り込みで
+///      候補全体の採点(窓単位の遅延評価)が終わる前に✕で閉じても、素早くホーム画面に戻れ、
+///      その後の操作が遅延しないことを確認(指摘A: ✕で閉じても裏で解析が走り続ける不具合の回帰テスト)。
 ///  13. testLegacyPlaceSelection_MigratesAndOffersClear … 場所ID方式変更前の「旧形式」の場所選択が
 ///      UserDefaultsに残っていた状態からの復帰(移行・解除ができること)を確認
 ///      (指摘B・G: 復帰手段が無い/設定がiCloudバックアップに含まれる、の回帰テスト)。
+///
+/// v6シナリオ(2026-09-05 CEO実機フィードバック対応の検証。証跡は verify/ に v6_ 接頭辞で保存):
+///  14. testNearMatchStreaming_AlwaysShowsSomething … 雰囲気+カテゴリの組み合わせ条件でスタートしても、
+///      「近い順に流す」設計により一定時間内に必ず通常のスライドショーへ決着すること(見つかりませんでした、
+///      には基本的にならないこと)を確認する(CEO報告「鮮やか×犬で何も出ない」への対応の回帰テスト)。
+///  15. testGreenRemovedFromMoodChoices … 絞り込み画面の「雰囲気・色」の選択肢一覧に「緑」が
+///      表示されないこと、他の選択肢(暖色・寒色等)は引き続き選べることを確認する。
+///  16. testHelpScreen_OpensAndShowsGuidance … ホーム画面の「?」から使い方説明画面が開き、
+///      主要な案内文(位置情報設定・プライバシー)が表示されることを確認する。
+///  17. testAlarmSettings_UntilStoppedShowsStopButton … アラーム設定画面で「止めるまで鳴り続ける」を
+///      選んでからタイマーを実行し、タイマー終了後に「アラームを止める」ボタンが表示され、
+///      押すと「閉じる」に切り替わることを確認する(CEO要望の鳴らし方切り替え機能の回帰テスト)。
 final class PhotoTimerUITests: XCTestCase {
 
     override func setUpWithError() throws {
@@ -398,23 +410,22 @@ final class PhotoTimerUITests: XCTestCase {
 
     // MARK: - シナリオ9(指摘B回帰テスト): 雰囲気+カテゴリの組み合わせで0件になりうるケースで固まらないか
     //
-    // 【なぜこの組み合わせを選んだか】
-    // テスト用ライブラリの実際の写真の色味・被写体は事前にはわからない(ランダム性がある解析のため)。
-    // そこで「雰囲気=緑」かつ「カテゴリ=花火」という、通常のテスト写真ではまず両方同時には
-    // 当てはまらないであろう組み合わせを選び、0件になる可能性を高くしている(が、絶対に0件になる保証はない)。
-    // そのため、このテストは「0件になること」自体は断定せず、
-    //   1. 一定時間内に必ず何らかの決着(見つからない表示 or 通常のスライドショー)に至ること
-    //   2. その後も閉じるボタン(✕)がちゃんと反応すること
-    // の2点を確認する。これが指摘B(無限ループでCPUを使い切り、✕ボタンも効かなくなるおそれ)の
-    // 直接の回帰テストになる。
-    func testEmptyResult_NeverMatchingMoodAndCategory() throws {
+    // 【2026-09-05変更】以前は「雰囲気=緑」かつ「カテゴリ=花火」という、まず一致しないであろう
+    // 組み合わせを選び、「0件になっても固まらない・0件表示か通常再生のどちらかに決着する」ことを
+    // 確認するテストだった。CEO判断により候補の出し方を「満たす/満たさない」の足切りから
+    // 「近い順に流す」方式に変更した(CandidateEngine.swift参照)ため、条件に合う写真が無くても
+    // 近いものから必ず表示されるようになった(=「見つかりませんでした」には基本的にならない)。
+    // このテストはその新しい保証(近い条件の組み合わせでも必ず何か表示される)の直接の確認に切り替え、
+    // あわせて指摘B(無限ループでCPUを使い切り、✕ボタンも効かなくなるおそれ)の回帰確認も引き続き行う。
+    // (「緑」はUIの選択肢から削除されたため、代わりに「暗め」を使う)
+    func testNearMatchStreaming_AlwaysShowsSomething() throws {
         let app = XCUIApplication()
         app.launch()
-        let recorder = ScreenshotRecorder(scenario: "v4_emptylazy")
+        let recorder = ScreenshotRecorder(scenario: "v6_nearmatch")
         try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
         try Self.setTotalTimer(app: app, minutes: "3", seconds: "0")
 
-        try Self.selectMoodAndCategory(app: app, mood: "緑", category: "花火", recorder: recorder)
+        try Self.selectMoodAndCategory(app: app, mood: "暗め", category: "花火", recorder: recorder)
 
         let startButton = app.buttons["startButton"]
         XCTAssertTrue(startButton.waitForExistence(timeout: 10))
@@ -430,8 +441,8 @@ final class PhotoTimerUITests: XCTestCase {
             NSPredicate(format: "identifier BEGINSWITH 'media-'")
         ).firstMatch
 
-        // 一定時間内(20秒)に「見つからない表示」か「実際に1枚以上の表示」のどちらかに必ず到達するはず。
-        // 指摘Bの不具合があると、どちらにも到達せず「読み込み中…」のまま延々とCPUを使い続けて止まる。
+        // 一定時間内(20秒)に決着するはず。指摘Bの不具合があると、どちらにも到達せず
+        // 「読み込み中…」のまま延々とCPUを使い続けて止まる。
         var settledAs: String?
         for _ in 0..<200 { // 200 x 100ms = 20秒
             if noResultsText.exists { settledAs = "no_results"; break }
@@ -451,6 +462,10 @@ final class PhotoTimerUITests: XCTestCase {
             return
         }
         XCTAssertNotEqual(settledAs, "crashed", "雰囲気+カテゴリの絞り込みでスタートするとアプリが強制終了した")
+        // 【2026-09-05追加の確認】「近い順に流す」設計により、候補プール(このライブラリでは絞り込みなしで
+        // 15枚程度)が空でない限り、雰囲気・カテゴリの一致度に関わらず何かしら表示されるはず。
+        // ここで no_results になった場合は「必ず何か出す」という設計の保証が崩れている疑いがある。
+        XCTAssertEqual(settledAs, "normal_slideshow", "雰囲気+カテゴリの絞り込みで「見つかりませんでした」になった。近い順に流す設計では、候補プールが空でない限り何かしら表示されるはず")
 
         // 決着後、閉じるボタン(✕)が実際に反応してホーム画面に戻れることを確認する(指摘Bの「✕ボタンも効かなくなる」への回帰テスト)。
         // v5でこのボタンに明示的なアクセシビリティID("closeButton")を付けたため、それを使う。
@@ -596,8 +611,8 @@ final class PhotoTimerUITests: XCTestCase {
     /// (simctlにライブラリを空にするコマンドは無く、写真アプリの中身を直接消す手段もこの実行環境には無い)。
     /// そこで「メディアの種類=動画」で絞り込む(この6枚には動画が1本も無いため確実に0件になる)ことで、
     /// 実質的に同じ検証(メタ情報の時点で0件と分かるケースが正しく扱われるか)を行っている。
-    /// 「該当0件」の一般ケース(遅延評価まで進んでから0件になる場合)は
-    /// testEmptyResult_NeverMatchingMoodAndCategory で別途確認済み。
+    /// 「該当0件」のメタ情報レベルのケース以外(雰囲気・カテゴリの遅延評価に関する確認)は
+    /// testNearMatchStreaming_AlwaysShowsSomething で別途確認済み。
     func testEmptyLibrary_NoPhotosAtAll() throws {
         let app = XCUIApplication()
         app.launch()
@@ -647,9 +662,11 @@ final class PhotoTimerUITests: XCTestCase {
         try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
         try Self.setTotalTimer(app: app, minutes: "3", seconds: "0")
 
-        // 「緑」+「花火」は testEmptyResult_NeverMatchingMoodAndCategory で確認済みの、
-        // このテスト用ライブラリでは絶対に一致しない組み合わせ(遅延評価が最後まで回る)。
-        try Self.selectMoodAndCategory(app: app, mood: "緑", category: "花火", recorder: recorder)
+        // 【2026-09-05変更】このテスト用ライブラリ(15枚程度)は窓サイズ(scoringBatchSize=20)より
+        // 小さいため、雰囲気・カテゴリを1つでも指定すれば「近い順」の並べ替えのために候補全体を
+        // 1回の窓でまとめて採点する(=遅延評価のうち最も重い処理)ことになる。どの組み合わせでも
+        // このキャンセル応答性の確認はできるため、「暗め」+「花火」を使う(「緑」はUIの選択肢から削除された)。
+        try Self.selectMoodAndCategory(app: app, mood: "暗め", category: "花火", recorder: recorder)
 
         let startButton = app.buttons["startButton"]
         XCTAssertTrue(startButton.waitForExistence(timeout: 10))
@@ -749,6 +766,106 @@ final class PhotoTimerUITests: XCTestCase {
         // この点は、テストを実行する側が `xcrun simctl spawn <UDID> defaults read com.aiteam.PhotoTimer
         // PhotoTimer.FilterSettings.v1` を別途実行し、キーが見つからなくなっている(終了コード非0に
         // なる)ことを確認する運用にしている。完了報告に実施結果を記載する。
+    }
+
+    // MARK: - シナリオ15: 「緑」が雰囲気の選択肢から消えていること(v6)
+
+    func testGreenRemovedFromMoodChoices() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v6_greenremoved")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+
+        let filterButton = app.buttons["filterButton"]
+        XCTAssertTrue(filterButton.waitForExistence(timeout: 15))
+        filterButton.tap()
+
+        // 雰囲気セクションはスクロールしないと現れないことがある。まず他の選択肢(暖色)で
+        // セクション自体の位置までスクロールさせてから、緑が無いことを確認する。
+        let warmChip = app.buttons["暖色"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: warmChip), "雰囲気セクションの「暖色」が見つからない")
+        recorder.shoot(app, label: "mood_section")
+
+        XCTAssertFalse(app.buttons["緑"].exists, "「緑」が雰囲気の選択肢からまだ表示されている(CEO判断で削除したはず)")
+
+        // 他の選択肢は引き続き選べることも確認する(削除の副作用で他が消えていないか)。
+        for label in ["暖色", "寒色", "モノトーン", "鮮やか", "淡い", "明るめ", "暗め"] {
+            XCTAssertTrue(app.buttons[label].exists, "雰囲気の選択肢「\(label)」が見つからない(緑の削除で他まで消えていないか確認)")
+        }
+
+        app.buttons["寒色"].tap() // 実際にタップできる(反応する)ことも確認しておく
+        recorder.shoot(app, label: "cool_selected")
+        recorder.writeManifest()
+
+        app.buttons["完了"].tap()
+    }
+
+    // MARK: - シナリオ16: 使い方説明画面(v6)
+
+    func testHelpScreen_OpensAndShowsGuidance() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v6_help")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+
+        let helpButton = app.buttons["helpButton"]
+        XCTAssertTrue(helpButton.waitForExistence(timeout: 15), "「?」の使い方ボタンが見つからない")
+        helpButton.tap()
+
+        let title = app.navigationBars["使い方・仕組み"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5), "使い方説明画面が開かなかった")
+
+        // カメラの位置情報設定についての案内文(CEO追加要望)が含まれているか。
+        let locationGuidance = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'カメラ'")).firstMatch
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: locationGuidance), "カメラの位置情報設定についての案内文が見つからない")
+        recorder.shoot(app, label: "help_location_section")
+
+        app.buttons["閉じる"].tap()
+        XCTAssertTrue(app.buttons["startButton"].waitForExistence(timeout: 5), "使い方説明画面を閉じてもホーム画面に戻れなかった")
+        recorder.writeManifest()
+    }
+
+    // MARK: - シナリオ17: アラーム設定「止めるまで鳴り続ける」→「アラームを止める」ボタン(v6)
+
+    func testAlarmSettings_UntilStoppedShowsStopButton() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v6_alarmstop")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+
+        // アラーム設定画面で「止めるまで鳴り続ける」を選ぶ。
+        let alarmSettingsButton = app.buttons["alarmSettingsButton"]
+        XCTAssertTrue(alarmSettingsButton.waitForExistence(timeout: 15), "アラーム設定(ベル)ボタンが見つからない")
+        alarmSettingsButton.tap()
+
+        let untilStoppedSegment = app.buttons["止めるまで鳴り続ける"]
+        XCTAssertTrue(untilStoppedSegment.waitForExistence(timeout: 5), "「止めるまで鳴り続ける」の選択肢が見つからない")
+        untilStoppedSegment.tap()
+        recorder.shoot(app, label: "alarm_settings_until_stopped")
+        app.buttons["完了"].tap()
+
+        // タイマーを最短(1秒)に設定してすぐ終わらせる。
+        try Self.setTotalTimer(app: app, minutes: "0", seconds: "1")
+
+        let startButton = app.buttons["startButton"]
+        XCTAssertTrue(startButton.waitForExistence(timeout: 10))
+        startButton.tap()
+
+        // タイマー終了後、「アラームを止める」ボタンが出るはず(音が止めるまで鳴り続けるモードのため)。
+        let stopAlarmButton = app.buttons["stopAlarmButton"]
+        XCTAssertTrue(stopAlarmButton.waitForExistence(timeout: 10), "タイマー終了後に「アラームを止める」ボタンが表示されなかった")
+        recorder.shoot(app, label: "stop_alarm_button_shown")
+
+        stopAlarmButton.tap()
+
+        // 止めた後は「閉じる」ボタンに切り替わるはず。
+        let closeButton = app.buttons["finishedCloseButton"]
+        XCTAssertTrue(closeButton.waitForExistence(timeout: 5), "「アラームを止める」を押しても「閉じる」ボタンに切り替わらなかった")
+        recorder.shoot(app, label: "switched_to_close")
+        closeButton.tap()
+
+        XCTAssertTrue(app.buttons["startButton"].waitForExistence(timeout: 5), "アラームを止めて閉じてもホーム画面に戻れなかった")
+        recorder.writeManifest()
     }
 
     // MARK: - 共通処理: スクロールしないと現れない要素を探す

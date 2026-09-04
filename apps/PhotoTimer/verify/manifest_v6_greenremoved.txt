@@ -1,0 +1,2 @@
+v6_greenremoved_01_mood_section.png	t=7.8s
+v6_greenremoved_02_cool_selected.png	t=9.5s

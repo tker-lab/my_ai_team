@@ -48,14 +48,15 @@ enum FilterSettingsStore {
     static func load() -> FilterSettings {
         if let data = try? Data(contentsOf: fileURL),
            let decoded = try? JSONDecoder().decode(FilterSettings.self, from: data) {
-            return decoded
+            return migrateAwayFromGreen(decoded)
         }
         // 新しい保存先にまだ何も無い場合、旧保存先(UserDefaults)に残っている可能性がある
         // (アップデート前から使っていた場合)。あれば1回だけ読み込み、新しい保存先に書き直した上で
         // 旧データは削除する(そのままだとバックアップに残り続けてしまうため)。
         if let legacyData = UserDefaults.standard.data(forKey: legacyDefaultsKey),
            let legacyDecoded = try? JSONDecoder().decode(FilterSettings.self, from: legacyData) {
-            save(legacyDecoded)
+            let migrated = migrateAwayFromGreen(legacyDecoded)
+            save(migrated)
             UserDefaults.standard.removeObject(forKey: legacyDefaultsKey)
             // 通常、UserDefaultsへの変更はOS側が適切なタイミングで自動的にディスクへ反映するため
             // synchronize() の明示呼び出しは非推奨・基本的に不要とされている。ただしこの移行処理は
@@ -63,9 +64,21 @@ enum FilterSettingsStore {
             // バックアップに残ってしまうことを確実に防ぎたい(CEO決定事項)ため、念のためここだけ
             // 明示的に同期させ、削除がすぐ確実にディスクへ反映されるようにしている。
             UserDefaults.standard.synchronize()
-            return legacyDecoded
+            return migrated
         }
         return .default
+    }
+
+    /// 【2026-09-05追加】「緑」を選択肢から削除した(FixedChoices.swift参照)ことに伴う移行処理。
+    /// 過去に「緑」を選んでいた場合、その選択だけを静かに外す(他の選択〔アルバム・雰囲気の他の項目・
+    /// カテゴリ等〕はそのまま維持する)。enumのケース自体は残しているのでデコード自体は失敗しないが、
+    /// 外さないままだと「UIには出ない・解除もできない・でも一致する写真は二度と現れない」という
+    /// 気づけない絞り込み条件が残り続けてしまうため、読み込み時に必ず取り除く。
+    private static func migrateAwayFromGreen(_ settings: FilterSettings) -> FilterSettings {
+        guard settings.selectedMoods.contains(.green) else { return settings }
+        var migrated = settings
+        migrated.selectedMoods.remove(.green)
+        return migrated
     }
 
     static func save(_ settings: FilterSettings) {

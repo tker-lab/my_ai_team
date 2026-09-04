@@ -9,8 +9,12 @@ struct ContentView: View {
     @State private var filterSettings: FilterSettings = FilterSettingsStore.load()
     /// 写真の表示秒数・動画の再生時間の扱い(CEO要望・2026-09-04:設定画面から変更できるようにする)。
     @State private var playbackSettings: PlaybackSettings = PlaybackSettingsStore.load()
+    /// アラーム(音・鳴らし方)の設定(CEO要望・2026-09-05:設定画面から変更できるようにする)。
+    @State private var alarmSettings: AlarmSettings = AlarmSettingsStore.load()
     @State private var showingFilterSheet = false
     @State private var showingPlaybackSettingsSheet = false
+    @State private var showingAlarmSettingsSheet = false
+    @State private var showingHelpSheet = false
     @State private var showingSlideshow = false
 
     /// 設定できる範囲(秒)。
@@ -117,6 +121,23 @@ struct ContentView: View {
             }
             .navigationTitle("写真タイマー")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showingHelpSheet = true
+                    } label: {
+                        Image(systemName: "questionmark.circle")
+                    }
+                    // 自動テスト(XCUITest)がこのボタンを確実に見つけられるようにするための目印。
+                    .accessibilityIdentifier("helpButton")
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showingAlarmSettingsSheet = true
+                    } label: {
+                        Image(systemName: "bell")
+                    }
+                    .accessibilityIdentifier("alarmSettingsButton")
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showingPlaybackSettingsSheet = true
@@ -137,8 +158,16 @@ struct ContentView: View {
             }) {
                 PlaybackSettingsView(settings: $playbackSettings)
             }
+            .sheet(isPresented: $showingAlarmSettingsSheet, onDismiss: {
+                AlarmSettingsStore.save(alarmSettings)
+            }) {
+                AlarmSettingsView(settings: $alarmSettings)
+            }
+            .sheet(isPresented: $showingHelpSheet) {
+                HelpView()
+            }
             .fullScreenCover(isPresented: $showingSlideshow) {
-                SlideshowView(totalSeconds: selectedSeconds, settings: filterSettings, playbackSettings: playbackSettings, placeClusters: libraryIndex.placeClusters)
+                SlideshowView(totalSeconds: selectedSeconds, settings: filterSettings, playbackSettings: playbackSettings, alarmSettings: alarmSettings, placeClusters: libraryIndex.placeClusters)
             }
             .onAppear {
                 libraryIndex.refreshIfNeeded()

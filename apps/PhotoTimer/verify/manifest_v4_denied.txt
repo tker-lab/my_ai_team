@@ -1,2 +1,1 @@
-deny dialog found=true
-v4_denied_01_after_deny.png	t=3.4s
+「写真へのアクセスを許可する」ボタンが出なかった(すでに許可/拒否済みの可能性)。このテストはprivacy未決定の端末で実行する前提。

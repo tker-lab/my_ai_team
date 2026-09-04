@@ -7,9 +7,21 @@ import Foundation
 // 色・雰囲気・カテゴリは「その人の写真を見なくても用意できる」選択肢なので、
 // 起動時に写真を解析してリストを作ることはしない。フリー入力も一切使わない。
 
-/// 雰囲気・色の選択肢(固定8種類)
+/// 雰囲気・色の選択肢。
 /// 判定は「選ばれた時に、流しながら」行う(原則2)。ここでは選択肢の定義だけ。
-enum MoodTag: String, CaseIterable, Identifiable, Codable {
+///
+/// 【2026-09-05 CEO判断:「緑」をUIの選択肢から削除】
+/// 他の選択肢(暖色系・寒色系・モノトーン・鮮やか・淡い等)が「雰囲気」という軸なのに対し、
+/// 「緑」だけ具体的な色を指していて浮いている、というCEOの指摘による。
+/// ただし enum のケース自体は残してある。過去に保存された設定(FilterSettings.selectedMoods)や
+/// 解析キャッシュ(AssetAnalysis.mood)に "緑" というraw valueが残っていた場合、ここでケースごと
+/// 削除してしまうとJSONの読み込み(デコード)自体が失敗し、緑以外も含めた設定全体が消えてしまう
+/// (Codableは列挙型の未知のraw valueを許容せずデコード全体を失敗させるため)。
+/// ケースを残しつつ `allCases` だけ独自定義して選択肢一覧(UI)からは外すことで、
+/// 「表示はしないが、古いデータを読んでも壊れない」という安全な削除ができる。
+/// 保存済みの設定に緑が残っていた場合は FilterSettingsStore.load() 側で自動的に除去する
+/// (詳細はそちらのコメント参照)。
+enum MoodTag: String, Identifiable, Codable {
     case warm = "暖色"
     case cool = "寒色"
     case monotone = "モノトーン"
@@ -20,6 +32,11 @@ enum MoodTag: String, CaseIterable, Identifiable, Codable {
     case dark = "暗め"
 
     var id: String { rawValue }
+}
+
+extension MoodTag: CaseIterable {
+    /// UI(絞り込み画面のチップ一覧)に出す選択肢。「緑」は含めない(2026-09-05 CEO判断)。
+    static var allCases: [MoodTag] { [.warm, .cool, .monotone, .vivid, .pastel, .bright, .dark] }
 }
 
 /// カテゴリの選択肢(固定20種類)。

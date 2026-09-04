@@ -79,3 +79,18 @@ XCUITest主要シナリオ(既定フロー・写真/動画絞り込み・遅延�
 場所データの移行・legacy再現)すべて成功(0 failures)。実機(CEOのiPhone 14、Team ID ZW257YHSQM):
 BUILD SUCCEEDED・devicectl device installで上書きインストール成功(CEOの許可状態・保存データは維持)。
 場所の診断用ログ取得も実機で実施済み(詳細は上記)。CEOへの依頼事項・報告はこの後の完了報告に記載。
+2026-09-05 (CEO実機フィードバック対応・1/実装) 5項目に着手。1: CandidateEngine.swiftを「合う/合わない」の
+足切りから「近い順に流す」方式に全面改修。窓(scoringBatchSize=20件)単位で採点→窓内だけ並べ替え→流す、を
+繰り返す設計にし、原則2(遅延評価・全走査しない)を維持。MoodSimilarity.swift(新規)で雰囲気タグ間の
+近さの目安表を追加、CandidateEngine.scoreで雰囲気+カテゴリのスコアを合算。2/3: TimerController.swiftの
+アラーム部分を全面改修。NSObject+AVAudioPlayerDelegateに変更しplayAlarm()/stopAlarm()/vibrationTaskを新設。
+start()の時点で音声セッションのカテゴリを先に予約(setActiveはしない)し、finish()ではsetActiveのみ行う
+よう変更(切り替えタイミングを早めて実機での初回無音リスクを下げる狙い)。AlarmTone.swiftを音色3種
+(ピピピ/ベル/サイレン、いずれも振幅アップ)に拡張、AlarmSettings.swift(新規)+AlarmSettingsView.swift
+(新規、試聴ボタン付き)で音色・n回/止めるまで・バイブレーション有無を設定可能に。SlideshowView
+finishedViewに「アラームを止める」⇄「閉じる」の2段階ボタンを追加。4: FixedChoices.swiftのMoodTagから
+「緑」をUI選択肢(allCases独自実装)から除外(enumケース自体は保持し過去データのデコード失敗を防止)。
+ImageAnalyzer.analyzeMoodの旧・緑色相帯を暖色/寒色に再配分。FilterSettingsStore.load()で保存済み設定の
+「緑」を自動除去する移行処理を追加。AssetAnalysis.currentVersionを2→3に上げ再解析を強制。5: HelpView.swift
+(新規)を追加、ホーム画面右上「?」から開けるようにした(位置情報設定・AI判定の限界・プライバシーの案内)。
+xcodegen再生成、シミュレータ向けBUILD SUCCEEDED確認済み。

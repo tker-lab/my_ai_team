@@ -12,7 +12,9 @@ struct AssetAnalysis: Codable {
     /// カテゴリ解析失敗時にキャッシュしないよう修正)ため、古いロジックで作られた結果は
     /// 再解析させる必要がある。バージョンを上げることで、次に選ばれた時に自動的に再解析される
     /// (原則3「同じ写真は二度と解析しない」の対象は「今のロジックで解析済みのもの」に限る)。
-    static let currentVersion = 2
+    /// 【2026-09-05: 2→3に更新】「緑」を選択肢から削除し、旧・緑の色相帯を暖色/寒色に
+    /// 振り分け直したため、古いバージョンで "緑" と判定されキャッシュされた結果を再解析させる。
+    static let currentVersion = 3
 }
 
 /// AssetAnalysis を localIdentifier ごとに端末内(Application Support配下のJSONファイル。

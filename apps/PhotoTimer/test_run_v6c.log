@@ -1,0 +1,330 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test -project PhotoTimer.xcodeproj -scheme PhotoTimer -destination id=E929CB6C-E759-4321-8CC3-10FA08F8B58A -derivedDataPath build "-only-testing:PhotoTimerUITests/PhotoTimerUITests/testOneSecondTimer"
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (2 targets)
+    Target 'PhotoTimerUITests' in project 'PhotoTimer'
+        ➜ Explicit dependency on target 'PhotoTimer' in project 'PhotoTimer'
+    Target 'PhotoTimer' in project 'PhotoTimer' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk /Users/takahashitakayuki/my_ai_team/apps/PhotoTimer/build/SDKStatCaches.noindex/iphonesimulator26.5-23F81a-6cfe768891a92b912361537c460fe42b.sdkstatcache
+    cd /Users/takahashitakayuki/my_ai_team/apps/PhotoTimer/PhotoTimer.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk -o /Users/takahashitakayuki/my_ai_team/apps/PhotoTimer/build/SDKStatCaches.noindex/iphonesimulator26.5-23F81a-6cfe768891a92b912361537c460fe42b.sdkstatcache
+
+2026-09-04 23:25:17.022462+0900 PhotoTimerUITests-Runner[58857:1347614] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-09-04 23:25:17.414.
+Test Suite 'PhotoTimerUITests.xctest' started at 2026-09-04 23:25:17.414.
+Test Suite 'PhotoTimerUITests' started at 2026-09-04 23:25:17.414.
+Test Case '-[PhotoTimerUITests.PhotoTimerUITests testOneSecondTimer]' started.
+    t =     0.00s Start Test at 2026-09-04 23:25:17.414
+    t =     0.02s Set Up
+    t =     0.02s Open com.aiteam.PhotoTimer
+    t =     0.02s     Launch com.aiteam.PhotoTimer
+2026-09-04 23:25:17.468 xcodebuild[58826:1347120] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-09-04 23:25:17.468 xcodebuild[58826:1347120] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[58857]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x1083bc310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1081fc398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     2.49s         Setting up automation session
+    t =     3.02s         Wait for com.aiteam.PhotoTimer to idle
+    t =     4.33s Waiting 5.0s for "写真へのアクセスを許可する" Button to exist
+    t =     5.36s     Checking `Expect predicate `existsNoRetry == 1` for object "写真へのアクセスを許可する" Button`
+    t =     5.36s         Checking existence of `"写真へのアクセスを許可する" Button`
+    t =     5.67s         Capturing element debug description
+    t =     6.38s     Checking `Expect predicate `existsNoRetry == 1` for object "写真へのアクセスを許可する" Button`
+    t =     6.38s         Checking existence of `"写真へのアクセスを許可する" Button`
+    t =     6.45s         Capturing element debug description
+    t =     7.36s     Checking `Expect predicate `existsNoRetry == 1` for object "写真へのアクセスを許可する" Button`
+    t =     7.36s         Checking existence of `"写真へのアクセスを許可する" Button`
+    t =     7.40s         Capturing element debug description
+    t =     8.42s     Checking `Expect predicate `existsNoRetry == 1` for object "写真へのアクセスを許可する" Button`
+    t =     8.43s         Checking existence of `"写真へのアクセスを許可する" Button`
+    t =     8.49s         Capturing element debug description
+    t =     9.33s     Checking `Expect predicate `existsNoRetry == 1` for object "写真へのアクセスを許可する" Button`
+    t =     9.33s         Checking existence of `"写真へのアクセスを許可する" Button`
+    t =     9.39s         Capturing element debug description
+    t =     9.40s     Checking existence of `"写真へのアクセスを許可する" Button`
+    t =     9.43s Collecting debug information to assist test failure triage
+    t =     9.43s     Requesting snapshot of accessibility hierarchy for app with pid 58873
+    t =     9.48s Waiting 15.0s for PickerWheel (Element at index 0) to exist
+    t =    10.51s     Checking `Expect predicate `existsNoRetry == 1` for object PickerWheel (Element at index 0)`
+    t =    10.51s         Checking existence of `PickerWheel (Element at index 0)`
+    t =    10.57s Waiting 5.0s for PickerWheel (Element at index 1) to exist
+    t =    11.59s     Checking `Expect predicate `existsNoRetry == 1` for object PickerWheel (Element at index 1)`
+    t =    11.59s         Checking existence of `PickerWheel (Element at index 1)`
+    t =    11.65s Set value of PickerWheel (Element at index 0) to 1
+    t =    11.65s     Wait for com.aiteam.PhotoTimer to idle
+    t =    11.65s     Find the PickerWheel (Element at index 0)
+    t =    11.69s     Check for interrupting elements affecting "1" PickerWheel
+    t =    11.72s     Synthesize event
+    t =    11.73s     Wait for com.aiteam.PhotoTimer to idle
+    t =    11.73s Set value of PickerWheel (Element at index 1) to 10
+    t =    11.73s     Wait for com.aiteam.PhotoTimer to idle
+    t =    11.73s     Find the PickerWheel (Element at index 1)
+    t =    11.76s     Check for interrupting elements affecting "0" PickerWheel
+    t =    11.79s     Synthesize event
+    t =    11.83s     Wait for com.aiteam.PhotoTimer to idle
+    t =    11.83s Set value of "1" PickerWheel to 0
+    t =    11.83s     Wait for com.aiteam.PhotoTimer to idle
+    t =    11.84s     Find the "1" PickerWheel
+    t =    11.87s     Check for interrupting elements affecting "1" PickerWheel
+    t =    11.90s     Synthesize event
+    t =    11.92s     Wait for com.aiteam.PhotoTimer to idle
+    t =    11.94s Set value of "0" PickerWheel to 1
+    t =    11.94s     Wait for com.aiteam.PhotoTimer to idle
+    t =    11.94s     Find the "0" PickerWheel
+    t =    12.02s     Check for interrupting elements affecting "10" PickerWheel
+    t =    12.05s     Synthesize event
+    t =    12.08s     Wait for com.aiteam.PhotoTimer to idle
+    t =    12.68s Checking existence of `StaticText (First Match)`
+    t =    12.70s Find the StaticText (First Match)
+    t =    12.72s Find the "設定可能な範囲: 1秒 〜 180分" StaticText
+    t =    12.74s Checking existence of `"homeTimeLabel" StaticText`
+    t =    12.77s Find the "homeTimeLabel" StaticText
+    t =    12.80s Find the "homeTimeLabel" StaticText
+    t =    12.83s Waiting 10.0s for "startButton" Button to exist
+    t =    13.86s     Checking `Expect predicate `existsNoRetry == 1` for object "startButton" Button`
+    t =    13.87s         Checking existence of `"startButton" Button`
+    t =    13.93s Tap "startButton" Button
+    t =    13.93s     Wait for com.aiteam.PhotoTimer to idle
+    t =    13.93s     Find the "startButton" Button
+    t =    13.96s     Check for interrupting elements affecting "startButton" Button
+    t =    14.00s     Synthesize event
+    t =    14.29s     Wait for com.aiteam.PhotoTimer to idle
+    t =    14.70s Checking existence of `"タイマー終了" StaticText`
+    t =    14.76s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    14.90s Checking existence of `"タイマー終了" StaticText`
+    t =    14.94s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    15.08s Checking existence of `"タイマー終了" StaticText`
+    t =    15.13s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    15.27s Checking existence of `"タイマー終了" StaticText`
+    t =    15.31s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    15.45s Checking existence of `"タイマー終了" StaticText`
+    t =    15.49s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    15.63s Checking existence of `"タイマー終了" StaticText`
+    t =    15.68s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    15.82s Checking existence of `"タイマー終了" StaticText`
+    t =    15.86s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    16.00s Checking existence of `"タイマー終了" StaticText`
+    t =    16.05s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    16.19s Checking existence of `"タイマー終了" StaticText`
+    t =    16.23s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    16.37s Checking existence of `"タイマー終了" StaticText`
+    t =    16.41s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    16.55s Checking existence of `"タイマー終了" StaticText`
+    t =    16.60s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    16.74s Checking existence of `"タイマー終了" StaticText`
+    t =    16.78s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    16.92s Checking existence of `"タイマー終了" StaticText`
+    t =    16.97s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    17.11s Checking existence of `"タイマー終了" StaticText`
+    t =    17.15s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    17.29s Checking existence of `"タイマー終了" StaticText`
+    t =    17.33s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    17.47s Checking existence of `"タイマー終了" StaticText`
+    t =    17.51s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    17.65s Checking existence of `"タイマー終了" StaticText`
+    t =    17.69s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    17.83s Checking existence of `"タイマー終了" StaticText`
+    t =    17.88s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    18.01s Checking existence of `"タイマー終了" StaticText`
+    t =    18.06s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    18.20s Checking existence of `"タイマー終了" StaticText`
+    t =    18.24s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    18.38s Checking existence of `"タイマー終了" StaticText`
+    t =    18.43s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    18.56s Checking existence of `"タイマー終了" StaticText`
+    t =    18.61s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    18.75s Checking existence of `"タイマー終了" StaticText`
+    t =    18.79s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    18.93s Checking existence of `"タイマー終了" StaticText`
+    t =    18.99s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    19.13s Checking existence of `"タイマー終了" StaticText`
+    t =    19.18s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    19.32s Checking existence of `"タイマー終了" StaticText`
+    t =    19.36s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    19.50s Checking existence of `"タイマー終了" StaticText`
+    t =    19.55s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    19.69s Checking existence of `"タイマー終了" StaticText`
+    t =    19.73s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    19.87s Checking existence of `"タイマー終了" StaticText`
+    t =    19.91s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    20.05s Checking existence of `"タイマー終了" StaticText`
+    t =    20.10s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    20.23s Checking existence of `"タイマー終了" StaticText`
+    t =    20.27s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    20.41s Checking existence of `"タイマー終了" StaticText`
+    t =    20.45s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    20.58s Checking existence of `"タイマー終了" StaticText`
+    t =    20.63s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    20.77s Checking existence of `"タイマー終了" StaticText`
+    t =    20.81s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    20.95s Checking existence of `"タイマー終了" StaticText`
+    t =    20.99s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    21.13s Checking existence of `"タイマー終了" StaticText`
+    t =    21.18s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    21.32s Checking existence of `"タイマー終了" StaticText`
+    t =    21.36s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    21.50s Checking existence of `"タイマー終了" StaticText`
+    t =    21.54s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    21.68s Checking existence of `"タイマー終了" StaticText`
+    t =    21.73s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    21.86s Checking existence of `"タイマー終了" StaticText`
+    t =    21.91s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    22.05s Checking existence of `"タイマー終了" StaticText`
+    t =    22.09s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    22.23s Checking existence of `"タイマー終了" StaticText`
+    t =    22.28s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    22.41s Checking existence of `"タイマー終了" StaticText`
+    t =    22.46s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    22.60s Checking existence of `"タイマー終了" StaticText`
+    t =    22.64s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    22.78s Checking existence of `"タイマー終了" StaticText`
+    t =    22.83s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    22.96s Checking existence of `"タイマー終了" StaticText`
+    t =    23.01s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    23.15s Checking existence of `"タイマー終了" StaticText`
+    t =    23.19s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    23.33s Checking existence of `"タイマー終了" StaticText`
+    t =    23.37s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    23.51s Checking existence of `"タイマー終了" StaticText`
+    t =    23.56s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    23.70s Checking existence of `"タイマー終了" StaticText`
+    t =    23.74s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    23.88s Checking existence of `"タイマー終了" StaticText`
+    t =    23.93s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    24.06s Checking existence of `"タイマー終了" StaticText`
+    t =    24.11s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    24.25s Checking existence of `"タイマー終了" StaticText`
+    t =    24.29s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    24.43s Checking existence of `"タイマー終了" StaticText`
+    t =    24.47s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    24.61s Checking existence of `"タイマー終了" StaticText`
+    t =    24.66s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    24.80s Checking existence of `"タイマー終了" StaticText`
+    t =    24.84s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    24.98s Checking existence of `"タイマー終了" StaticText`
+    t =    25.03s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    25.16s Checking existence of `"タイマー終了" StaticText`
+    t =    25.22s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    25.38s Checking existence of `"タイマー終了" StaticText`
+    t =    25.43s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    25.56s Checking existence of `"タイマー終了" StaticText`
+    t =    25.61s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    25.75s Checking existence of `"タイマー終了" StaticText`
+    t =    25.79s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    25.93s Checking existence of `"タイマー終了" StaticText`
+    t =    25.97s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    26.11s Checking existence of `"タイマー終了" StaticText`
+    t =    26.16s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    26.30s Checking existence of `"タイマー終了" StaticText`
+    t =    26.34s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    26.48s Checking existence of `"タイマー終了" StaticText`
+    t =    26.52s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    26.66s Checking existence of `"タイマー終了" StaticText`
+    t =    26.71s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    26.85s Checking existence of `"タイマー終了" StaticText`
+    t =    26.89s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    27.03s Checking existence of `"タイマー終了" StaticText`
+    t =    27.07s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    27.21s Checking existence of `"タイマー終了" StaticText`
+    t =    27.26s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    27.40s Checking existence of `"タイマー終了" StaticText`
+    t =    27.44s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    27.58s Checking existence of `"タイマー終了" StaticText`
+    t =    27.62s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    27.75s Checking existence of `"タイマー終了" StaticText`
+    t =    27.80s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    27.94s Checking existence of `"タイマー終了" StaticText`
+    t =    27.98s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    28.12s Checking existence of `"タイマー終了" StaticText`
+    t =    28.17s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    28.31s Checking existence of `"タイマー終了" StaticText`
+    t =    28.35s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    28.49s Checking existence of `"タイマー終了" StaticText`
+    t =    28.53s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    28.67s Checking existence of `"タイマー終了" StaticText`
+    t =    28.72s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    28.86s Checking existence of `"タイマー終了" StaticText`
+    t =    28.90s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    29.04s Checking existence of `"タイマー終了" StaticText`
+    t =    29.08s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    29.22s Checking existence of `"タイマー終了" StaticText`
+    t =    29.27s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    29.41s Checking existence of `"タイマー終了" StaticText`
+    t =    29.45s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    29.59s Checking existence of `"タイマー終了" StaticText`
+    t =    29.64s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    29.77s Checking existence of `"タイマー終了" StaticText`
+    t =    29.82s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    29.96s Checking existence of `"タイマー終了" StaticText`
+    t =    30.00s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    30.14s Checking existence of `"タイマー終了" StaticText`
+    t =    30.19s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    30.33s Checking existence of `"タイマー終了" StaticText`
+    t =    30.37s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    30.51s Checking existence of `"タイマー終了" StaticText`
+    t =    30.54s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    30.68s Checking existence of `"タイマー終了" StaticText`
+    t =    30.73s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    30.87s Checking existence of `"タイマー終了" StaticText`
+    t =    30.91s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    31.05s Checking existence of `"タイマー終了" StaticText`
+    t =    31.09s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    31.23s Checking existence of `"タイマー終了" StaticText`
+    t =    31.28s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    31.42s Checking existence of `"タイマー終了" StaticText`
+    t =    31.46s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    31.60s Checking existence of `"タイマー終了" StaticText`
+    t =    31.65s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    31.79s Checking existence of `"タイマー終了" StaticText`
+    t =    31.83s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    31.97s Checking existence of `"タイマー終了" StaticText`
+    t =    32.02s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    32.16s Checking existence of `"タイマー終了" StaticText`
+    t =    32.20s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    32.34s Checking existence of `"タイマー終了" StaticText`
+    t =    32.38s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    32.52s Checking existence of `"タイマー終了" StaticText`
+    t =    32.57s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    32.71s Checking existence of `"タイマー終了" StaticText`
+    t =    32.75s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    32.89s Checking existence of `"タイマー終了" StaticText`
+    t =    32.93s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+    t =    33.16s Checking existence of `"条件に合う写真・動画が見つかりませんでした" StaticText`
+/Users/takahashitakayuki/my_ai_team/apps/PhotoTimer/PhotoTimerUITests/PhotoTimerUITests.swift:212: error: -[PhotoTimerUITests.PhotoTimerUITests testOneSecondTimer] : failed - 1秒タイマーを開始したのに10秒待っても「タイマー終了」画面が出てこなかった
+    t =    33.22s Tear Down
+Test Case '-[PhotoTimerUITests.PhotoTimerUITests testOneSecondTimer]' failed (33.442 seconds).
+Test Suite 'PhotoTimerUITests' failed at 2026-09-04 23:25:50.857.
+	 Executed 1 test, with 1 failure (0 unexpected) in 33.442 (33.443) seconds
+Test Suite 'PhotoTimerUITests.xctest' failed at 2026-09-04 23:25:50.858.
+	 Executed 1 test, with 1 failure (0 unexpected) in 33.442 (33.444) seconds
+Test Suite 'Selected tests' failed at 2026-09-04 23:25:50.859.
+	 Executed 1 test, with 1 failure (0 unexpected) in 33.442 (33.445) seconds
+2026-09-04 23:25:57.252 xcodebuild[58826:1347120] [MT] IDETestOperationsObserverDebug: 43.257 elapsed -- Testing started completed.
+2026-09-04 23:25:57.252 xcodebuild[58826:1347120] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-04 23:25:57.252 xcodebuild[58826:1347120] [MT] IDETestOperationsObserverDebug: 43.257 sec, +43.257 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/takahashitakayuki/my_ai_team/apps/PhotoTimer/build/Logs/Test/Test-PhotoTimer-2026.09.04_23-25-13-+0900.xcresult
+
+Failing tests:
+	PhotoTimerUITests.testOneSecondTimer()
+
+** TEST FAILED **
+
+Testing started

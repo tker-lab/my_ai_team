@@ -8,13 +8,42 @@ import CoreLocation
 /// あらかじめ全件を解析してから絞り込むのではなく、
 ///  1. まず「日時・種類・アルバム」というメタ情報だけで候補を絞り(解析不要・一瞬)
 ///  2. 候補をシャッフルする
-///  3. シャッフル順に1枚ずつ取り出し、必要なら(雰囲気・カテゴリ指定がある時だけ)その場で解析し、
-///     条件に合えば採用・合わなければ次へ進む
+///  3. シャッフル順に一定件数だけ取り出し、必要なら(雰囲気・カテゴリ指定がある時だけ)その場で解析し、
+///     「条件にどれだけ近いか」を点数化してその中で近い順に流す
 /// という順番で処理する。表示は1枚ずつなので、全件を先に判定し終える必要はない。
+///
+/// 【2026-09-05変更(CEO判断):「満たす/満たさない」の足切りから「近い順」へ】
+/// 以前は雰囲気・カテゴリの条件を1つでも満たさない写真は不採用にしていたが、
+/// 「鮮やか×犬」のように該当が少ない組み合わせだと候補を使い切っても1枚も見つからず
+/// 「見つかりませんでした」になってしまうことがあった(CEO実機報告)。
+/// 今は不採用にする代わりに「条件にどれだけ近いか」を0〜複数の点数で表し、高い順に流す。
+/// これにより「合う写真が1枚も無い」状態は原理上ほぼ起こらなくなる(何かしらは必ず流れる)。
+///
+/// 【遅延評価を崩さない工夫:窓(バッチ)単位での並べ替え】
+/// 「近い順」を実現する素朴な方法は、全候補を先に採点してから並べ替えることだが、それでは
+/// 「起動時に全走査しない」という設計4原則を破ってしまう(CEOの懸念どおり)。
+/// そこでシャッフル済みの候補を`scoringBatchSize`件ずつの「窓」に区切り、窓の中だけを採点・
+/// 並べ替えて流し、窓を使い切ったら次の窓を採点する、という単位で遅延評価を維持する。
+/// こうすると、一度に解析する枚数は「窓のサイズ」で頭打ちになり(ライブラリの総枚数には依存しない)、
+/// かつ窓の中では「近い順」が成立する。窓を小さくするほど並べ替えの効果は弱まるが1枚目までの
+/// 待ちは短くなり、大きくするほど並べ替えの精度は上がるが待ちは長くなる、というトレードオフがある
+/// (現在の値は報告書に記載のうえCEOに判断を仰いだ値。調整したい場合はここの定数を変えるだけでよい)。
 actor CandidateEngine {
+
+    /// 一度に採点する候補の件数(=遅延評価を保ったまま近い順に並べ替える「窓」のサイズ)。
+    /// 【2026-09-05 シミュレータ検証で判明】当初20で試したところ、雰囲気・カテゴリ未指定時と違い
+    /// この窓の分だけVision解析(端末内AI処理。1枚ごとに複数の判定を行う)を待ってから最初の1枚を
+    /// 出す設計のため、初回(まだ何も解析していない状態)は窓のサイズがそのまま「最初の1枚が出るまでの
+    /// 待ち時間」に直結すると判明(実測で20枚だと数十秒かかるケースを確認)。近い順に並べ替える効果と
+    /// 最初の待ち時間の短さを両立するため6に縮小した。窓が小さいと近い順の精度(何枚の中から選ぶか)は
+    /// 下がるが、窓を使い切れば自動的に次の窓の採点に進む(遅延評価は変わらず維持)ため、
+    /// 「体感の待ち時間」を優先してこの値にした。
+    private static let scoringBatchSize = 6
 
     private var shuffledAssets: [PHAsset] = []
     private var cursor = 0
+    /// 現在の「窓」の中で、採点済みだがまだ表示していない候補(スコアの高い順に並んでいる)。
+    private var scoredWindow: [(asset: PHAsset, score: Double)] = []
     private let settings: FilterSettings
     /// 【2026-09-04追加:先読み(プリフェッチ)】
     /// 「該当が少ないカテゴリ×短い表示秒数だと、判定が表示時間に追いつかれる」という実機での
@@ -52,6 +81,7 @@ actor CandidateEngine {
         let filtered = assets.filter { Self.passesMetadataFilters($0, settings: settings) }
         shuffledAssets = filtered.shuffled()
         cursor = 0
+        scoredWindow = []
         hadUndeterminedCandidatesThisPass = false
     }
 
@@ -101,56 +131,82 @@ actor CandidateEngine {
 
     /// 雰囲気・カテゴリの判定をしながら次の1枚を探す本体(遅延評価。原則2)。
     /// `next()`(即座に呼ばれる経路)と `prefetchNext()`(裏で先読みする経路)の両方から使う。
+    ///
+    /// 【2026-09-05変更】「合う/合わない」で足切りするのをやめ、窓(scoringBatchSize件)単位で
+    /// 採点→並べ替え→近い順に払い出す、という動きに変えた。窓の中に候補が残っていればそこから返し、
+    /// 無くなったら次の窓を採点する。候補プール全体を使い切ったら nil を返す(この時だけ「見つからない」)。
     private func findNextMatch() async -> PHAsset? {
-        while cursor < shuffledAssets.count {
+        while true {
             // 【指摘A対応】1枚判定するたびにキャンセルされていないか確認する。
             // 以前はここに確認が無かったため、✕ボタンで閉じてもタイマーが0になっても、
-            // このwhileループは「候補を最後の1枚まで判定し終える」まで裏で走り続けてしまっていた
+            // このループは「候補を最後の1枚まで判定し終える」まで裏で走り続けてしまっていた
             // (写真が多いほど、CPUを使い切ったまま数分〜十数分止まらない状態になりうる不具合)。
             // 呼び出し元がタイマー停止・画面を閉じた時にこのTaskをcancel()するので
             // (先読み分は cancelPrefetch() 経由)、ここでその状態を毎回確認してすぐ打ち切れるようにする。
             if Task.isCancelled { return nil }
 
-            let asset = shuffledAssets[cursor]
-            cursor += 1
+            // 窓の中に採点済みの候補が残っていれば、その中で最もスコアが高いものを返す(近い順)。
+            if !scoredWindow.isEmpty {
+                return scoredWindow.removeFirst().asset
+            }
 
-            if let analysis = await AnalysisCache.shared.analysis(for: asset.localIdentifier) {
-                if Self.matches(analysis: analysis, settings: settings) {
-                    return asset
+            // 窓が空。候補プール全体を使い切っていれば、これ以上は無い。
+            guard cursor < shuffledAssets.count else { return nil }
+
+            // 次の窓ぶん(最大 scoringBatchSize 件)をまとめて採点する。
+            // ここで解析するのはこの窓の分だけで、ライブラリ全体を解析するわけではない
+            // (=原則2「起動時に全走査しない」を崩さない)。
+            let batchEnd = min(cursor + Self.scoringBatchSize, shuffledAssets.count)
+            var newlyScored: [(asset: PHAsset, score: Double)] = []
+            for i in cursor..<batchEnd {
+                if Task.isCancelled { return nil }
+                let asset = shuffledAssets[i]
+
+                guard let analysis = await analyzedResult(for: asset) else {
+                    // 判定できなかった(サムネイル取得失敗・Vision解析失敗)。この1枚は今回は諦めて次へ。
+                    // 【指摘H対応】この「読み飛ばし」があったことを記録しておく。窓を最後まで使い切っても
+                    // 候補が1枚も残らなかった場合、呼び出し側は「該当0件」ではなく「判定できなかった」を表示する。
+                    hadUndeterminedCandidatesThisPass = true
+                    continue
                 }
-                continue
+                let score = Self.score(analysis: analysis, settings: settings)
+                newlyScored.append((asset, score))
             }
-
-            guard let cgImage = await Self.requestAnalysisThumbnail(asset: asset) else {
-                // サムネイルが取得できなかった(端末内に無い等)場合は判定不能として次へ。落とさず読み飛ばすだけ。
-                // 【指摘H対応】この「読み飛ばし」があったことを記録しておく。全部読み飛ばして
-                // 候補を使い切った場合、呼び出し側は「該当0件」ではなく「判定できなかった」を表示する。
-                hadUndeterminedCandidatesThisPass = true
-                continue
-            }
-            // サムネイル取得(await)には時間がかかることがあるため、その直後にも確認する。
-            // キャンセル後にVisionでの解析(CPUを使う処理)へ進んでしまうことを防ぐ。
-            if Task.isCancelled { return nil }
-
-            guard let analysis = ImageAnalyzer.analyze(cgImage: cgImage) else {
-                // 【2026-09-04発見・修正:実機不具合「該当があるのに数枚で止まる」の調査で発覚】
-                // 以前はVisionでの解析(ImageAnalyzer.analyze)が内部で失敗した場合も
-                // 「カテゴリ0件」という"正常な解析結果"として扱い、AnalysisCacheに永久保存していた。
-                // 解析の失敗は一時的な現象(メモリ逼迫・対応できない画像形式など)でも起こりうるため、
-                // 実際には条件に合う写真(例:犬が写っている)なのに、たまたま1回解析に失敗しただけで
-                // 「合わない」という誤った判定結果が固定されてしまい、その写真は二度と表示されなくなる
-                // (=使うほど本当の該当数が減っていくという実害のあるバグだった)。
-                // サムネイル取得失敗と同じ「判定できなかった(undetermined)」扱いにし、
-                // 結果をキャッシュしない(次に選ばれた時にもう一度判定し直す機会を残す)ことで修正した。
-                hadUndeterminedCandidatesThisPass = true
-                continue
-            }
-            await AnalysisCache.shared.store(analysis, for: asset.localIdentifier)
-            if Self.matches(analysis: analysis, settings: settings) {
-                return asset
-            }
+            cursor = batchEnd
+            // この窓の中だけを「近い順」に並べ替える(全候補ではなく窓の中だけなので計算量は小さい)。
+            scoredWindow = newlyScored.sorted { $0.score > $1.score }
+            // 窓の中が空(この窓は全部判定不能だった)なら、ループの先頭に戻って次の窓を試す。
         }
-        return nil
+    }
+
+    /// 1枚の判定結果を取得する(キャッシュ済みならそれを使い、無ければサムネイル取得→Vision解析)。
+    /// 判定できなかった場合は nil(呼び出し側が hadUndeterminedCandidatesThisPass に記録する)。
+    private func analyzedResult(for asset: PHAsset) async -> AssetAnalysis? {
+        if let cached = await AnalysisCache.shared.analysis(for: asset.localIdentifier) {
+            return cached
+        }
+        guard let cgImage = await Self.requestAnalysisThumbnail(asset: asset) else {
+            // サムネイルが取得できなかった(端末内に無い等)。
+            return nil
+        }
+        // サムネイル取得(await)には時間がかかることがあるため、その直後にも確認する。
+        // キャンセル後にVisionでの解析(CPUを使う処理)へ進んでしまうことを防ぐ。
+        if Task.isCancelled { return nil }
+
+        guard let analysis = ImageAnalyzer.analyze(cgImage: cgImage) else {
+            // 【2026-09-04発見・修正:実機不具合「該当があるのに数枚で止まる」の調査で発覚】
+            // 以前はVisionでの解析(ImageAnalyzer.analyze)が内部で失敗した場合も
+            // 「カテゴリ0件」という"正常な解析結果"として扱い、AnalysisCacheに永久保存していた。
+            // 解析の失敗は一時的な現象(メモリ逼迫・対応できない画像形式など)でも起こりうるため、
+            // 実際には条件に合う写真(例:犬が写っている)なのに、たまたま1回解析に失敗しただけで
+            // 「合わない」という誤った判定結果が固定されてしまい、その写真は二度と表示されなくなる
+            // (=使うほど本当の該当数が減っていくという実害のあるバグだった)。
+            // サムネイル取得失敗と同じ「判定できなかった(undetermined)」扱いにし、
+            // 結果をキャッシュしない(次に選ばれた時にもう一度判定し直す機会を残す)ことで修正した。
+            return nil
+        }
+        await AnalysisCache.shared.store(analysis, for: asset.localIdentifier)
+        return analysis
     }
 
     // MARK: - メタ情報での絞り込み(解析不要・原則2の「事前にできる分」)
@@ -245,15 +301,33 @@ actor CandidateEngine {
         return true
     }
 
-    private static func matches(analysis: AssetAnalysis, settings: FilterSettings) -> Bool {
+    /// 写真が選んだ雰囲気・カテゴリに「どれだけ近いか」を点数化する(高いほど近い)。
+    /// 【2026-09-05追加】以前はここで合否(Bool)を決めていたが、「合わない」を切り捨てるのをやめ、
+    /// 点数として表すことで、条件にぴったり合う写真が無くても近いものから流せるようにした。
+    /// 雰囲気・カテゴリの両方を選んだ場合(例:「鮮やか×犬」)は単純に加算する
+    /// (CEO要望「両方の近さを合算する」への対応。各軸は選んだ時だけ0〜1の点を持ち、
+    /// 選ばなかった軸は0点=順位に影響しない)。
+    private static func score(analysis: AssetAnalysis, settings: FilterSettings) -> Double {
+        var total = 0.0
+
         if !settings.selectedMoods.isEmpty {
-            guard let mood = analysis.mood, settings.selectedMoods.contains(mood) else { return false }
+            if let mood = analysis.mood {
+                // 選んだ雰囲気の中で最も近いものとの近さを採用する(複数選んだ場合、どれか1つに
+                // 近ければ十分近いとみなす。原則2の判定対象がANDではなくORの考え方に合わせている)。
+                total += settings.selectedMoods.map { MoodSimilarity.similarity(mood, $0) }.max() ?? 0
+            }
+            // 平均色の判定自体ができなかった写真(analysis.mood == nil)は、この軸の加点が無いまま
+            // (=この軸では最下位に近い扱い)進む。除外はしない(「必ず何か出す」方針のため)。
         }
+
         if !settings.selectedCategories.isEmpty {
-            let hasMatch = analysis.categories.contains { settings.selectedCategories.contains($0) }
-            if !hasMatch { return false }
+            // 選んだカテゴリのうち何個が実際に写っていたか、の割合(0〜1)。
+            // 複数カテゴリを選んだ場合、より多く該当する写真ほど高得点になる。
+            let matchedCount = settings.selectedCategories.intersection(analysis.categories).count
+            total += Double(matchedCount) / Double(settings.selectedCategories.count)
         }
-        return true
+
+        return total
     }
 
     // MARK: - 判定用サムネイル取得

@@ -1,3 +1,2 @@
-photos permission dialog found=true
-v4_emptylibrary_01_home_with_few_photos.png	t=4.8s
-v4_emptylibrary_02_after_start.png	t=12.7s
+v4_emptylibrary_01_home_with_few_photos.png	t=6.3s
+v4_emptylibrary_02_after_start.png	t=23.4s

@@ -7,6 +7,7 @@ struct SlideshowView: View {
     let totalSeconds: Int
     let settings: FilterSettings
     let playbackSettings: PlaybackSettings
+    let alarmSettings: AlarmSettings
     let placeClusters: [PlaceCluster]
 
     @StateObject private var controller = TimerController()
@@ -52,7 +53,7 @@ struct SlideshowView: View {
         }
         .statusBarHidden()
         .onAppear {
-            controller.start(totalDurationSeconds: totalSeconds, settings: settings, playbackSettings: playbackSettings, placeClusters: placeClusters)
+            controller.start(totalDurationSeconds: totalSeconds, settings: settings, playbackSettings: playbackSettings, alarmSettings: alarmSettings, placeClusters: placeClusters)
             // 指摘C: スライドショー中は画面の自動ロックを止める(この画面にいる間だけ)。
             UIApplication.shared.isIdleTimerDisabled = true
         }
@@ -120,13 +121,29 @@ struct SlideshowView: View {
         }
     }
 
+    /// タイマー終了時の画面。CEO要望(2026-09-05):アラームの鳴らし方に「止めるまで鳴り続ける」
+    /// パターンを追加したため、まず音(・バイブレーション)だけを止めるボタンを用意し、
+    /// 止まったら「閉じる」に切り替わる、という2段階にした
+    /// (iPhone標準のアラームと同じく「音を止める」と「画面を閉じる」を分けている。
+    /// n回鳴って終わるパターンで自然に鳴り終わった場合も、controller.isAlarmSoundingが自動で
+    /// falseになるため、ボタンは操作しなくても自動的に「閉じる」に切り替わる)。
     private var finishedView: some View {
         VStack(spacing: 12) {
             Text("タイマー終了")
                 .font(.title2.bold())
                 .foregroundStyle(.white)
-            Button("閉じる") { dismiss() }
+            if controller.isAlarmSounding {
+                Button("アラームを止める") {
+                    controller.stopAlarm()
+                }
                 .buttonStyle(.borderedProminent)
+                .tint(.red)
+                .accessibilityIdentifier("stopAlarmButton")
+            } else {
+                Button("閉じる") { dismiss() }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("finishedCloseButton")
+            }
         }
         .padding()
         .frame(maxWidth: .infinity)

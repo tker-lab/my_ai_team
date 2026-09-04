@@ -1,17 +1,17 @@
-v3_default_01_launch.png	t=8.0s
+v3_default_01_launch.png	t=7.9s
 v3_default_02_after_start.png	t=11.9s
 v3_default_03_after_start_wait.png	t=13.1s
 v3_default_04_r2.png	t=17.4s
-v3_default_05_r4.png	t=21.7s
-v3_default_06_r6.png	t=26.0s
+v3_default_05_r4.png	t=21.8s
+v3_default_06_r6.png	t=26.1s
 v3_default_07_r8.png	t=30.3s
-v3_default_08_r10.png	t=34.5s
-v3_default_09_final.png	t=34.6s
+v3_default_08_r10.png	t=34.6s
+v3_default_09_final.png	t=34.7s
 
 media identifiers observed (順番):
   [0] media-video-2-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
   [1] media-video-2-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
-  [2] media-video-2-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
+  [2] media-video-3-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
   [3] media-video-3-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
   [4] media-video-3-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
   [5] media-video-4-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
@@ -20,6 +20,6 @@ media identifiers observed (順番):
   [8] media-video-5-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
   [9] media-video-5-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
 
-remaining seconds observed (順番): [295, 293, 290, 288, 286, 284, 282, 280, 278, 275]
+remaining seconds observed (順番): [295, 293, 290, 288, 286, 284, 282, 280, 278, 276]
 distinct media count: 4
 video observed: true
