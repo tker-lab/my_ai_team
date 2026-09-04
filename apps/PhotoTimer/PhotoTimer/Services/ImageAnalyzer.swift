@@ -17,9 +17,12 @@ enum ImageAnalyzer {
     private static let generalConfidenceThreshold: Float = 0.15
     private static let dedicatedConfidenceThreshold: Float = 0.3
 
-    static func analyze(cgImage: CGImage) -> AssetAnalysis {
+    /// カテゴリの解析結果。Visionでの解析自体が失敗した場合は nil を返す
+    /// (「判定できなかった」であって「該当カテゴリが無かった」ではないことを呼び出し側に伝えるため。
+    /// 詳細は analyzeCategories 内のコメント参照)。
+    static func analyze(cgImage: CGImage) -> AssetAnalysis? {
         let mood = analyzeMood(cgImage: cgImage)
-        let categories = analyzeCategories(cgImage: cgImage)
+        guard let categories = analyzeCategories(cgImage: cgImage) else { return nil }
         return AssetAnalysis(mood: mood, categories: categories, analyzerVersion: AssetAnalysis.currentVersion)
     }
 
@@ -34,28 +37,44 @@ enum ImageAnalyzer {
         // 数値解析による最適化ではなく、実際の写真で試しながら決めた経験則であることに注意
         // (=精度を追い込む種類のしきい値ではない。色に関する条件は「多少ずれても実害が小さい」
         // 性質のため、これで十分と判断した)。
+        //
+        // 【2026-09-04調整:「緑」「鮮やか」がほとんど出ない件】
+        // 実機で「暖色・寒色はしっかり出たが、緑・鮮やかは1枚しか出なかった」という報告を受けての調整。
+        // 原因は「写真1枚まるごとの平均色」という判定方法そのものの性質にある。緑や鮮やかな被写体は
+        // 写真の中の一部分であることが多く(例:芝生の上の犬。犬自体・空・地面の色と混ざって平均される)、
+        // 画面全体を平均するとその色は薄まってしまい、平均色だけでは「緑」「鮮やか」の代表的なしきい値に
+        // なかなか届かない。写真の一部分だけを見る判定(領域ごとの色分布など)に作り替えれば精度は上げられるが、
+        // 実装量が増える大きめの変更になるため、今回は行っていない(報告書に改善案として記載)。
+        // CEO判断(2026-09-04): 精度よりヒット数を優先し、「拾いすぎる側に倒す」方針をさらに強めてよい
+        // (的外れな判定が増えるのは許容する。むしろ「犬を選んだのに違う結果が出る」ような意外性も歓迎)。
+        // これを受け、無彩色寄り(モノトーン・淡い)に逃がす範囲を絞り、色相での判定に回る写真を増やし、
+        // 「緑」の色相範囲を広げ、「鮮やか」に必要な彩度も下げた。
         //  - 明度(b) < 0.25: 暗所・夜景など、画面全体が暗いと感じられる目安として「暗め」判定
         //  - 明度(b) > 0.85 かつ 彩度(s) < 0.2: 白背景に近いくらい明るく色味が薄い時に「明るめ」判定
         //  - 彩度(s) < 0.15: ほぼ無彩色(白黒グレー)とみなせる目安で「モノトーン」判定
-        //  - 彩度(s) < 0.35: 上より色はあるがまだ淡い程度の目安で「淡い」判定
+        //  - 彩度(s) < 0.22: 上より色はあるがまだ淡い程度の目安で「淡い」判定(旧0.35→0.22。
+        //    ここで「淡い」に回ってしまう写真が多すぎ、緑・鮮やかにたどり着けていなかったため引き下げ)
         // これらに当てはまらない場合のみ、下の色相(hue)による暖色・寒色・緑の判定に進む。
         if b < 0.25 { return .dark }
         if b > 0.85 && s < 0.2 { return .bright }
         if s < 0.15 { return .monotone }
-        if s < 0.35 { return .pastel }
+        if s < 0.22 { return .pastel }
 
         // 色相(0〜1)で暖色/寒色/緑を判定。0=赤,0.17=黄,0.33=緑,0.5=シアン,0.66=青,0.83=マゼンタ
+        // 「緑」の範囲を 0.22〜0.45 → 0.18〜0.48 に広げ、隣接する暖色帯(黄緑寄り)を少し譲った。
+        // 「鮮やか」に必要な彩度は 0.5 → 0.4 に下げた(平均色は個々の鮮やかな被写体より
+        // 彩度が低く出がちなため)。
         switch h {
-        case 0.22..<0.45:
+        case 0.18..<0.48:
             return .green
-        case 0.0..<0.16, 0.92...1.0:
-            return s > 0.5 ? .vivid : .warm
-        case 0.16..<0.22:
+        case 0.0..<0.16, 0.94...1.0:
+            return s > 0.4 ? .vivid : .warm
+        case 0.16..<0.18:
             return .warm
-        case 0.45..<0.7:
+        case 0.48..<0.7:
             return .cool
         default:
-            return s > 0.5 ? .vivid : .cool
+            return s > 0.4 ? .vivid : .cool
         }
     }
 
@@ -83,7 +102,7 @@ enum ImageAnalyzer {
 
     // MARK: - カテゴリ(犬・猫・人は専用検出、それ以外は一般分類)
 
-    private static func analyzeCategories(cgImage: CGImage) -> [CategoryTag] {
+    private static func analyzeCategories(cgImage: CGImage) -> [CategoryTag]? {
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
 
         let classifyRequest = VNClassifyImageRequest()
@@ -91,7 +110,18 @@ enum ImageAnalyzer {
         let humanRequest = VNDetectHumanRectanglesRequest()
 
         // 3つのリクエストを1回のハンドラでまとめて実行(画像デコードを使い回す)
-        try? handler.perform([classifyRequest, animalRequest, humanRequest])
+        do {
+            try handler.perform([classifyRequest, animalRequest, humanRequest])
+        } catch {
+            // 【2026-09-04発見・修正】以前は try? でここのエラーを黙って握りつぶしていたため、
+            // Vision側の一時的な失敗(メモリ逼迫・対応できない画像形式など)が起きても
+            // 「カテゴリ0件」という"正常な結果"として扱われ、呼び出し側(CandidateEngine)が
+            // それをそのままAnalysisCacheへ永久保存してしまっていた。本当は該当する写真でも、
+            // たまたま解析に失敗した1回のせいで二度と該当しない扱いになる不具合の原因だった。
+            // ここでは nil を返し、「判定できなかった」であることを呼び出し側に伝える
+            // (呼び出し側はこれをキャッシュせず、次に選ばれた時にもう一度判定し直す)。
+            return nil
+        }
 
         var found: Set<CategoryTag> = []
 

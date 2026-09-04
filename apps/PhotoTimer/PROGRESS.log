@@ -26,3 +26,56 @@
 2026-09-04 19:59 (2回目のチェック工程指摘対応・4/動作確認) XCUITestに新規2シナリオ追加(v5_接頭辞): testImmediateDismiss_DuringLazyEvaluation_NoBackgroundHang(雰囲気+カテゴリ遅延評価中に✕を押し、5秒以内にホーム画面へ戻る・その後の操作が遅延しないことを確認。指摘Aの回帰テスト。ただしテスト用ライブラリが15枚程度のため「数分間裏で走り続ける」規模の再現はこの環境では不可、と正直に明記)。testLegacyPlaceSelection_MigratesAndOffersClear(旧形式の場所ID一件を含むFilterSettingsをxcrun simctl経由でUserDefaultsに直接注入し、起動後に移行・表示・「見つからない場所の選択を解除」ボタンでの解除までを確認。指摘B・Gの回帰テスト)。既存11シナリオ+新規2シナリオ=13シナリオ全て成功(0 failures)。証跡はverify/にv5_接頭辞(一部v3/v4を再実行して更新)で保存。BUILD SUCCEEDED、警告0件。
 2026-09-04 19:59 【デバッグ知見・他部署にも有用】xcrun simctl spawn <UDID> defaults read/writeはcfprefsd(設定値を管理する常駐プロセス)のキャッシュにより、既に起動済みのアプリに対する外部からの書き込みや、アプリ内部での削除の直後の外部からの読み取りが実態と食い違って見えることがある(検証中に2回遭遇)。確実に検証するには、アプリを一度アンインストール→再インストールしてから書き込む(初回起動前の注入)/ raw plistファイル(<コンテナ>/Library/Preferences/<bundle-id>.plist)をplutil -pで直接読む、のいずれかを使うこと。
 2026-09-04 19:59 権限拒否・写真ごくわずかケース用の検証シミュレータ"PhotoTimer-EmptyLib"(前回作成分は本セッション開始時点で既に存在せず)を再作成(UDID 14447BD1-967B-4386-9974-CD75E51FFBBB)。testPermissionDenied_ShowsDeniedState / testEmptyLibrary_NoPhotosAtAll ともに成功確認済み。
+2026-09-04 21:45 (実機インストール・1) project.ymlにDEVELOPMENT_TEAM(ZW257YHSQM、CEOがXcode GUIでチーム選択)・CODE_SIGN_IDENTITY(実機=Apple Development/シミュレータ=無署名)を追加。xcodegen再生成後、generic/platform=iOS向けにBUILD SUCCEEDED(署名解決)。実機(id=EAEAFAB7-1FCD-5A39-8B86-56F04218F234)向けビルドは「Developer Mode disabled」で停止。CEOにデベロッパモード有効化を依頼する必要あり(この後の報告参照)。
+2026-09-04 21:50 (実機インストール・2) デベロッパモード有効化を確認後、ビルド成功・xcrun devicectl device installでインストール成功(bundleID com.aiteam.PhotoTimer)。起動を試みたところ「Unable to launch...because it has an invalid code signature...or its profile has not been explicitly trusted by the user」で失敗。CEOに「設定→一般→VPNとデバイス管理」からデベロッパを信頼する操作を依頼する必要あり(この後の報告参照)。
+2026-09-04 21:57 (実機動作確認・1) CEOの「信頼」操作完了後、devicectl device process launchで起動成功(プロセスID 656、2秒後も生存確認=クラッシュなし)。写真アクセス未許可のため許可依頼画面(PhotoAuthorizationView)が表示されているはず。このアプリ自体の許可ダイアログ(実機・CEO本人の写真ライブラリへのフルアクセス)は、シミュレータでの自動突破手法(XCUITestからのspringboard直接タップ)を意図的に使わず、CEO本人にタップしてもらう方針とした(理由:CEOの実際の個人写真への恒久的なアクセス許可という重い意思決定を、本人が見ていない場で自動化するのは不適切と判断)。CEOへの依頼待ち。
+2026-09-04 22:35 (実機不具合4件対応・1) 致命的2件+調査2件+CEO追加観測(先読み)に着手。コード調査の結論:
+致命的1「カテゴリで絞ると3枚目等で止まる」は、Task.isCancelled追加・1周判定ロジック自体には該当写真が
+存在するのに止まるバグは見つからず(コードトレースで確認)。CEO自身の実機再観測(表示2秒・カテゴリ雪で
+2秒/5秒とばらつく)が示す通り、「該当が少ないカテゴリほど、次の1枚を見つけるまでの探索(逐次のVision解析)
+に時間がかかり、表示時間内に終わらない分だけ待ちが発生する」という設計通りの挙動と判断(致命的な停止ではない)。
+ただし調査中に別の実害あるバグを発見・修正: ImageAnalyzer.analyzeCategories内でVisionのhandler.perform()を
+try?で握りつぶしていたため、解析が一時的に失敗した写真も「カテゴリ0件」という正常結果としてAnalysisCacheに
+永久保存されてしまい、本来該当する写真が二度と該当しなくなる(使うほど本当の該当数が減る)不具合があった。
+doで受けてnilを返す方式に変更し、CandidateEngine側は「判定できなかった(undetermined)」として扱い
+キャッシュしないよう修正(サムネイル取得失敗と同じ扱いに統一)。AssetAnalysis.currentVersionを1→2に上げ、
+過去に誤ってキャッシュされた結果を再解析させる。
+2026-09-04 22:36 (実機不具合4件対応・2/先読み) CEOから「待ち時間があるのは仕様と理解した。探しています表示は
+不要、先読みは検討して」との方針提示。CandidateEngineに1手先読み(prefetchNext)を実装:今の1枚を表示している
+間(数秒の待ち時間)に、裏で次の1枚の判定を始めておくTaskを追加。表示時間内に判定が終われば次に進む時の待ちが
+ゼロになる。既存のfindNextMatch()ループを流用しているので判定ロジック自体は変えていない。先読みタスクは
+runLoopTaskとは別Taskのため、✕で閉じた/タイマー終了した時に取り残されないよう明示的にcancelPrefetch()を追加
+(TimerController.stop()から呼ぶ)。XCUITestのtestImmediateDismiss_DuringLazyEvaluation_NoBackgroundHang
+(指摘Aの回帰テスト)で、先読み追加後も✕を押してからのフリーズが起きないことを確認済み。
+複数枚先読み(2〜3枚先まで)は実装コスト・複雑さが増す(先読み中の候補を捨てずに管理するキュー等が必要)ため
+今回は見送り、報告書に提案として記載。
+2026-09-04 22:33 (実機不具合4件対応・3/マナーモード再調査) 前回対応(アラーム直前に音声セッションを.playback
+へ切替+AudioServicesPlaySystemSound)が実機で効かなかった原因を特定: AudioServicesPlaySystemSound
+(システムサウンド再生用API)はアプリの音声セッションのカテゴリを一切参照しない仕様のため、直前に
+.playbackへ切り替えても意味が無かった(消音スイッチの影響を受け続ける)。マナースイッチを無視して確実に
+鳴らすには実際の音声データをAVAudioPlayerで(.playbackカテゴリの下で)再生する必要があると判明。
+外部素材を追加せず、Services/AlarmTone.swift(新規)でビープ音(880Hz、0.15秒×3回)をその場でWAVデータ
+として生成し、TimerController.finish()でAVAudioPlayerに渡して再生する方式に変更。バイブレーション
+(kSystemSoundID_Vibrate)は元々消音スイッチの影響を受けないAPIのため据え置き(効かない場合は端末設定
+「消音時のバイブレーション」がオフになっている可能性がある。報告書に確認依頼を記載)。
+2026-09-04 22:36 (実機不具合4件対応・4/場所の調査確定) CEOの実機(接続済み・ロック解除後)に対し、
+DEBUGビルド限定・環境変数ゲート付きの一度きりの診断コード(RootView.runLocationDiagnosticIfRequested、
+PHOTOTIMER_DIAG_LOCATION=1を明示的に渡した時だけ動く。通常のCEOの利用では一切動かない)を追加し、
+devicectl device process launch --console 経由でNSLog出力を直接確認。結果:
+authorizationStatus=3(フルアクセス許可済み。限定的アクセスではない)/ total=6296件 / withLocation=0件
+(写真0・動画0)。写真ライブラリ全体(6296件)に位置情報付きの写真が1枚も無いことを実機の実データで確認。
+実装側の読み取り不備(権限不足・差分処理の不具合等)ではなく、CEOの写真自体に位置情報が付いていないことが
+事実として確定。原因はカメラアプリの位置情報設定(設定→プライバシーとセキュリティ→位置情報サービス→
+カメラアプリ、が「許可しない」になっていると新規に撮る写真に位置情報が付かない)である可能性が高い。
+実装に不具合は無いと判断(修正なし)。診断コードはDEBUGビルドのみに存在し環境変数無しでは何もしないため、
+リリース版・CEOの普段の利用には影響しない。
+2026-09-04 22:38 (実機不具合4件対応・5/色のしきい値緩和) CEO承認(「拾いすぎる側にさらに倒してよい、精度を
+上げる方向には倒さない」)を受け、ImageAnalyzer.analyzeMoodのしきい値を緩和。「淡い」に回る彩度の上限を
+0.35→0.22に下げ(平均色が淡い判定に吸われすぎて緑・鮮やかまで到達できていなかったため)、「緑」の色相範囲を
+0.22-0.45→0.18-0.48に拡大、「鮮やか」に必要な彩度を0.5→0.4に緩和。AssetAnalysis.currentVersionを1→2に
+上げ、過去にキャッシュされた解析結果(旧しきい値によるもの)を再解析させるようにした。
+2026-09-04 22:40 (実機不具合4件対応・完了) 全修正のビルド確認完了。シミュレータ:BUILD SUCCEEDED、
+XCUITest主要シナリオ(既定フロー・写真/動画絞り込み・遅延評価中の即時✕対応・5フィルタ組み合わせ・旧形式
+場所データの移行・legacy再現)すべて成功(0 failures)。実機(CEOのiPhone 14、Team ID ZW257YHSQM):
+BUILD SUCCEEDED・devicectl device installで上書きインストール成功(CEOの許可状態・保存データは維持)。
+場所の診断用ログ取得も実機で実施済み(詳細は上記)。CEOへの依頼事項・報告はこの後の完了報告に記載。

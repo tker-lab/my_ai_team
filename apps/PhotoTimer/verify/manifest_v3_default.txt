@@ -1,25 +1,25 @@
-v3_default_01_launch.png	t=7.8s
-v3_default_02_after_start.png	t=11.8s
-v3_default_03_after_start_wait.png	t=12.9s
-v3_default_04_r2.png	t=17.2s
-v3_default_05_r4.png	t=21.5s
-v3_default_06_r6.png	t=25.8s
-v3_default_07_r8.png	t=30.1s
-v3_default_08_r10.png	t=34.4s
-v3_default_09_final.png	t=34.4s
+v3_default_01_launch.png	t=8.0s
+v3_default_02_after_start.png	t=11.9s
+v3_default_03_after_start_wait.png	t=13.1s
+v3_default_04_r2.png	t=17.4s
+v3_default_05_r4.png	t=21.7s
+v3_default_06_r6.png	t=26.0s
+v3_default_07_r8.png	t=30.3s
+v3_default_08_r10.png	t=34.5s
+v3_default_09_final.png	t=34.6s
 
 media identifiers observed (順番):
-  [0] media-photo-2-6A653F27-3CEB-46B9-8C1C-85244DC19E6C/L0/001
-  [1] media-photo-2-6A653F27-3CEB-46B9-8C1C-85244DC19E6C/L0/001
-  [2] media-photo-3-AC5455A6-337A-4D15-BCA0-2A1D621D0E3A/L0/001
-  [3] media-photo-3-AC5455A6-337A-4D15-BCA0-2A1D621D0E3A/L0/001
-  [4] media-photo-4-299B040A-D804-4211-9509-12C28F95CCE4/L0/001
-  [5] media-photo-4-299B040A-D804-4211-9509-12C28F95CCE4/L0/001
-  [6] media-photo-5-B84E8479-475C-4727-A4A4-B77AA9980897/L0/001
-  [7] media-photo-6-8D89972F-6979-49DD-B2E8-1C0F45482C1A/L0/001
-  [8] media-photo-6-8D89972F-6979-49DD-B2E8-1C0F45482C1A/L0/001
-  [9] media-photo-7-4E25F3BD-0337-4CF9-8259-59EE4B2E4307/L0/001
+  [0] media-video-2-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
+  [1] media-video-2-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
+  [2] media-video-2-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
+  [3] media-video-3-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
+  [4] media-video-3-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
+  [5] media-video-4-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
+  [6] media-video-4-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
+  [7] media-video-5-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
+  [8] media-video-5-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
+  [9] media-video-5-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
 
-remaining seconds observed (順番): [295, 293, 291, 289, 287, 283, 281, 279, 277, 275]
-distinct media count: 6
-video observed: false
+remaining seconds observed (順番): [295, 293, 290, 288, 286, 284, 282, 280, 278, 275]
+distinct media count: 4
+video observed: true

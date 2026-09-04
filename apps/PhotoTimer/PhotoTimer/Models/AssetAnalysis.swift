@@ -8,7 +8,11 @@ struct AssetAnalysis: Codable {
     /// この結果を作った時のロジックのバージョン。判定ロジックを改善した時に再解析させるための版番号。
     var analyzerVersion: Int
 
-    static let currentVersion = 1
+    /// 【2026-09-04: 1→2に更新】ImageAnalyzerのロジックを変更した(雰囲気の色しきい値を緩和、
+    /// カテゴリ解析失敗時にキャッシュしないよう修正)ため、古いロジックで作られた結果は
+    /// 再解析させる必要がある。バージョンを上げることで、次に選ばれた時に自動的に再解析される
+    /// (原則3「同じ写真は二度と解析しない」の対象は「今のロジックで解析済みのもの」に限る)。
+    static let currentVersion = 2
 }
 
 /// AssetAnalysis を localIdentifier ごとに端末内(Application Support配下のJSONファイル。

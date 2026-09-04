@@ -79,10 +79,17 @@ final class TimerController: ObservableObject {
         currentPlayer = nil
         currentImage = nil
         currentAsset = nil
+        // 【2026-09-04追加】先読み(prefetchNext)は runLoopTask とは別の独立したTaskとして動いているため、
+        // runLoopTask をキャンセルしただけではこの先読みタスクは止まらない。指摘Aで直した
+        // 「✕で閉じたらすぐ裏の処理も止まる」を、先読み追加によって再び壊さないための後始末。
+        if let engine {
+            Task { await engine.cancelPrefetch() }
+        }
         // 軽微指摘対応: 次回 start() まで前回の CandidateEngine を握ったままにしないよう nil に戻す
         // (機能上の実害は無いが、使い終わった実体を持ち続けない、という後始末を明確にする)。
         engine = nil
         phase = .idle
+        alarmPlayer = nil
         // 動画再生中に閉じられた場合に備え、念のため音声セッションも手放しておく(指摘D関連)。
         deactivateAudioSessionIfNeeded()
     }
@@ -103,6 +110,9 @@ final class TimerController: ObservableObject {
         finish()
     }
 
+    /// 鳴らしている間、参照を保持しておくためのプレイヤー(手放すと即座に無音で止まってしまうため)。
+    private var alarmPlayer: AVAudioPlayer?
+
     private func finish() {
         guard phase == .running else { return }
         phase = .finished
@@ -110,19 +120,34 @@ final class TimerController: ObservableObject {
         currentPlayer?.pause()
         // カウントダウン終了を知らせる(仮:動画の音を止めてアラーム音のみ鳴らす。詳細はCEO確認事項)
         //
-        // 【実機確認事項への対応: マナーモード(消音スイッチ)でアラームが聞こえない問題】
-        // `AudioServicesPlaySystemSound` は、その時点でアプリの音声セッションが「消音スイッチの
-        // 影響を受けないカテゴリ(.playback等)」になっていない限り、消音スイッチがオンだと
-        // 無音になる(Appleの仕様。QA1631)。このアプリは直前まで写真だけが表示されていると
-        // 音声セッションを手放している状態(指摘D対応)のため、そのままだとタイマーが鳴っても
-        // マナーモード中は本当に何も聞こえない可能性があった(タイマーアプリとして致命的)。
-        // アラームを鳴らす直前に音声セッションを.playbackへ切り替えることで、消音スイッチの
-        // 状態によらず必ず音が鳴るようにする。
-        try? AVAudioSession.sharedInstance().setCategory(.playback)
+        // 【2026-09-04再調査: マナーモード(消音スイッチ)でアラームが聞こえない不具合が直っていなかった件】
+        // 前回、「アラームを鳴らす直前に音声セッションを.playbackへ切り替える」という対応をしたが、
+        // 実機では効かなかった。原因を調べた結果、そもそも `AudioServicesPlaySystemSound`
+        // (キーボード音や送信音のような「短い操作音」向けのAPI。System Sound Services)は、
+        // アプリの音声セッションの種類(カテゴリ)を一切見ない仕様だと判明した。つまり直前に
+        // .playbackへ切り替えても、このAPIを使っている限りは消音スイッチの影響を受け続けてしまう
+        // (Appleの技術文書QA1631にも「このAPIは消音スイッチを無視させたい音には向かない」という
+        // 趣旨の記載がある)。
+        // 消音スイッチを無視して確実に鳴らすには、実際の音声データを AVAudioPlayer で
+        // (.playback カテゴリのセッションの下で)再生する必要がある。外部の音声ファイルを
+        // 追加で同梱する代わりに、短いビープ音をその場で生成して鳴らす方式にした
+        // (AlarmTone.swift。外部通信・追加素材なしで完結させるため)。
+        try? AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
         try? AVAudioSession.sharedInstance().setActive(true)
-        AudioServicesPlaySystemSound(1005)
-        // 万一(機種・設定・音量0などで)音に気づけない場合の保険として、バイブレーションも併用する
-        // (指摘: バイブレーションの併用が無かった)。
+        isAudioSessionActive = true
+        if let player = try? AVAudioPlayer(data: AlarmTone.data) {
+            player.prepareToPlay()
+            player.play()
+            alarmPlayer = player
+        } else {
+            // 万一 AVAudioPlayer の生成に失敗した場合の保険。マナーモード次第では聞こえないが、
+            // 何も鳴らないよりはまし、という位置づけで従来のシステムサウンドも鳴らしておく。
+            AudioServicesPlaySystemSound(1005)
+        }
+        // バイブレーションも併用する(指摘: バイブレーションの併用が無かった)。
+        // 【実機確認事項への回答】バイブレーションは消音スイッチの影響を受けない
+        // (影響するのは「設定→サウンドと触覚→消音時のバイブレーション」がオフの場合のみで、
+        // これは端末側の任意設定でありアプリからは検知・変更できない。報告書のCEO確認依頼を参照)。
         AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
     }
 
@@ -157,6 +182,11 @@ final class TimerController: ObservableObject {
                 if Task.isCancelled { break }
                 currentAsset = asset
                 displayToken += 1
+                // 【2026-09-04追加:先読み】この1枚を表示している間(displayAndWaitの待ち時間)を使って、
+                // 次の1枚の判定を裏で始めておく。該当が少ない条件(例:カテゴリ「雪」)ほど判定に
+                // 時間がかかりやすく、表示時間内に終わらないと結局その分だけ待つことになるが、
+                // 表示時間内に終わる場合は次に進む時の待ちがゼロになる。
+                await engine.prefetchNext()
                 let displayed = await displayAndWait(asset: asset)
                 if displayed { displayedAnyThisPass = true }
             }

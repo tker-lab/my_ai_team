@@ -1,6 +1,6 @@
-v3_wheelsync_01_combo0_m0_s15.png	t=8.7s
+v3_wheelsync_01_combo0_m0_s15.png	t=8.6s
 combo0: wheel=0分15秒 / homeTimeLabel=00:15 / expected=00:15
-v3_wheelsync_02_combo1_m2_s20.png	t=10.1s
+v3_wheelsync_02_combo1_m2_s20.png	t=10.0s
 combo1: wheel=2分20秒 / homeTimeLabel=02:20 / expected=02:20
 v3_wheelsync_03_combo2_m0_s45.png	t=11.5s
 combo2: wheel=0分45秒 / homeTimeLabel=00:45 / expected=00:45

@@ -1,6 +1,6 @@
-v5_immediatedismiss_01_mood_緑_category_花火_set.png	t=20.2s
-v5_immediatedismiss_02_before_close.png	t=25.5s
-v5_immediatedismiss_03_after_close.png	t=26.2s
-dismiss duration: 0.73s
+v5_immediatedismiss_01_mood_緑_category_花火_set.png	t=20.3s
+v5_immediatedismiss_02_before_close.png	t=25.6s
+v5_immediatedismiss_03_after_close.png	t=26.4s
+dismiss duration: 0.75s
 came back home: true
-filter button responsive after: 1.05s
+filter button responsive after: 1.11s

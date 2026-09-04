@@ -16,6 +16,16 @@ actor CandidateEngine {
     private var shuffledAssets: [PHAsset] = []
     private var cursor = 0
     private let settings: FilterSettings
+    /// 【2026-09-04追加:先読み(プリフェッチ)】
+    /// 「該当が少ないカテゴリ×短い表示秒数だと、判定が表示時間に追いつかれる」という実機での
+    /// CEO確認(雰囲気=雪で表示2秒設定→切り替えに2秒の時と5秒かかる時がある)を受けて追加。
+    /// 以前は「今表示している1枚の表示時間が終わってから、次の1枚を探し始める」という順番だったため、
+    /// 探すのに時間がかかる条件では表示時間ぴったりで待ちが発生していた。
+    /// 今は「今の1枚を表示し始めた直後」に、次の1枚の判定をこのTaskとして裏で始めておく。
+    /// 表示時間(数秒)の間に判定が終われば、次に進む時には既に結果が出ている=待ちがゼロになる。
+    /// 判定のほうが時間がかかる場合は、これまで通りその分だけ待つ(先読みは「隠せる分だけ隠す」仕組みで、
+    /// 判定そのものを速くするものではない)。
+    private var prefetchTask: Task<PHAsset?, Never>?
     /// 【指摘H対応】雰囲気・カテゴリの判定用サムネイルが取得できず、「合うかどうか判定できなかった」
     /// 候補が今回のひと巡り(prepare()〜候補を使い切るまで)で1件でもあったか。
     /// 「iPhoneのストレージを最適化」設定を使っていると、端末内に無い写真が多くを占めることがあり、
@@ -35,11 +45,24 @@ actor CandidateEngine {
 
     /// 候補プールを準備する(原則1:選択肢は固定/自動生成済みのものだけを使い、ここでは絞り込みの実行のみ)
     func prepare() {
+        // シャッフルし直す(=候補の並びが変わる)ので、古い並びを前提に先読みしていた分は捨てる。
+        prefetchTask?.cancel()
+        prefetchTask = nil
         let assets = Self.fetchBaseAssets(settings: settings)
         let filtered = assets.filter { Self.passesMetadataFilters($0, settings: settings) }
         shuffledAssets = filtered.shuffled()
         cursor = 0
         hadUndeterminedCandidatesThisPass = false
+    }
+
+    /// ✕で閉じた・タイマーが終わった時に呼ぶ。先読み中の判定を打ち切る。
+    /// 【なぜ必要か】先読み(prefetchNext)は呼び出し元(TimerController.runSlideLoop)のTaskとは
+    /// 別の独立したTaskとして動くため、呼び出し元のTaskをキャンセルしただけではこの先読みタスクは
+    /// 止まらない。指摘Aで直した「閉じたらすぐ裏の処理も止まる」を、先読み追加によって
+    /// 再び壊さないための後始末。
+    func cancelPrefetch() {
+        prefetchTask?.cancel()
+        prefetchTask = nil
     }
 
     var candidatePoolCount: Int { shuffledAssets.count }
@@ -56,14 +79,36 @@ actor CandidateEngine {
             return shuffledAssets[cursor]
         }
 
+        // 先読み(prefetchNext)が既に始まっていれば、その結果を待つだけでよい
+        // (表示時間中に判定が終わっていれば、ここは実質即座に返る)。
+        if let task = prefetchTask {
+            prefetchTask = nil
+            return await task.value
+        }
+        return await findNextMatch()
+    }
+
+    /// 今表示している1枚の表示時間を使って、次の1枚の判定を裏で始めておく(先読み)。
+    /// 判定不要な設定(雰囲気・カテゴリどちらも指定なし)の時は next() 自体が一瞬で終わるため、
+    /// 先読みする意味が無い(むしろ余計なTaskを作るだけ)ので何もしない。
+    /// 既に先読み中なら二重に始めない。
+    func prefetchNext() {
+        guard settings.needsImageAnalysis, prefetchTask == nil else { return }
+        prefetchTask = Task {
+            await self.findNextMatch()
+        }
+    }
+
+    /// 雰囲気・カテゴリの判定をしながら次の1枚を探す本体(遅延評価。原則2)。
+    /// `next()`(即座に呼ばれる経路)と `prefetchNext()`(裏で先読みする経路)の両方から使う。
+    private func findNextMatch() async -> PHAsset? {
         while cursor < shuffledAssets.count {
             // 【指摘A対応】1枚判定するたびにキャンセルされていないか確認する。
             // 以前はここに確認が無かったため、✕ボタンで閉じてもタイマーが0になっても、
             // このwhileループは「候補を最後の1枚まで判定し終える」まで裏で走り続けてしまっていた
             // (写真が多いほど、CPUを使い切ったまま数分〜十数分止まらない状態になりうる不具合)。
-            // 呼び出し元(TimerController.runSlideLoop)がタイマー停止・画面を閉じた時に
-            // このメソッドを呼んでいるTaskをcancel()するので、ここでその状態を毎回確認して
-            // すぐに処理を打ち切れるようにする。
+            // 呼び出し元がタイマー停止・画面を閉じた時にこのTaskをcancel()するので
+            // (先読み分は cancelPrefetch() 経由)、ここでその状態を毎回確認してすぐ打ち切れるようにする。
             if Task.isCancelled { return nil }
 
             let asset = shuffledAssets[cursor]
@@ -86,7 +131,20 @@ actor CandidateEngine {
             // サムネイル取得(await)には時間がかかることがあるため、その直後にも確認する。
             // キャンセル後にVisionでの解析(CPUを使う処理)へ進んでしまうことを防ぐ。
             if Task.isCancelled { return nil }
-            let analysis = ImageAnalyzer.analyze(cgImage: cgImage)
+
+            guard let analysis = ImageAnalyzer.analyze(cgImage: cgImage) else {
+                // 【2026-09-04発見・修正:実機不具合「該当があるのに数枚で止まる」の調査で発覚】
+                // 以前はVisionでの解析(ImageAnalyzer.analyze)が内部で失敗した場合も
+                // 「カテゴリ0件」という"正常な解析結果"として扱い、AnalysisCacheに永久保存していた。
+                // 解析の失敗は一時的な現象(メモリ逼迫・対応できない画像形式など)でも起こりうるため、
+                // 実際には条件に合う写真(例:犬が写っている)なのに、たまたま1回解析に失敗しただけで
+                // 「合わない」という誤った判定結果が固定されてしまい、その写真は二度と表示されなくなる
+                // (=使うほど本当の該当数が減っていくという実害のあるバグだった)。
+                // サムネイル取得失敗と同じ「判定できなかった(undetermined)」扱いにし、
+                // 結果をキャッシュしない(次に選ばれた時にもう一度判定し直す機会を残す)ことで修正した。
+                hadUndeterminedCandidatesThisPass = true
+                continue
+            }
             await AnalysisCache.shared.store(analysis, for: asset.localIdentifier)
             if Self.matches(analysis: analysis, settings: settings) {
                 return asset

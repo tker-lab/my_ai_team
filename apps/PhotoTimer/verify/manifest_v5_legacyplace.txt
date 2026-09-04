@@ -2,4 +2,4 @@ photos permission dialog found=true
 v5_legacyplace_01_home_after_legacy_seed.png	t=4.9s
 v5_legacyplace_02_filter_place_section.png	t=12.5s
 v5_legacyplace_03_after_clear_place.png	t=13.3s
-v5_legacyplace_04_home_after_clear.png	t=16.1s
+v5_legacyplace_04_home_after_clear.png	t=16.0s

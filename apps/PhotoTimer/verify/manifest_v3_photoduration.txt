@@ -1,8 +1,8 @@
-v3_photoduration_01_photo_duration_set_6秒.png	t=23.0s
-v3_photoduration_02_default_after_start.png	t=28.2s
-long(6秒設定) intervals: ["4.78", "6.21"]
-v3_photoduration_03_after_close_1.png	t=44.2s
-v3_photoduration_04_photo_duration_set_1秒.png	t=52.3s
-v3_photoduration_05_short_after_start.png	t=57.5s
-short(1秒設定) intervals: ["0.74", "0.94", "1.20", "0.95", "2.01", "0.22", "0.94"]
-v3_photoduration_06_final.png	t=65.8s
+v3_photoduration_01_photo_duration_set_6秒.png	t=22.9s
+v3_photoduration_02_default_after_start.png	t=28.1s
+long(6秒設定) intervals: ["4.54", "6.44"]
+v3_photoduration_03_after_close_1.png	t=44.0s
+v3_photoduration_04_photo_duration_set_1秒.png	t=52.0s
+v3_photoduration_05_short_after_start.png	t=57.2s
+short(1秒設定) intervals: ["0.72", "0.94", "1.20", "0.95", "1.22", "0.91", "0.96"]
+v3_photoduration_06_final.png	t=65.4s

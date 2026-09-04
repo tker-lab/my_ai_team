@@ -11,3 +11,6 @@
 - [写真ライブラリの差分だけ取得するAPIの動作確認済みコード](phaassetlibrary-differential-scan-api.md) — PHPersistentChangeToken/fetchPersistentChanges(since:)
 - [XCUITestのForm下部LazyVGridはスクロールしないと見つからない/シミュレータ既定写真6枚は消せない](xcuitest-lazy-form-scroll-and-simulator-seed-photos.md)
 - [simctl defaults read/writeはcfprefsdキャッシュで実態と食い違うことがある](simctl-defaults-cfprefsd-caching.md) — 検証は再インストール後の書き込み、またはraw plist直読みで行う
+- [無料Apple IDでの実機署名手順](free-apple-id-device-signing.md) — Team IDはGUIで一度だけ選んでもらいproject.ymlに保存、CODE_SIGN_IDENTITYはSDK別、no DDI=デベロッパモード未オン
+- [AudioServicesPlaySystemSoundはマナースイッチを無視できない](audioservices-ignores-mute-switch.md) — 音声セッションのカテゴリを一切見ない仕様。AVAudioPlayerで自前生成した音を再生する必要あり
+- [devicectlでの実機ログ診断手法](devicectl-console-diagnostic-technique.md) — DEBUG+環境変数ゲートの一度きり診断+`--console`でNSLog取得。ロック中は起動不可、CEOに解除依頼が必要
