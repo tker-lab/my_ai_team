@@ -79,16 +79,26 @@ final class TimerController: ObservableObject {
         currentPlayer = nil
         currentImage = nil
         currentAsset = nil
+        // 軽微指摘対応: 次回 start() まで前回の CandidateEngine を握ったままにしないよう nil に戻す
+        // (機能上の実害は無いが、使い終わった実体を持ち続けない、という後始末を明確にする)。
+        engine = nil
         phase = .idle
         // 動画再生中に閉じられた場合に備え、念のため音声セッションも手放しておく(指摘D関連)。
-        Self.deactivateAudioSession()
+        deactivateAudioSessionIfNeeded()
     }
 
+    /// 【軽微指摘対応: カウントダウンが実時間からズレていく不具合】
+    /// 以前は「1秒スリープして1引く」を繰り返すだけだったため、スリープ自体のわずかなオーバーヘッド
+    /// (OSのスケジューリングの都合など)が毎回積み重なり、タイマーが長いほど実際の経過時間より
+    /// 表示上の残り時間の減りが遅くなっていく(実時間とズレる)不具合があった。
+    /// 今は「開始時刻から数えて本来あと何秒か」を毎回時計(Date)から計算し直すことで、
+    /// 1回ごとのズレが蓄積しないようにしている。
     private func runCountdown() async {
+        let deadline = Date().addingTimeInterval(TimeInterval(remainingSeconds))
         while remainingSeconds > 0 {
             try? await Task.sleep(nanoseconds: 1_000_000_000)
             if Task.isCancelled { return }
-            remainingSeconds -= 1
+            remainingSeconds = max(0, Int(deadline.timeIntervalSinceNow.rounded()))
         }
         finish()
     }
@@ -99,7 +109,21 @@ final class TimerController: ObservableObject {
         runLoopTask?.cancel()
         currentPlayer?.pause()
         // カウントダウン終了を知らせる(仮:動画の音を止めてアラーム音のみ鳴らす。詳細はCEO確認事項)
+        //
+        // 【実機確認事項への対応: マナーモード(消音スイッチ)でアラームが聞こえない問題】
+        // `AudioServicesPlaySystemSound` は、その時点でアプリの音声セッションが「消音スイッチの
+        // 影響を受けないカテゴリ(.playback等)」になっていない限り、消音スイッチがオンだと
+        // 無音になる(Appleの仕様。QA1631)。このアプリは直前まで写真だけが表示されていると
+        // 音声セッションを手放している状態(指摘D対応)のため、そのままだとタイマーが鳴っても
+        // マナーモード中は本当に何も聞こえない可能性があった(タイマーアプリとして致命的)。
+        // アラームを鳴らす直前に音声セッションを.playbackへ切り替えることで、消音スイッチの
+        // 状態によらず必ず音が鳴るようにする。
+        try? AVAudioSession.sharedInstance().setCategory(.playback)
+        try? AVAudioSession.sharedInstance().setActive(true)
         AudioServicesPlaySystemSound(1005)
+        // 万一(機種・設定・音量0などで)音に気づけない場合の保険として、バイブレーションも併用する
+        // (指摘: バイブレーションの併用が無かった)。
+        AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
     }
 
     /// スライドショーの本体ループ。
@@ -141,7 +165,18 @@ final class TimerController: ObservableObject {
 
             if !displayedAnyThisPass {
                 // 1周しても1枚も表示できなかった。もう一度シャッフルし直しても結果は変わらないため、ここで止める。
-                let reason: NoCandidatesReason = sawAnyCandidateThisPass ? .loadFailed : .noMatchingPhotos
+                // 【指摘H対応】「条件に合う候補が無かった(noMatchingPhotos)」と「判定・表示できなかった
+                // だけ(loadFailed)」を混同しないようにする。以前は sawAnyCandidateThisPass
+                // (=雰囲気・カテゴリの判定に実際に合格した候補があったか)だけを見ていたため、
+                // 「判定用サムネイルがそもそも取得できず、合否を判定できないまま読み飛ばした」
+                // ケース(engine.hadUndeterminedCandidates)が noMatchingPhotos 側に紛れ込んでいた。
+                let hadUndeterminedCandidates = await engine.hadUndeterminedCandidates
+                let reason: NoCandidatesReason
+                if sawAnyCandidateThisPass || hadUndeterminedCandidates {
+                    reason = .loadFailed
+                } else {
+                    reason = .noMatchingPhotos
+                }
                 showNoCandidates(reason: reason)
                 return
             }
@@ -171,15 +206,23 @@ final class TimerController: ObservableObject {
             if Task.isCancelled { return false }
             let player = AVPlayer(playerItem: playerItem)
             currentPlayer = player
-            Self.activateAudioSessionForPlayback() // 指摘D: 再生する瞬間だけ音声セッションを確保する
+            activateAudioSessionIfNeeded() // 指摘D: 再生する瞬間だけ音声セッションを確保する
             player.play() // 動画は音付きで再生(MVP必須要件)
             // 「指定秒数で切り上げる」設定の時だけ上限を設ける。「最後まで再生する」設定の時は上限なし(nil)。
             let timeout: TimeInterval? = playbackSettings.videoPlaybackMode == .capped ? playbackSettings.videoCapSeconds : nil
             await Self.waitForVideoToFinish(player: player, timeout: timeout)
             player.pause()
-            Self.deactivateAudioSession() // 指摘D: 再生が終わったら手放し、他アプリの音楽を妨げないようにする
+            // 【軽微指摘対応】ここでは手放さない。以前はここで毎回 deactivate していたため、
+            // 動画が連続して選ばれた時に「手放す→次の動画のために確保し直す」を動画ごとに
+            // 繰り返してしまい、そのたびに他アプリ(音楽アプリ等)の再生が一瞬止まって
+            // また再開する、を動画の本数だけ繰り返す不具合があった。
+            // 手放すのは「次に表示するのが動画ではなかった時」(下のdefault節)か、
+            // スライドショー自体を終了する時(stop())にまとめて行う。
             return true
         default:
+            // 直前まで動画が続いていた場合、写真に切り替わったタイミングで音声セッションを手放す
+            // (動画を再生する瞬間"だけ"確保する、という指摘D対応の元々の意図はここで保つ)。
+            deactivateAudioSessionIfNeeded()
             guard let image = await Self.requestDisplayImage(for: asset) else { return false }
             if Task.isCancelled { return false }
             currentImage = image
@@ -188,23 +231,34 @@ final class TimerController: ObservableObject {
         }
     }
 
-    // MARK: - 音声セッション(指摘D対応)
+    // MARK: - 音声セッション(指摘D対応 + 軽微指摘対応)
 
-    /// 動画を再生する瞬間だけ音声セッションを確保する。
+    /// 今、音声セッション(動画の音を鳴らすための権利のようなもの)を確保している最中かどうか。
+    /// これを見て「すでに確保済みなら何もしない/まだ確保していなければ確保する」を判断することで、
+    /// 動画が連続する時に毎回 確保→解放 を繰り返さないようにする。
+    private var isAudioSessionActive = false
+
+    /// 動画を再生する瞬間だけ音声セッションを確保する。すでに確保済みなら何もしない
+    /// (動画が連続する時に、動画ごとに確保し直して他アプリの音楽を毎回止めてしまうのを防ぐ)。
     /// 【なぜ「アプリ起動時にまとめて確保」から「再生の瞬間だけ」に変えたか】
     /// 以前は PhotoTimerApp の起動時(init)に確保しっぱなしにしていたため、フィルタ画面を見ているだけ、
     /// あるいはタイマーを設定しているだけでも他アプリ(音楽アプリ等)の再生が強制的に止まってしまう
     /// 不具合があった(指摘D)。動画を再生する瞬間だけ確保することで、写真だけが流れている間や
     /// タイマーを使っていない間は他アプリの音楽を邪魔しない。
-    private static func activateAudioSessionForPlayback() {
+    private func activateAudioSessionIfNeeded() {
+        guard !isAudioSessionActive else { return }
         try? AVAudioSession.sharedInstance().setCategory(.playback)
         try? AVAudioSession.sharedInstance().setActive(true)
+        isAudioSessionActive = true
     }
 
-    /// 動画の再生が終わったら音声セッションを手放す。`.notifyOthersOnDeactivation` を指定することで、
-    /// 一時停止していた他アプリの音楽に「再開してよい」ことを伝える(Appleの推奨パターン)。
-    private static func deactivateAudioSession() {
+    /// 音声セッションを手放す。すでに手放し済みなら何もしない。`.notifyOthersOnDeactivation` を
+    /// 指定することで、一時停止していた他アプリの音楽に「再開してよい」ことを伝える
+    /// (Appleの推奨パターン)。
+    private func deactivateAudioSessionIfNeeded() {
+        guard isAudioSessionActive else { return }
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        isAudioSessionActive = false
     }
 
     // MARK: - 画像・動画の取得
@@ -215,8 +269,17 @@ final class TimerController: ObservableObject {
         options.isNetworkAccessAllowed = true // 本人のiCloud上の写真も表示できるようにする(仮の判断。詳細は報告参照)
         options.resizeMode = .fast
 
-        let targetSize = CGSize(width: UIScreen.main.bounds.width * UIScreen.main.scale,
-                                 height: UIScreen.main.bounds.height * UIScreen.main.scale)
+        // 【軽微指摘対応】UIScreen.main はiOS 16以降非推奨(複数ウィンドウに対応したアプリでは
+        // 「画面は1つ」を前提にするこのAPIが実態に合わないため)。代わりに、今つながっている
+        // ウィンドウシーンから画面情報を取る。TimerController全体が@MainActorなので、
+        // UIApplication.sharedへここで直接アクセスして問題ない。取得できなかった場合の保険値として
+        // iPhoneでよくある解像度・スケールを使う(取得できないのは通常起こらない想定)。
+        let screen = UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.screen }
+            .first
+        let scale = screen?.scale ?? 3.0
+        let bounds = screen?.bounds ?? CGRect(x: 0, y: 0, width: 430, height: 932)
+        let targetSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
 
         return await withCheckedContinuation { continuation in
             // highQualityFormat は低画質版→高画質版と2回コールバックが来ることがあるが、
@@ -255,21 +318,38 @@ final class TimerController: ObservableObject {
     /// 待ち続けたまま処理が戻らなくなる(実質のフリーズ)おそれがあった。写真の待ち方
     /// (`try? await Task.sleep`)と同じく、短い間隔で寝ては起きてキャンセルを確認する方式にすることで、
     /// どのケースでも確実に処理が戻るようにしている。
+    /// 【指摘E対応: 再生失敗を検知していなかった不具合】
+    /// 以前は「最後まで再生する」設定の時、`AVPlayerItemDidPlayToEndTime`(正常に最後まで再生し終えた
+    /// 通知)しか見ていなかった。壊れた動画・iCloudから取得できない動画などで再生に失敗した場合は
+    /// この通知が一切来ないため、`timeout` が nil(最後まで再生する設定)だと真っ黒な画面のまま
+    /// タイマーが終わるまでずっと止まって見えてしまっていた。
+    /// 再生失敗は (1) `AVPlayerItemFailedToPlayToEndTime` 通知、(2) `player.currentItem?.status == .failed`
+    /// (通知が来る前に状態だけ先に失敗になるケースがあるため、ポーリングでも念のため確認する)
+    /// の2通りで検知し、どちらかが起きたら「最後まで再生する」設定でもそこで処理を戻す。
     private static func waitForVideoToFinish(player: AVPlayer, timeout: TimeInterval?) async {
         final class DidFinishBox: @unchecked Sendable {
             var didFinish = false
         }
         let box = DidFinishBox()
-        let observer = NotificationCenter.default.addObserver(
+        let endObserver = NotificationCenter.default.addObserver(
             forName: .AVPlayerItemDidPlayToEndTime,
             object: player.currentItem,
             queue: .main
         ) { _ in box.didFinish = true }
-        defer { NotificationCenter.default.removeObserver(observer) }
+        let failObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemFailedToPlayToEndTime,
+            object: player.currentItem,
+            queue: .main
+        ) { _ in box.didFinish = true }
+        defer {
+            NotificationCenter.default.removeObserver(endObserver)
+            NotificationCenter.default.removeObserver(failObserver)
+        }
 
         let start = Date()
         while !box.didFinish {
             if Task.isCancelled { return }
+            if player.currentItem?.status == .failed { return }
             if let timeout, Date().timeIntervalSince(start) >= timeout { return }
             try? await Task.sleep(nanoseconds: 100_000_000) // 0.1秒ごとに確認
         }

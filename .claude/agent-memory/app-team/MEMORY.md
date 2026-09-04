@@ -10,3 +10,4 @@
 - [@MainActorクラス内のTask{}は画面スレッドで動き続ける](mainactor-background-work-pattern.md) — 本当にバックグラウンド化するにはnonisolated+Task.detachedが必要
 - [写真ライブラリの差分だけ取得するAPIの動作確認済みコード](phaassetlibrary-differential-scan-api.md) — PHPersistentChangeToken/fetchPersistentChanges(since:)
 - [XCUITestのForm下部LazyVGridはスクロールしないと見つからない/シミュレータ既定写真6枚は消せない](xcuitest-lazy-form-scroll-and-simulator-seed-photos.md)
+- [simctl defaults read/writeはcfprefsdキャッシュで実態と食い違うことがある](simctl-defaults-cfprefsd-caching.md) — 検証は再インストール後の書き込み、またはraw plist直読みで行う

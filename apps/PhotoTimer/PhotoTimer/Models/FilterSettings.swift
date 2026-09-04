@@ -25,19 +25,52 @@ struct FilterSettings: Codable, Equatable {
 }
 
 // MARK: - 永続化
+///
+/// 【2026-09-04変更(指摘G対応)】
+/// 以前は UserDefaults に保存していたが、UserDefaults(標準の保存領域)の中身は既定で
+/// iCloudバックアップ・iTunes/Finderバックアップの対象に含まれる。選んだ「場所」
+/// (selectedPlaceIDs)はマス目番号(例 "715.0_2795.0")で、割り算を戻すだけで
+/// 自宅周辺などの座標が復元できてしまうため、**CEOが「バックアップ対象外にする」と
+/// 決定した事項**に反していた(場所データ本体〔PlaceCluster〕は既に対応済みだったが、
+/// 「どの場所を選んだか」という設定はここが漏れていた)。
+/// 解析結果(AssetAnalysis)・場所データ(PlaceCluster)と同じ「端末内ファイル+
+/// isExcludedFromBackup」の方式に統一する。
 enum FilterSettingsStore {
-    private static let key = "PhotoTimer.FilterSettings.v1"
+    /// 移行元(旧保存先)。読み込み専用として残す。移行が済んだらこのキーは削除する。
+    private static let legacyDefaultsKey = "PhotoTimer.FilterSettings.v1"
+
+    private static let fileURL: URL = {
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent("filter_settings.json")
+    }()
 
     static func load() -> FilterSettings {
-        guard let data = UserDefaults.standard.data(forKey: key),
-              let decoded = try? JSONDecoder().decode(FilterSettings.self, from: data) else {
-            return .default
+        if let data = try? Data(contentsOf: fileURL),
+           let decoded = try? JSONDecoder().decode(FilterSettings.self, from: data) {
+            return decoded
         }
-        return decoded
+        // 新しい保存先にまだ何も無い場合、旧保存先(UserDefaults)に残っている可能性がある
+        // (アップデート前から使っていた場合)。あれば1回だけ読み込み、新しい保存先に書き直した上で
+        // 旧データは削除する(そのままだとバックアップに残り続けてしまうため)。
+        if let legacyData = UserDefaults.standard.data(forKey: legacyDefaultsKey),
+           let legacyDecoded = try? JSONDecoder().decode(FilterSettings.self, from: legacyData) {
+            save(legacyDecoded)
+            UserDefaults.standard.removeObject(forKey: legacyDefaultsKey)
+            // 通常、UserDefaultsへの変更はOS側が適切なタイミングで自動的にディスクへ反映するため
+            // synchronize() の明示呼び出しは非推奨・基本的に不要とされている。ただしこの移行処理は
+            // 「アプリの生涯で最大1回だけ」しか通らない特別な経路であり、かつ削除したはずのキーが
+            // バックアップに残ってしまうことを確実に防ぎたい(CEO決定事項)ため、念のためここだけ
+            // 明示的に同期させ、削除がすぐ確実にディスクへ反映されるようにしている。
+            UserDefaults.standard.synchronize()
+            return legacyDecoded
+        }
+        return .default
     }
 
     static func save(_ settings: FilterSettings) {
         guard let data = try? JSONEncoder().encode(settings) else { return }
-        UserDefaults.standard.set(data, forKey: key)
+        try? data.write(to: fileURL, options: .atomic)
+        BackupExclusion.exclude(fileURL)
     }
 }

@@ -182,6 +182,18 @@ struct FilterOptionsView: View {
 
     // MARK: - 場所
 
+    /// 選択済みだが、もう「場所」の選択肢一覧に存在しないID。
+    /// 【指摘B対応】以前は場所のID(PlaceCluster.id)の作り方を「クラスタ中心の平均座標」から
+    /// 「マス目番号(bucketKey)」に変更したため、その変更より前に選んでいたIDは新しい一覧の
+    /// どのIDとも一致しなくなり、絞り込み結果が黙って0件になるのに解除する手段が無かった。
+    /// アルバム側(missingSelectedAlbumIDs)と全く同じ考え方で、一覧に存在しないIDを検出して
+    /// 解除ボタンを出す。これにより、ID方式の変更前に選んでいた古い設定が残っている場合でも、
+    /// このボタン1つで復帰できる(=当時の設定を保存していたUserDefaultsのキー自体を
+    /// 新バージョンに切り替える、という大掛かりな移行処理をしなくても済む)。
+    private var missingSelectedPlaceIDs: Set<String> {
+        settings.selectedPlaceIDs.subtracting(libraryIndex.placeClusters.map(\.id))
+    }
+
     private var placeSection: some View {
         Section {
             if libraryIndex.isBuildingPlaces && libraryIndex.placeClusters.isEmpty {
@@ -202,10 +214,21 @@ struct FilterOptionsView: View {
                     }
                 }
             }
+            if !missingSelectedPlaceIDs.isEmpty {
+                Button(role: .destructive) {
+                    settings.selectedPlaceIDs.subtract(missingSelectedPlaceIDs)
+                } label: {
+                    Text("見つからない場所の選択を解除(\(missingSelectedPlaceIDs.count)件)")
+                }
+            }
         } header: {
             Text("場所")
         } footer: {
-            Text("あなたが実際に撮影した場所から自動でリストを作成します(位置情報は端末内だけで処理し、地名の変換にのみOS標準の仕組みを使います)。")
+            if missingSelectedPlaceIDs.isEmpty {
+                Text("あなたが実際に撮影した場所から自動でリストを作成します(位置情報は端末内だけで処理し、地名の変換にのみOS標準の仕組みを使います)。")
+            } else {
+                Text("以前選んでいた場所が今の一覧に見つかりません。上のボタンで選択を解除できます。")
+            }
         }
     }
 

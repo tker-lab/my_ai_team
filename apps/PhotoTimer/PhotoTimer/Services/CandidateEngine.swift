@@ -16,6 +16,14 @@ actor CandidateEngine {
     private var shuffledAssets: [PHAsset] = []
     private var cursor = 0
     private let settings: FilterSettings
+    /// 【指摘H対応】雰囲気・カテゴリの判定用サムネイルが取得できず、「合うかどうか判定できなかった」
+    /// 候補が今回のひと巡り(prepare()〜候補を使い切るまで)で1件でもあったか。
+    /// 「iPhoneのストレージを最適化」設定を使っていると、端末内に無い写真が多くを占めることがあり、
+    /// (判定用サムネイルは isNetworkAccessAllowed=false のためiCloudへは取りに行かない設計)
+    /// 以前はこれらが黙って読み飛ばされ、実際は「判定できなかった」だけなのに「条件に合う写真が
+    /// 見つかりませんでした」と表示されてしまっていた。この値を呼び出し側(TimerController)が
+    /// 参照し、正しい理由(loadFailed)を出し分けられるようにする。
+    private var hadUndeterminedCandidatesThisPass = false
 
     init(settings: FilterSettings, placeClusters: [PlaceCluster]) {
         self.settings = settings
@@ -31,9 +39,13 @@ actor CandidateEngine {
         let filtered = assets.filter { Self.passesMetadataFilters($0, settings: settings) }
         shuffledAssets = filtered.shuffled()
         cursor = 0
+        hadUndeterminedCandidatesThisPass = false
     }
 
     var candidatePoolCount: Int { shuffledAssets.count }
+
+    /// 指摘H対応: 今回のひと巡りで「判定できなかった」候補が1件でもあったか。
+    var hadUndeterminedCandidates: Bool { hadUndeterminedCandidatesThisPass }
 
     /// 次に表示する1枚を返す。無ければ nil(=「条件に合う写真が見つかりませんでした」)。
     func next() async -> PHAsset? {
@@ -45,6 +57,15 @@ actor CandidateEngine {
         }
 
         while cursor < shuffledAssets.count {
+            // 【指摘A対応】1枚判定するたびにキャンセルされていないか確認する。
+            // 以前はここに確認が無かったため、✕ボタンで閉じてもタイマーが0になっても、
+            // このwhileループは「候補を最後の1枚まで判定し終える」まで裏で走り続けてしまっていた
+            // (写真が多いほど、CPUを使い切ったまま数分〜十数分止まらない状態になりうる不具合)。
+            // 呼び出し元(TimerController.runSlideLoop)がタイマー停止・画面を閉じた時に
+            // このメソッドを呼んでいるTaskをcancel()するので、ここでその状態を毎回確認して
+            // すぐに処理を打ち切れるようにする。
+            if Task.isCancelled { return nil }
+
             let asset = shuffledAssets[cursor]
             cursor += 1
 
@@ -57,8 +78,14 @@ actor CandidateEngine {
 
             guard let cgImage = await Self.requestAnalysisThumbnail(asset: asset) else {
                 // サムネイルが取得できなかった(端末内に無い等)場合は判定不能として次へ。落とさず読み飛ばすだけ。
+                // 【指摘H対応】この「読み飛ばし」があったことを記録しておく。全部読み飛ばして
+                // 候補を使い切った場合、呼び出し側は「該当0件」ではなく「判定できなかった」を表示する。
+                hadUndeterminedCandidatesThisPass = true
                 continue
             }
+            // サムネイル取得(await)には時間がかかることがあるため、その直後にも確認する。
+            // キャンセル後にVisionでの解析(CPUを使う処理)へ進んでしまうことを防ぐ。
+            if Task.isCancelled { return nil }
             let analysis = ImageAnalyzer.analyze(cgImage: cgImage)
             await AnalysisCache.shared.store(analysis, for: asset.localIdentifier)
             if Self.matches(analysis: analysis, settings: settings) {

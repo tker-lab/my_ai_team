@@ -53,8 +53,14 @@ struct ContentView: View {
                             .foregroundStyle(.secondary)
                             .padding(.trailing, 16)
 
+                        // 【軽微指摘対応】下限は1秒(0分0秒は選べない)。以前は秒ホイールに常に0〜59を
+                        // 表示していたため、「分0・秒0」を選ぶと内部的には1秒に補正されるのに、
+                        // ホイールの見た目は0のままで食い違って見える不具合があった。
+                        // 「分が0の時だけ、秒の選択肢から0を外す(1〜59のみ)」ことで、
+                        // そもそも「分0・秒0」という組み合わせをホイール上で選べないようにし、
+                        // 内部の補正とホイールの見た目が食い違う状況自体を起こらなくしている。
                         Picker("秒", selection: secondsBinding) {
-                            ForEach(0..<60, id: \.self) { s in
+                            ForEach(secondsWheelRange, id: \.self) { s in
                                 Text("\(s)").tag(s)
                             }
                         }
@@ -166,6 +172,12 @@ struct ContentView: View {
 
     private static func clamp(_ value: Int, min minValue: Int, max maxValue: Int) -> Int {
         min(max(value, minValue), maxValue)
+    }
+
+    /// 秒ホイールに表示する選択肢の範囲。分が0の時だけ0を除く(1〜59)。
+    /// 分が1以上の時は合計が必ず60秒以上になるので、下限(1秒)を気にせず0〜59を出せる。
+    private var secondsWheelRange: Range<Int> {
+        minutesBinding.wrappedValue == 0 ? 1..<60 : 0..<60
     }
 
     private var filterSummary: String {

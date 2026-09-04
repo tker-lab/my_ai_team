@@ -1,8 +1,8 @@
-v3_videoduration_01_video_mode_set.png	t=25.4s
-v3_videoduration_02_capped_after_start.png	t=30.1s
-capped(3秒設定) on-duration: 2.03
-v3_videoduration_03_capped_observed.png	t=32.2s
-v3_videoduration_04_video_mode_set.png	t=39.4s
-v3_videoduration_05_full_after_start.png	t=44.0s
-full(最後まで再生) on-duration: 4.00
-v3_videoduration_06_full_observed.png	t=48.1s
+v3_videoduration_01_video_mode_set.png	t=25.3s
+v3_videoduration_02_capped_after_start.png	t=29.9s
+capped(3秒設定) on-duration: 2.05
+v3_videoduration_03_capped_observed.png	t=32.0s
+v3_videoduration_04_video_mode_set.png	t=39.5s
+v3_videoduration_05_full_after_start.png	t=44.2s
+full(最後まで再生) on-duration: 4.06
+v3_videoduration_06_full_observed.png	t=48.3s

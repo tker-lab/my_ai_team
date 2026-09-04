@@ -73,6 +73,9 @@ struct SlideshowView: View {
                     .font(.title2)
                     .foregroundStyle(.white, .black.opacity(0.4))
             }
+            // 自動テスト(XCUITest)がこの✕ボタンを確実に見つけられるようにするための目印。
+            // 画面表示や動作には影響しない。
+            .accessibilityIdentifier("closeButton")
 
             Spacer()
 
@@ -111,7 +114,9 @@ struct SlideshowView: View {
         case .noMatchingPhotos:
             return "条件に合う写真・動画が見つかりませんでした"
         case .loadFailed:
-            return "写真・動画を読み込めませんでした\n(iCloud上にしか無い写真で、電波が届いていない可能性があります)"
+            // 指摘H対応: 原因は「iCloud上にしか無い写真」だけでなく、「iPhoneのストレージを最適化」設定で
+            // 端末内から写真の実データが取り除かれているケースもあるため、両方が伝わる文言にする。
+            return "写真・動画を読み込めませんでした\n(iCloud上にしか無い、または「ストレージを最適化」で端末内に無い写真の可能性があります。電波の良い場所でお試しください)"
         }
     }
 

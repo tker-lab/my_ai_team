@@ -11,8 +11,10 @@ struct AssetAnalysis: Codable {
     static let currentVersion = 1
 }
 
-/// AssetAnalysis を localIdentifier ごとに端末内(Documents配下のJSONファイル)へ保存するキャッシュ。
-/// 「使うほど速くなる」を実現する本体。iCloudには置かない(端末内のみ)。
+/// AssetAnalysis を localIdentifier ごとに端末内(Application Support配下のJSONファイル。
+/// 【軽微指摘対応】以前のコメントは「Documents配下」としていたが、実際の保存先(下の fileURL)は
+/// Application Support配下になっており食い違っていた)へ保存するキャッシュ。
+/// 「使うほど速くなる」を実現する本体。iCloudバックアップには含めない(BackupExclusion.swift参照。端末内のみ)。
 actor AnalysisCache {
     static let shared = AnalysisCache()
 
@@ -57,15 +59,45 @@ actor AnalysisCache {
     }
 
     private var saveTask: Task<Void, Never>?
+    /// 「保存待ち」の変更が最初に発生した時刻。連続して解析が続く間の書き込み上限(下記)を
+    /// 計算するために使う。書き込みが終わるたびに nil に戻す。
+    private var firstDirtyAt: Date?
+
+    /// 書き込みを保存する(=ディスクに書く)頻度を抑える仕組み(指摘K対応)。
+    ///
+    /// 【以前の実装の問題】store()が呼ばれるたびに「まだ保存タスクが無ければ2秒後に1回保存する」
+    /// という予約をしていたが、一度予約されたタスクはそのまま2秒後に必ず発火する仕様だった。
+    /// スライドショー中は数百ミリ秒〜数秒おきに新しい写真の解析が続くため、実質「2秒おきに
+    /// 辞書全体(数万件だと数MB)をまるごとJSON化して書き直す」動作になっていた
+    /// (書き込みのたびにファイル全体を上書きするため、件数が多いほど1回の書き込みコストも増える)。
+    ///
+    /// 【今の実装】store()が呼ばれるたびに「最後の変更から2秒間、操作が止まったら保存する」という
+    /// デバウンス(操作が続く間は保存を先延ばしにする仕組み)に変更した。ただし、スライドショーが
+    /// 途切れず長時間続くとデバウンスが永遠に保存を先延ばしにしてしまい、その間にアプリが
+    /// 不意に終了すると保存されていない解析結果がまとめて失われる(=次回同じ写真をもう一度
+    /// 解析し直すことになる。あくまでキャッシュなので不具合にはならないが、量が多いと勿体ない)。
+    /// そのためもう1つ上限を設け、「最初の未保存の変更から最大10秒経ったら、操作が続いていても
+    /// そこで必ず1回保存する」ようにしている。
+    private static let quietInterval: TimeInterval = 2.0
+    private static let maxDelayInterval: TimeInterval = 10.0
+
     private func scheduleSaveIfNeeded() {
-        guard saveTask == nil else { return }
+        let now = Date()
+        if firstDirtyAt == nil { firstDirtyAt = now }
+        let elapsedSinceFirstDirty = now.timeIntervalSince(firstDirtyAt ?? now)
+        let remainingUntilCap = max(0, Self.maxDelayInterval - elapsedSinceFirstDirty)
+        let waitInterval = min(Self.quietInterval, remainingUntilCap)
+
+        // 新しい変更があるたびに、前の予約はキャンセルして待ち直す(デバウンス本体)。
+        saveTask?.cancel()
         saveTask = Task {
-            // 書き込みをまとめるため少し待ってから保存する(1枚ごとにディスクI/Oしない)
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            try? await Task.sleep(nanoseconds: UInt64(waitInterval * 1_000_000_000))
+            guard !Task.isCancelled else { return }
             // このTaskはAnalysisCacheアクター自身の中から作られているため、persist()の呼び出しに
             // awaitは不要(不要なawaitがビルド警告になっていたのを修正)。
             self.persist()
             self.saveTask = nil
+            self.firstDirtyAt = nil
         }
     }
 

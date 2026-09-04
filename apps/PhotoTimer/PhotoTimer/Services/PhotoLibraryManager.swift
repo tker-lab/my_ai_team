@@ -70,19 +70,27 @@ final class PhotoLibraryManager: ObservableObject {
         var requiresFullRebuild: Bool
         var insertedOrUpdatedIdentifiers: [String]
         var deletedIdentifiers: [String]
+        /// この差分を計算した時点の「新しいしおり」。まだ端末には保存していない状態のもの。
+        /// 【指摘J対応】呼び出し側がこの差分を実際に反映し終えたら `commitToken(_:)` に渡して
+        /// 初めて保存する(差分を検知した直後にすぐ保存すると、保存後・反映前にアプリが終了した場合、
+        /// その分の差分が「もう前回のしおりより後ろなので次回は差分に出てこない」まま永久に失われるため)。
+        var pendingToken: PHPersistentChangeToken?
 
         /// 何かしらの変化があったか(全件対象化が必要な場合も含む)。
         var hasAnyChange: Bool {
             requiresFullRebuild || !insertedOrUpdatedIdentifiers.isEmpty || !deletedIdentifiers.isEmpty
         }
 
-        static let none = ChangeSet(requiresFullRebuild: false, insertedOrUpdatedIdentifiers: [], deletedIdentifiers: [])
+        static let none = ChangeSet(requiresFullRebuild: false, insertedOrUpdatedIdentifiers: [], deletedIdentifiers: [], pendingToken: nil)
     }
 
     /// 起動時に呼ぶ。前回からの差分だけを確認する。「原則4」の実装本体。
     ///
     /// `nonisolated`: 画面スレッド(MainActor)をブロックしないよう、呼び出し側が
     /// バックグラウンドのTaskから呼べるようにするため(指摘A対応)。
+    ///
+    /// 【指摘J対応】この関数自体はもう「しおり」を保存しない(計算するだけ)。実際に保存するのは
+    /// 呼び出し側が差分の反映を終えた後、`commitToken(changeSet.pendingToken)` を呼んだ時点。
     nonisolated func checkForChangesSinceLastLaunch() -> ChangeSet {
         guard Self.isUsable(PHPhotoLibrary.authorizationStatus(for: .readWrite)) else { return .none }
 
@@ -97,8 +105,18 @@ final class PhotoLibraryManager: ObservableObject {
                 var updated = Set<String>()
                 var deleted = Set<String>()
                 for change in changes {
-                    // アセット(写真・動画)以外の変化(アルバムの並び替え等)は今回は使わないため読み飛ばす。
-                    guard let details = try? change.changeDetails(for: .asset) else { continue }
+                    // 【指摘I対応】以前は `try?` で「詳細が取得できないエラー」まで含めて握りつぶし、
+                    // その変更だけを黙って読み飛ばしていた。しおり(トークン)はこの後どのみち
+                    // 最新まで進めてしまうため、一度読み飛ばした変更は二度と拾えなくなる
+                    // (取りこぼしが無言で起き続ける)。
+                    // このメソッドは「アセット以外の変化(アルバムの並び替え等)しか無い」場合は
+                    // 空の詳細(insertedLocalIdentifiers等が空)を返すだけで、エラーにはならない
+                    // (Photosフレームワークのドキュメント上、正常系)。エラーを投げるのは
+                    // `PHPhotosErrorPersistentChangeDetailsUnavailable`(=変更履歴からもう
+                    // 現在の状態を再構築できない)ような、本当に差分を取り切れない場合だけなので、
+                    // `try`(`?`を付けない)でこの下の catch まで伝播させ、その時だけ
+                    // 全件再構築にフォールバックする。
+                    let details = try change.changeDetails(for: .asset)
                     inserted.formUnion(details.insertedLocalIdentifiers)
                     updated.formUnion(details.updatedLocalIdentifiers)
                     deleted.formUnion(details.deletedLocalIdentifiers)
@@ -115,10 +133,17 @@ final class PhotoLibraryManager: ObservableObject {
             changeSet.requiresFullRebuild = true
         }
 
-        // 次回のために「しおり」を更新しておく
-        Self.saveToken(PHPhotoLibrary.shared().currentChangeToken)
+        // 「次のしおり」を計算はするが、ここではまだ保存しない(指摘J対応。保存は呼び出し側が
+        // 差分の反映を終えてから commitToken(_:) で行う)。
+        changeSet.pendingToken = PHPhotoLibrary.shared().currentChangeToken
 
         return changeSet
+    }
+
+    /// 呼び出し側が `checkForChangesSinceLastLaunch()` で受け取った差分を実際に反映し終えたら呼ぶ。
+    /// ここで初めて「しおり」を端末に保存する(指摘J対応)。
+    nonisolated func commitToken(_ token: PHPersistentChangeToken) {
+        Self.saveToken(token)
     }
 
     nonisolated private static func loadToken() -> PHPersistentChangeToken? {

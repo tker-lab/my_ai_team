@@ -15,16 +15,25 @@ import XCTest
 ///  6. testVideoDurationSettingAffectsCutoff … 設定画面で動画の「指定秒数で切り上げる/最後まで再生する」を変えると、実際の挙動が変わることを確認
 ///  7. testWheelDisplaySync … ホイールの値と画面上部の大きな時間表示が、操作が落ち着いた後は必ず一致することを確認(既存の疑わしいスクリーンショットの検証)
 ///
-/// v4シナリオ(2026-09-04 チェック工程の指摘対応の検証。証跡は verify/ に v4_ 接頭辞で保存):
-///  8. testEmptyResult_ImpossibleDateRange … 未来の日付範囲を指定し、メタ情報の時点で確実に0件になるケース。
-///     「見つかりませんでした」が出て、閉じるボタンがちゃんと効くことを確認(指摘Bの基本形)。
-///  9. testEmptyResult_NeverMatchingMoodAndCategory … 雰囲気+カテゴリの組み合わせ条件で、遅延評価(原則2)の
+/// v4シナリオ(2026-09-04 チェック工程1回目の指摘対応の検証。証跡は verify/ に v4_ 接頭辞で保存):
+///  8. testEmptyResult_NeverMatchingMoodAndCategory … 雰囲気+カテゴリの組み合わせ条件で、遅延評価(原則2)の
 ///     結果0件になりうるケース。指摘Bで実際に問題だった「無限ループで固まる」不具合の直接の回帰テスト。
 ///     一定時間内に必ず決着し(見つからない表示 or 通常再生)、閉じるボタンが効き続けることを確認する。
-///  10. testFiveFilterCombination … 日時・アルバム・雰囲気を実際に画面操作で選択し(+メディアの種類・
-///      スクリーンショット除くは既定値のまま)、「場所」セクションの表示も確認した上でスタートしても
-///      クラッシュ・フリーズせず、決着した状態(通常再生 or 見つかりませんでした)に至ることを確認。
-///      (場所はテスト用ライブラリに位置情報付きの写真が無い可能性が高いため、選べる時だけ選ぶ)
+///  9. testFiveFilterCombination … 日時・アルバム・雰囲気を実際に画面操作で選択し(+メディアの種類・
+///     スクリーンショット除くは既定値のまま)、「場所」セクションの表示も確認した上でスタートしても
+///     クラッシュ・フリーズせず、決着した状態(通常再生 or 見つかりませんでした)に至ることを確認。
+///     (場所はテスト用ライブラリに位置情報付きの写真が無い可能性が高いため、選べる時だけ選ぶ)
+///  10. testPermissionDenied_ShowsDeniedState / 11. testEmptyLibrary_NoPhotosAtAll … 権限拒否・写真が
+///      ごくわずかなケース。既存の検証用シミュレータを壊さないよう別シミュレータで実行する
+///      (実行方法は該当テストの直前のコメント参照)。
+///
+/// v5シナリオ(2026-09-04 チェック工程2回目の指摘対応の検証。証跡は verify/ に v5_ 接頭辞で保存):
+///  12. testImmediateDismiss_DuringLazyEvaluation_NoBackgroundHang … 雰囲気・カテゴリの遅延評価が
+///      決着する前に✕で閉じても、素早くホーム画面に戻れ、その後の操作が遅延しないことを確認
+///      (指摘A: ✕で閉じても裏で解析が走り続ける不具合の回帰テスト)。
+///  13. testLegacyPlaceSelection_MigratesAndOffersClear … 場所ID方式変更前の「旧形式」の場所選択が
+///      UserDefaultsに残っていた状態からの復帰(移行・解除ができること)を確認
+///      (指摘B・G: 復帰手段が無い/設定がiCloudバックアップに含まれる、の回帰テスト)。
 final class PhotoTimerUITests: XCTestCase {
 
     override func setUpWithError() throws {
@@ -239,7 +248,9 @@ final class PhotoTimerUITests: XCTestCase {
         let defaultIntervals = Self.measureSwitchIntervals(mediaElement: mediaElement, observeSeconds: 14.0, pollInterval: 0.2)
         recorder.appendManifestLines(["long(6秒設定) intervals: \(defaultIntervals.map { String(format: "%.2f", $0) })"])
 
-        app.buttons["xmark.circle.fill"].firstMatch.tap() // 閉じるボタン(SF Symbol名がラベルになっている)
+        // 閉じるボタン。以前はSF Symbol名("xmark.circle.fill")が暗黙のラベルとして拾えていたが、
+        // v5でこのボタンに明示的なアクセシビリティID("closeButton")を付けたため、それに合わせて変更。
+        app.buttons["closeButton"].firstMatch.tap()
         if !app.buttons["startButton"].waitForExistence(timeout: 5) {
             // ラベルでの取得に失敗した場合、画面左上あたりの唯一のボタンをタップするフォールバック。
             app.buttons.firstMatch.tap()
@@ -442,7 +453,8 @@ final class PhotoTimerUITests: XCTestCase {
         XCTAssertNotEqual(settledAs, "crashed", "雰囲気+カテゴリの絞り込みでスタートするとアプリが強制終了した")
 
         // 決着後、閉じるボタン(✕)が実際に反応してホーム画面に戻れることを確認する(指摘Bの「✕ボタンも効かなくなる」への回帰テスト)。
-        let closeButton = app.buttons["xmark.circle.fill"].firstMatch
+        // v5でこのボタンに明示的なアクセシビリティID("closeButton")を付けたため、それを使う。
+        let closeButton = app.buttons["closeButton"].firstMatch
         if closeButton.exists {
             closeButton.tap()
         } else {
@@ -606,6 +618,137 @@ final class PhotoTimerUITests: XCTestCase {
 
         XCTAssertTrue(appeared, "動画が1本も無いライブラリで動画に絞り込んだのに「見つかりませんでした」が表示されなかった")
         XCTAssertEqual(app.state, .runningForeground, "写真がごくわずかな状態でスタートするとアプリが落ちた")
+    }
+
+    // MARK: - シナリオ13: 雰囲気・カテゴリの遅延評価中に✕で閉じても、裏で解析が走り続けないか(v5)
+    //
+    // 【2回目のチェック工程・指摘A対応の回帰テスト】以前はCandidateEngine.next()のループに
+    // キャンセル確認が一度も入っておらず、✕ボタンで閉じてもタイマーが0になっても、候補を最後の
+    // 1枚まで判定し終えるまで裏で処理が走り続けてしまっていた(写真が多いほどCPUを使い切ったまま
+    // 数分〜十数分止まらない不具合)。
+    //
+    // 【この検証環境での限界について、正直に書いておく】
+    // このテスト用ライブラリは写真・動画あわせて15枚程度しか無く、1周分の判定はどのみち一瞬で
+    // 終わってしまうため、「数分間裏で走り続ける」こと自体をこの環境で直接再現・確認することは
+    // できない(実害が大きく出るのは実際に数千〜数万枚の写真を持つ利用者の場合)。
+    // そのため、ここでは以下を確認することで間接的に裏付ける:
+    //  1. 遅延評価が必要な絞り込み(雰囲気+カテゴリ、必ず0件になる組み合わせ)でスタートした直後、
+    //     結果が確定するのを待たずに✕(closeButton)を押す。
+    //  2. ✕を押した直後、素早く(数秒以内に)ホーム画面に戻れること
+    //     (=CandidateEngine.next()のwhileループがTask.isCancelled確認で即座に打ち切られている
+    //     ことの状況証拠。以前の実装でもこの小さなライブラリでは同様に速く戻っていた可能性はあるが、
+    //     「戻ってくること自体」の回帰確認として意味がある)。
+    //  3. 戻った直後からアプリの操作(絞り込み画面を開く)が遅延なく効くこと
+    //     (=裏でCPUを使い切る処理が続いていれば、UIの応答が遅れるはず)。
+    func testImmediateDismiss_DuringLazyEvaluation_NoBackgroundHang() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v5_immediatedismiss")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+        try Self.setTotalTimer(app: app, minutes: "3", seconds: "0")
+
+        // 「緑」+「花火」は testEmptyResult_NeverMatchingMoodAndCategory で確認済みの、
+        // このテスト用ライブラリでは絶対に一致しない組み合わせ(遅延評価が最後まで回る)。
+        try Self.selectMoodAndCategory(app: app, mood: "緑", category: "花火", recorder: recorder)
+
+        let startButton = app.buttons["startButton"]
+        XCTAssertTrue(startButton.waitForExistence(timeout: 10))
+        startButton.tap()
+
+        // 結果が確定するのを待たず、できるだけ早いタイミングで✕を押す。
+        let closeButton = app.buttons["closeButton"]
+        XCTAssertTrue(closeButton.waitForExistence(timeout: 5), "スライドショー画面の✕ボタンが見つからない")
+        recorder.shoot(app, label: "before_close")
+        let dismissRequestedAt = Date()
+        closeButton.tap()
+
+        var cameBackHome = false
+        for _ in 0..<100 { // 最大 100 x 100ms = 10秒
+            if startButton.exists { cameBackHome = true; break }
+            usleep(100_000)
+        }
+        let dismissDuration = Date().timeIntervalSince(dismissRequestedAt)
+        recorder.shoot(app, label: "after_close")
+        recorder.appendManifestLines(["dismiss duration: \(String(format: "%.2f", dismissDuration))s", "came back home: \(cameBackHome)"])
+
+        XCTAssertTrue(cameBackHome, "遅延評価中に✕を押したのに10秒経ってもホーム画面に戻れなかった(裏で処理が走り続けているフリーズの疑い)")
+        XCTAssertLessThan(dismissDuration, 5.0, "✕を押してからホーム画面に戻るまで5秒以上かかった(このライブラリの規模ではあり得ないはずの遅さ)")
+
+        // 戻った直後、UIの応答が遅延していないか(=裏でCPUを使い切る処理が続いていないか)の簡易確認。
+        let filterButton = app.buttons["filterButton"]
+        let respondedAt = Date()
+        XCTAssertTrue(filterButton.waitForExistence(timeout: 3), "ホーム画面に戻った直後、絞り込みボタンの操作が遅延している(裏で処理が続いている疑い)")
+        recorder.appendManifestLines(["filter button responsive after: \(String(format: "%.2f", Date().timeIntervalSince(respondedAt)))s"])
+        recorder.writeManifest()
+    }
+
+    // MARK: - シナリオ14: 旧形式(クラスタ中心の平均座標)の「場所」設定が残っていた場合の復帰(v5)
+    //
+    // 【2回目のチェック工程・指摘B・G対応の回帰テスト】
+    // 場所の識別子(PlaceCluster.id)の作り方を「クラスタ中心の平均座標」から「マス目番号
+    // (bucketKey)」に変更したため、変更前のバージョンで場所を選んでいた端末では、保存されている
+    // 選択IDが今の一覧のどのIDとも一致しなくなる。指摘Bはこの状態から復帰する手段が無いこと、
+    // 指摘Gはその設定の保存先自体がUserDefaults(=iCloudバックアップ対象)のままだったことを指す。
+    //
+    // 【実行方法についての注意】
+    // XCUITestのテストコードはこのアプリと同じiOS Simulator向けにビルドされるため、
+    // (Macホスト上で動く一部のXCUITestとは違い)Foundationの `Process` が使えず、テストコード
+    // 自身からは `xcrun simctl` のようなシェルコマンドを呼び出せない。そのため「旧形式のプレースID」
+    // を含む FilterSettings のJSONを旧保存先(UserDefaults, キー "PhotoTimer.FilterSettings.v1")へ
+    // 直接書き込む準備は、このテストを動かす「前」に、テストを実行する側(Macのターミナル)から
+    // 以下のコマンドで行う(=アップデート前から使っていたユーザーの状態を模擬する)。
+    //
+    //   xcrun simctl spawn <シミュレータのUDID> defaults write com.aiteam.PhotoTimer \
+    //     PhotoTimer.FilterSettings.v1 -data \
+    //     7b2273656c656374656443617465676f72696573223a5b5d2c2273656c6563746564416c62756d494473223a5b5d2c226461746552616e6765223a7b22616c6c223a7b7d7d2c2273656c65637465644d6f6f6473223a5b5d2c226d6564696154797065223a22e38199e381b9e381a6222c2273656c6563746564506c616365494473223a5b2233352e3638313233362c3133392e373637313235225d2c226578636c75646553637265656e73686f7473223a747275657d
+    //
+    // このバイト列は「実際の FilterSettings.swift の型定義」を使って
+    // `FilterSettings(selectedPlaceIDs: ["35.681236,139.767125"])`(それ以外は既定値)を
+    // JSONEncoderでエンコードした結果そのもの(事前に別途生成・decodeできることまで検証済み)。
+    // 書き込んだ後、このアプリを一度も起動していない状態(未起動または `xcrun simctl terminate` 済み)
+    // からテストを実行すること。
+    func testLegacyPlaceSelection_MigratesAndOffersClear() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v5_legacyplace")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+
+        // 移行が正しく起きていれば、ホーム画面の「絞り込み条件」の要約に「場所1件」が出るはず。
+        // (旧データが読み込めず黙って消えてしまう、が一番まずいパターンなので、まずここを確認する)
+        let filterButton = app.buttons["filterButton"]
+        XCTAssertTrue(filterButton.waitForExistence(timeout: 15))
+        recorder.shoot(app, label: "home_after_legacy_seed")
+        let placeCountLabel = app.staticTexts.matching(NSPredicate(format: "label CONTAINS '場所1件'")).firstMatch
+        XCTAssertTrue(placeCountLabel.waitForExistence(timeout: 5), "旧形式の場所設定(UserDefaults)が復元されていない(移行処理が効いていない可能性)")
+
+        filterButton.tap()
+
+        // 場所セクションまでスクロール。旧IDは今のどの場所とも一致しないはずなので、
+        // 「見つからない場所の選択を解除」ボタンが出ていることを確認する(指摘B対応)。
+        let clearPlaceButton = app.buttons.matching(NSPredicate(format: "label CONTAINS '見つからない場所の選択を解除'")).firstMatch
+        let found = Self.scrollUntilVisible(app: app, element: clearPlaceButton)
+        recorder.shoot(app, label: "filter_place_section")
+        XCTAssertTrue(found, "旧形式の場所IDが残っているのに「見つからない場所の選択を解除」ボタンが出ない(指摘B対応が効いていない)")
+
+        clearPlaceButton.tap()
+        recorder.shoot(app, label: "after_clear_place")
+
+        let doneButton = app.buttons["完了"]
+        XCTAssertTrue(doneButton.waitForExistence(timeout: 5))
+        doneButton.tap()
+
+        // 解除後は絞り込み要約から「場所」の表示が消えているはず。
+        Thread.sleep(forTimeInterval: 0.3)
+        let stillShowsPlace = app.staticTexts.matching(NSPredicate(format: "label CONTAINS '場所'")).firstMatch.exists
+        recorder.shoot(app, label: "home_after_clear")
+        recorder.writeManifest()
+        XCTAssertFalse(stillShowsPlace, "「見つからない場所の選択を解除」を押したのに、絞り込み要約から場所の表示が消えていない")
+
+        // 【指摘G(旧保存先のキーが削除されたか)について】
+        // このテストコード自身からは(Processが使えないため)旧UserDefaultsキーの削除を直接確認できない。
+        // この点は、テストを実行する側が `xcrun simctl spawn <UDID> defaults read com.aiteam.PhotoTimer
+        // PhotoTimer.FilterSettings.v1` を別途実行し、キーが見つからなくなっている(終了コード非0に
+        // なる)ことを確認する運用にしている。完了報告に実施結果を記載する。
     }
 
     // MARK: - 共通処理: スクロールしないと現れない要素を探す

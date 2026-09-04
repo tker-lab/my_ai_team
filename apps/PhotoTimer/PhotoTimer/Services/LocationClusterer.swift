@@ -24,7 +24,13 @@ import CoreLocation
 actor LocationClusterer {
     static let shared = LocationClusterer()
 
-    /// 経度・緯度をこの度数間隔(約5.5km四方)でまとめて、同じマスに入った写真を1クラスタとする。
+    /// 経度・緯度をこの度数間隔でまとめて、同じマスに入った写真を1クラスタとする。
+    /// 【軽微指摘対応: コメントの不正確さ】緯度1度は世界のどこでも約111kmなので、緯度方向は
+    /// 常に約5.5km(=111km×0.05)。ただし経度1度の距離は緯度によって変わり(赤道に近いほど長い)、
+    /// 日本付近(北緯35度前後)では約91km/度のため、経度方向は約4.5km(=91km×0.05)。
+    /// つまりマス目は正確には「約5.5km(南北)×約4.5km(東西)」の長方形であり、「5.5km四方」という
+    /// 正方形の表現は緯度方向にしか当てはまらない(絞り込みの正しさには影響しない。あくまで
+    /// コメント上の説明の精度の話)。
     private static let gridSize = 0.05
 
     /// 「場所」の絞り込み一致判定は、以前は独立した半径(6km)を使っていたが、マス目(約5.5km四方)と
@@ -96,10 +102,22 @@ actor LocationClusterer {
     /// 呼び出し側(LibraryIndex)がバックグラウンドスレッドで組み立てた `[PHAsset]` を渡す想定。
     func rebuildFully(assets: [PHAsset]) async -> [PlaceCluster] {
         loadIfNeeded()
+        // 【指摘F対応】以前はここで `state = PersistedState()` により地名キャッシュ(placeName)ごと
+        // まっさらにしていたため、しおり失効等で全件再構築が起きるたびに、最大50箇所の地名変換を
+        // 1.1秒間隔で全部やり直していた(最悪2〜3分)。マス目番号(bucketKey)は写真の増減で変わらない
+        // 安定した値なので、集計(合計座標・枚数)は作り直しても、既に変換済みの地名だけは
+        // マス目番号をキーに引き継げる。ここで一旦地名だけ退避しておき、集計をゼロから作り直した後に
+        // 同じマス目が残っていれば書き戻す。
+        let previousPlaceNames: [String: String] = state.buckets.compactMapValues(\.placeName)
         state = PersistedState()
         for asset in assets {
             guard let coordinate = asset.location?.coordinate else { continue }
             addContribution(assetID: asset.localIdentifier, coordinate: coordinate)
+        }
+        for (key, name) in previousPlaceNames {
+            guard var bucket = state.buckets[key] else { continue } // そのマス目に写真がもう無ければ引き継がない
+            bucket.placeName = name
+            state.buckets[key] = bucket
         }
         return await resolveClusters()
     }
@@ -120,13 +138,6 @@ actor LocationClusterer {
             }
         }
         return await resolveClusters()
-    }
-
-    /// 保存済みの内部状態から、今すぐ表示できる `[PlaceCluster]` を組み立てる(地名変換なし。高速)。
-    /// アプリ起動直後、写真の差分確認が終わる前でも「前回までの場所選択肢」を即座に見せるために使う。
-    func currentClustersWithoutGeocoding() async -> [PlaceCluster] {
-        loadIfNeeded()
-        return buildClusterList(resolveNewNames: false).clusters
     }
 
     private func addContribution(assetID: String, coordinate: CLLocationCoordinate2D) {
@@ -163,9 +174,10 @@ actor LocationClusterer {
     }
 
     /// 枚数が多い順に並べ、上限50箇所までに絞る(設計書の「30〜50箇所に収束」に合わせる)。
-    /// `resolveNewNames: false` の時は、まだ地名変換していないマス目は座標そのままのラベルにしておく
-    /// (呼び出し側が resolveClusters() で改めて解決する)。
-    private func buildClusterList(resolveNewNames: Bool) -> BuiltList {
+    /// まだ地名変換していないマス目は座標そのままのラベル(仮表示)にしておき、
+    /// そのマス目のキーを `pendingGeocodeKeys` に載せる(呼び出し側の resolveClusters() が
+    /// これを見て実際の地名変換を行い、終わったら改めてこの関数を呼んで正式なラベルを得る)。
+    private func buildClusterList() -> BuiltList {
         let top = state.buckets.sorted { $0.value.count > $1.value.count }.prefix(50)
         var clusters: [PlaceCluster] = []
         var pending: [String] = []
@@ -186,7 +198,7 @@ actor LocationClusterer {
 
     /// 一覧を組み立て、まだ地名変換していないマス目だけレート制限をかけながら変換し、結果をキャッシュに保存する。
     private func resolveClusters() async -> [PlaceCluster] {
-        let built = buildClusterList(resolveNewNames: true)
+        let built = buildClusterList()
         guard !built.pendingGeocodeKeys.isEmpty else {
             persist()
             return built.clusters
@@ -201,7 +213,7 @@ actor LocationClusterer {
             state.buckets[key] = bucket
         }
         persist()
-        return buildClusterList(resolveNewNames: true).clusters
+        return buildClusterList().clusters
     }
 
     // MARK: - 地名変換(レート制限つき。指摘G対応)

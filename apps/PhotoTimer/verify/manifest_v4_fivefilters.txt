@@ -1,4 +1,4 @@
 picked: album=true mood=true / placeSectionRendered(空表示)=false
-v4_fivefilters_01_filters_set.png	t=35.8s
-v4_fivefilters_02_settled_normal_slideshow.png	t=40.0s
+v4_fivefilters_01_filters_set.png	t=35.9s
+v4_fivefilters_02_settled_normal_slideshow.png	t=40.1s
 settledAs=normal_slideshow
