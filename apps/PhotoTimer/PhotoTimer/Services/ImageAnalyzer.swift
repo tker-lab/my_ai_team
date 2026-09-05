@@ -20,10 +20,44 @@ enum ImageAnalyzer {
     /// カテゴリの解析結果。Visionでの解析自体が失敗した場合は nil を返す
     /// (「判定できなかった」であって「該当カテゴリが無かった」ではないことを呼び出し側に伝えるため。
     /// 詳細は analyzeCategories 内のコメント参照)。
-    static func analyze(cgImage: CGImage) -> AssetAnalysis? {
+    ///
+    /// 【2026-09-05変更:async化】「よく撮れてる度」(CalculateImageAestheticsScoresRequest)が
+    /// Swiftの新しい非同期API(`request.perform(on:)`がasync throws)のため、この関数全体もasyncにした。
+    /// 雰囲気・カテゴリの判定自体は元々同期処理のままで、待つのは「よく撮れてる度」の部分だけ。
+    static func analyze(cgImage: CGImage) async -> AssetAnalysis? {
         let mood = analyzeMood(cgImage: cgImage)
         guard let categories = analyzeCategories(cgImage: cgImage) else { return nil }
-        return AssetAnalysis(mood: mood, categories: categories, analyzerVersion: AssetAnalysis.currentVersion)
+        let (aestheticsScore, isUtilityImage) = await analyzeAesthetics(cgImage: cgImage)
+        return AssetAnalysis(
+            mood: mood,
+            categories: categories,
+            aestheticsScore: aestheticsScore,
+            isUtilityImage: isUtilityImage,
+            analyzerVersion: AssetAnalysis.currentVersion
+        )
+    }
+
+    // MARK: - よく撮れてる度(iOS 18以降のみ)
+
+    /// 【2026-09-05追加】CalculateImageAestheticsScoresRequest(iOS 18で追加されたVisionのAPI)を使い、
+    /// 「よく撮れてる度」(-1〜1、高いほど良い)と「実用目的の画像らしいか」を判定する。
+    /// iOS 17以下ではこのAPI自体が存在しないため、`#available` で確実に分岐し、判定せず (nil, nil) を返す
+    /// (設計書の指示どおり「iOS18未満では選択肢を出さない」。呼び出し側〔FilterOptionsView〕も
+    /// iOS 18未満ではこの機能に関する選択肢自体を表示しない)。
+    /// 解析に失敗した場合(壊れた画像等)も同様に (nil, nil) とし、他の判定(雰囲気・カテゴリ)には
+    /// 影響させない(この判定だけが「おまけ」的に付加される位置づけのため)。
+    private static func analyzeAesthetics(cgImage: CGImage) async -> (score: Double?, isUtility: Bool?) {
+        guard #available(iOS 18.0, *) else { return (nil, nil) }
+        let request = CalculateImageAestheticsScoresRequest()
+        let ciImage = CIImage(cgImage: cgImage)
+        do {
+            let observation = try await request.perform(on: ciImage)
+            return (Double(observation.overallScore), observation.isUtility)
+        } catch {
+            // 一時的な解析失敗(メモリ逼迫等)。この写真自体を「判定不能」扱いにする必要は無く、
+            // 「よく撮れてる度」の情報だけが無い状態として扱う(雰囲気・カテゴリの判定結果は活かす)。
+            return (nil, nil)
+        }
     }
 
     // MARK: - 雰囲気・色(CoreImageで平均色を取り、色相・彩度・明度から分類)

@@ -56,19 +56,58 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
     /// アラームの鳴らし方(音色・n回/止めるまで・バイブレーション)。CEO要望(2026-09-05)によりユーザー設定可能。
     private var alarmSettings: AlarmSettings = .default
 
+    /// 削除操作の結果をSlideshowViewに一時的に伝えるための値。
+    /// 【なぜ必要か】削除の確認画面はOS標準のもの(iOSが必ず出す)なので、アプリ側で確認UIを
+    /// 作る必要は無いが、「ユーザーが確認画面でキャンセルした」場合は何も起きない一方、
+    /// 「本当に削除に失敗した」場合は理由をユーザーに伝えたい(CLAUDE.mdのチェック観点
+    /// 「エラー時に何が起きたかが伝わるか」に対応)。発生のたびに新しい値(idが変わる)を入れることで、
+    /// 表示側が「前回と同じ失敗をもう一度表示してしまう」ことなく、1回だけ通知として扱える。
+    struct DeletionFailure: Identifiable, Equatable {
+        let id = UUID()
+    }
+    @Published private(set) var deletionFailure: DeletionFailure?
+
     private var engine: CandidateEngine?
     private var runLoopTask: Task<Void, Never>?
     private var countdownTask: Task<Void, Never>?
+    /// タイマーが終わる予定の絶対時刻。カウントダウンの計算(runCountdown)と、バックグラウンド
+    /// 復帰時の「経過時間の正しい反映」(returnToForeground)の両方がこの1つの値を基準にする
+    /// (CEO要望C. 2026-09-05:バックグラウンド動作)。
+    private var deadline: Date?
+    /// フィルタ画面で使う場所の選択肢(バックグラウンド復帰時にスライドループを再始動する際、
+    /// CandidateEngineを作り直すために必要。start()呼び出し時の値をそのまま保持するだけ)。
+    private var placeClusters: [PlaceCluster] = []
 
-    func start(totalDurationSeconds: Int, settings: FilterSettings, playbackSettings: PlaybackSettings, alarmSettings: AlarmSettings, placeClusters: [PlaceCluster]) {
+    /// - Parameter resumingUntil: 通常は nil(=今から`totalDurationSeconds`後に終わる、新規のタイマー開始)。
+    ///   バックグラウンド中にアプリのプロセスごと終了し、その後の再起動で「前回のタイマー」を
+    ///   再開する時だけ、前回計算済みの終了予定時刻(絶対時刻)をそのまま渡す
+    ///   (これにより「経過時間を正しく反映」できる。RootView参照)。
+    func start(totalDurationSeconds: Int, settings: FilterSettings, playbackSettings: PlaybackSettings, alarmSettings: AlarmSettings, placeClusters: [PlaceCluster], resumingUntil: Date? = nil) {
         stop()
 
         phase = .running
         noCandidatesReason = nil
         totalSeconds = totalDurationSeconds
-        remainingSeconds = totalDurationSeconds
         self.playbackSettings = playbackSettings
         self.alarmSettings = alarmSettings
+        self.placeClusters = placeClusters
+
+        let endDate = resumingUntil ?? Date().addingTimeInterval(TimeInterval(totalDurationSeconds))
+        deadline = endDate
+        remainingSeconds = max(0, Int(endDate.timeIntervalSinceNow.rounded()))
+
+        // 【CEO要望C対応】バックグラウンドに回っていても「表示を正しく再開できる」ように、
+        // 今動いているタイマーの情報を端末内に記録しておく。閉じた時(stop())に消す。
+        RunningTimerStateStore.save(RunningTimerState(
+            endDate: endDate,
+            totalSeconds: totalDurationSeconds,
+            filterSettings: settings,
+            playbackSettings: playbackSettings,
+            alarmSettings: alarmSettings
+        ))
+        // 【CEO要望C対応】バックグラウンド中でも指定時刻に音が鳴るよう、OS側(ローカル通知)に
+        // 1件予約しておく。フォアグラウンドのまま普通に終わった場合はfinish()で取り消す。
+        AlarmNotificationScheduler.scheduleAlarm(fireDate: endDate, tone: alarmSettings.tone)
 
         // 【2026-09-05追加:マナーモードで鳴らなかった不具合の対策の1つ】
         // 以前はタイマー終了の瞬間(finish())に初めて音声セッションのカテゴリを設定していた。
@@ -77,6 +116,14 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
         // こうすることで、実際にアラームを鳴らす瞬間に「初めてカテゴリを切り替える」という
         // 状態変化が起きなくなり、切り替え直後の一瞬だけ音が出ない可能性を減らす狙い。
         try? AVAudioSession.sharedInstance().setCategory(.playback, options: [.duckOthers])
+
+        // 【resumingUntilが既に過ぎていた場合】バックグラウンド中(またはプロセス終了中)に、
+        // 本来ならとっくにタイマーが終わっていたケース。写真の検索・表示を始めるまでもなく、
+        // 直接「タイマー終了」の状態にする(=戻ってきたら"即座に"しっかり表示する、という要望への対応)。
+        guard remainingSeconds > 0 else {
+            finish()
+            return
+        }
 
         let engine = CandidateEngine(settings: settings, placeClusters: placeClusters)
         self.engine = engine
@@ -107,9 +154,120 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
         // 軽微指摘対応: 次回 start() まで前回の CandidateEngine を握ったままにしないよう nil に戻す
         // (機能上の実害は無いが、使い終わった実体を持ち続けない、という後始末を明確にする)。
         engine = nil
+        deadline = nil
         phase = .idle
         // アラーム(音・バイブレーション)が鳴っている途中で閉じられた場合に備え、必ず止める。
         stopAlarm()
+        // CEO要望C対応: 閉じた=もう再開する必要が無いタイマーなので、記録と予約通知の両方を消す。
+        RunningTimerStateStore.clear()
+        AlarmNotificationScheduler.cancelPendingAlarm()
+    }
+
+    // MARK: - バックグラウンド対応(CEO要望C. 2026-09-05)
+
+    /// アプリがバックグラウンドに回った時に呼ぶ(SlideshowViewのscenePhase監視から)。
+    /// 「裏にいる間は解析・表示を止める(電池を無駄に使わない)」を実現する:
+    /// 写真・動画を探す/表示するループだけを止め、画面に出ていた画像・動画を手放す。
+    /// カウントダウン自体(残り秒数の内部計算)は止めない
+    /// (軽い処理であり、フォアグラウンド復帰時に正しい残り時間をすぐ計算し直せるようにするため。
+    /// なお仮にOSがこのTaskごと一時停止させても、deadline〔絶対時刻〕基準で計算し直す設計〔runCountdown〕
+    /// のため復帰後のズレは生じない)。バックグラウンド中に指定時刻へ鳴らす役目は
+    /// start()で予約済みのローカル通知(AlarmNotificationScheduler)が担う。
+    func enterBackground() {
+        guard phase == .running else { return }
+        runLoopTask?.cancel()
+        runLoopTask = nil
+        if let engine {
+            Task { await engine.cancelPrefetch() }
+        }
+        currentPlayer?.pause()
+        currentPlayer = nil
+        currentImage = nil
+    }
+
+    /// アプリがフォアグラウンドに戻った時に呼ぶ。
+    /// 「経過時間を正しく反映して表示を再開する」を実現する: deadline(絶対時刻)から
+    /// 残り秒数を計算し直し、まだ残っていれば表示ループを再開、すでに終わっていれば
+    /// (バックグラウンド中に本来鳴っているはずだった)アラームをここで鳴らす。
+    func returnToForeground() {
+        guard phase == .running, let deadline else { return }
+        remainingSeconds = max(0, Int(deadline.timeIntervalSinceNow.rounded()))
+        guard remainingSeconds > 0 else {
+            finish()
+            return
+        }
+        guard runLoopTask == nil, let engine else { return } // 既に動いている(=一瞬の切り替えだった)場合は何もしない
+        runLoopTask = Task { [weak self] in
+            await self?.runSlideLoop(engine: engine)
+        }
+    }
+
+    // MARK: - 写真・動画の削除(CEO要望 D. 2026-09-05)
+
+    /// 今表示している1枚をその場で削除する。
+    ///
+    /// 【誤削除が起きない理由】ここでは「削除したい」という意思表示(`PHAssetChangeRequest.deleteAssets`)
+    /// をOSに伝えるだけで、実際の削除はiOS標準の確認ダイアログ(「写真を削除」/「キャンセル」)を
+    /// ユーザーが自分で選んだ場合にのみ実行される。この確認ダイアログはPhotosフレームワーク側が
+    /// 自動的に出すものでアプリ側で省略・自作することはできない(=CEO要望どおり、OS標準の
+    /// 仕組みをそのまま使っている。アプリ側の不具合で「確認なしに消える」ことは原理的に起こらない)。
+    ///
+    /// 【将来の課金機能との切り分け】このボタンを見せるかどうかの判定はSlideshowView側で
+    /// `FeatureFlags.isPhotoDeletionEnabled` を見て行っている(このメソッド自体はフラグを見ない)。
+    /// 課金者限定にしたくなったら、そのフラグの中身だけを差し替えればよい(詳細はFeatureFlags.swift参照)。
+    func deleteCurrentAsset() {
+        guard phase == .running, let asset = currentAsset else { return }
+        let identifierToDelete = asset.localIdentifier
+
+        PHPhotoLibrary.shared().performChanges({
+            PHAssetChangeRequest.deleteAssets([asset] as NSArray)
+        }, completionHandler: { [weak self] success, error in
+            Task { @MainActor in
+                guard let self else { return }
+                if success {
+                    // 端末内に蓄積した色・カテゴリの解析結果も一緒に片付ける(もう存在しない写真の
+                    // 判定結果を持ち続けても無駄なだけなので。AnalysisCacheは別actorなので
+                    // ここではawaitせず投げっぱなしにして良い=削除完了の体感速度に影響させない)。
+                    Task.detached(priority: .utility) {
+                        await AnalysisCache.shared.removeAnalyses(for: [identifierToDelete])
+                    }
+                    self.advanceAfterDeletion()
+                } else if error != nil {
+                    // success=false かつ error が nil の場合は「ユーザーが確認ダイアログでキャンセルした」
+                    // という正常系(Appleの仕様どおり)であり、何もしない(=表示を続ける)のが正しい。
+                    // ここに来るのは本当に削除できなかった場合(iCloud同期の都合等)だけなので、
+                    // その時だけユーザーに知らせる(指摘対応: エラー時に何が起きたか伝わるようにする)。
+                    NSLog("[PhotoTimer] 写真・動画の削除に失敗しました: \(error!)")
+                    self.deletionFailure = DeletionFailure()
+                }
+            }
+        })
+    }
+
+    /// 削除失敗のアラートを閉じた後、同じ内容をもう一度表示しないようにするための後始末。
+    func clearDeletionFailure() {
+        deletionFailure = nil
+    }
+
+    /// 削除が成功した直後、今表示していた分をスキップしてスライドショーを続ける。
+    ///
+    /// 【なぜ「表示中の待ち時間だけを打ち切る」複雑な仕組みを作らず、ループを丸ごと再始動するか】
+    /// 削除操作自体は頻繁には起きない特別な操作なので、表示ループの内部状態(先読みキュー・窓の
+    /// 途中経過など)を精密に維持したまま「今の1枚だけ差し替える」ような作り込みをするよりも、
+    /// 「候補プールを作り直して(prepare)最初から再開する」という既存の仕組みをそのまま使うほうが、
+    /// 状態管理の複雑さと不具合のリスクを抑えられると判断した。削除した写真は実際に写真ライブラリ
+    /// から無くなっているため、次のprepare()では自然にこの写真が候補から外れる(=同じ写真が
+    /// もう一度出てくることはない)。
+    private func advanceAfterDeletion() {
+        guard phase == .running, let engine else { return }
+        runLoopTask?.cancel()
+        currentPlayer?.pause()
+        currentPlayer = nil
+        currentImage = nil
+        currentAsset = nil
+        runLoopTask = Task { [weak self] in
+            await self?.runSlideLoop(engine: engine)
+        }
     }
 
     /// 【軽微指摘対応: カウントダウンが実時間からズレていく不具合】
@@ -118,9 +276,11 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
     /// 表示上の残り時間の減りが遅くなっていく(実時間とズレる)不具合があった。
     /// 今は「開始時刻から数えて本来あと何秒か」を毎回時計(Date)から計算し直すことで、
     /// 1回ごとのズレが蓄積しないようにしている。
+    /// 【2026-09-05変更】deadlineをこのメソッド内のローカル変数からTimerControllerのプロパティに
+    /// 昇格した(CEO要望C:バックグラウンド復帰時にreturnToForeground()からも同じ基準時刻を
+    /// 参照する必要があるため)。計算方法自体は変えていない。
     private func runCountdown() async {
-        let deadline = Date().addingTimeInterval(TimeInterval(remainingSeconds))
-        while remainingSeconds > 0 {
+        while let deadline, remainingSeconds > 0 {
             try? await Task.sleep(nanoseconds: 1_000_000_000)
             if Task.isCancelled { return }
             remainingSeconds = max(0, Int(deadline.timeIntervalSinceNow.rounded()))
@@ -139,6 +299,10 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
         runLoopTask?.cancel()
         currentPlayer?.pause()
         playAlarm()
+        // 【CEO要望C対応】ここに来た時点で(フォアグラウンドの、いつも通りの繰り返しパターンで)
+        // アラームを鳴らし始めたので、バックグラウンド用に予約していたローカル通知は不要になる
+        // (鳴らさずに済ませることで、後から二重に音が鳴るのを防ぐ)。
+        AlarmNotificationScheduler.cancelPendingAlarm()
     }
 
     /// アラーム(音・バイブレーション)を鳴らし始める。

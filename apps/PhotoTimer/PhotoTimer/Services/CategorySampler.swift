@@ -37,7 +37,7 @@ enum CategorySampler {
             // 解析(Vision)自体が失敗した場合は nil が返る(2026-09-04変更)。並び順のためだけの
             // サンプリングなので、その1枚は諦めて次へ進む(キャッシュにも保存しない。呼び出し側
             // CandidateEngine 側と同じ「判定できなかったものは残さない」という扱いに揃えている)。
-            guard let analysis = ImageAnalyzer.analyze(cgImage: cgImage) else { continue }
+            guard let analysis = await ImageAnalyzer.analyze(cgImage: cgImage) else { continue }
             await AnalysisCache.shared.store(analysis, for: asset.localIdentifier)
             for category in analysis.categories { counts[category, default: 0] += 1 }
 

@@ -16,6 +16,7 @@ struct FilterOptionsView: View {
                 dateSection
                 mediaTypeSection
                 screenshotSection
+                aestheticsSection
                 albumSection
                 moodSection
                 placeSection
@@ -122,6 +123,29 @@ struct FilterOptionsView: View {
             Toggle("スクリーンショットを除く", isOn: $settings.excludeScreenshots)
         } footer: {
             Text("メモ代わりに撮ったスクリーンショットなどをスライドショーから外します。")
+        }
+    }
+
+    // MARK: - よく撮れてる度(2026-09-05追加。iOS 18以降のみ)
+    //
+    // 【なぜ #available で丸ごと分岐しているか】判定に使うVisionのAPI(CalculateImageAestheticsScoresRequest)
+    // 自体がiOS 18以降にしか存在しないため、iOS 17以下の端末ではこの機能そのものが使えない。
+    // 設計書の指示どおり「iOS18未満では選択肢を出さない」(中途半端にグレーアウト表示するのではなく、
+    // 使えない端末には項目自体を見せない)。
+
+    @ViewBuilder
+    private var aestheticsSection: some View {
+        if #available(iOS 18.0, *) {
+            Section {
+                Toggle("よく撮れてる写真を優先する", isOn: $settings.preferHighAesthetics)
+                if settings.excludeScreenshots {
+                    Toggle("AIで書類・レシートらしい写真も除く", isOn: $settings.strictScreenshotDetection)
+                }
+            } header: {
+                Text("よく撮れてる度")
+            } footer: {
+                Text("構図・色・ブレ・露出などからAIが「よく撮れているか」を判定します。優先しても除外はされないため、他に該当する写真が無い時は撮れの良し悪しに関わらず表示されます。「書類・レシートらしい写真も除く」は、スクリーンショットではないけれど書類やレシートを撮っただけの写真を追加で見分けます(「スクリーンショットを除く」がオンの時のみ表示)。")
+            }
         }
     }
 

@@ -42,11 +42,15 @@ final class PhotoLibraryManager: ObservableObject {
     /// (新規追加のみ・既存の写真は見えない)の2種類だけで、このアプリのように「既存の写真を
     /// 選んで表示する」用途では `.readWrite` を選ぶ以外に方法が無い(Appleの命名が誤解を招きやすいが、
     /// 実質「フルアクセス」を指す値だと考えてよい)。
-    /// そのためコード上はこれまで通り `.readWrite` を指定しているが、**実際に書き込み
-    /// (PHPhotoLibrary.performChanges等)を行う処理はアプリ内に一切無い**ことを確認済み。
-    /// また Info.plist にも「読み取り用」の説明文(NSPhotoLibraryUsageDescription)のみを申告しており、
-    /// 「追加用」の説明文(NSPhotoLibraryAddUsageDescription)は含めていない(不要な権限を申告しない、
-    /// という指摘の意図はこの形で満たしている)。
+    /// そのためコード上はこれまで通り `.readWrite` を指定している。
+    /// 【2026-09-05追記】CEO要望により写真・動画の削除機能(TimerController.deleteCurrentAsset())を
+    /// 追加したため、「書き込み(PHPhotoLibrary.performChanges等)を行う処理はアプリ内に一切無い」
+    /// という以前の前提はもう成り立たない。削除は `PHAssetChangeRequest.deleteAssets` を使うが、
+    /// これはOS標準の確認ダイアログをユーザーが「削除」で確定した場合にのみ実行される
+    /// (アプリ側で確認を省略することはできない)。Info.plistの説明文(NSPhotoLibraryUsageDescription)
+    /// もこの削除機能について言及する内容に更新済み。「追加用」の説明文
+    /// (NSPhotoLibraryAddUsageDescription)は、新規に写真を追加する機能が無いため引き続き含めていない
+    /// (不要な権限を申告しない、という指摘の意図はこの形で満たしている)。
     @discardableResult
     func requestAccess() async -> PHAuthorizationStatus {
         let status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)

@@ -1,25 +1,25 @@
-v3_default_01_launch.png	t=7.9s
-v3_default_02_after_start.png	t=11.9s
-v3_default_03_after_start_wait.png	t=13.1s
-v3_default_04_r2.png	t=17.4s
-v3_default_05_r4.png	t=21.8s
+v3_default_01_launch.png	t=8.2s
+v3_default_02_after_start.png	t=11.8s
+v3_default_03_after_start_wait.png	t=13.0s
+v3_default_04_r2.png	t=17.3s
+v3_default_05_r4.png	t=21.7s
 v3_default_06_r6.png	t=26.1s
-v3_default_07_r8.png	t=30.3s
-v3_default_08_r10.png	t=34.6s
-v3_default_09_final.png	t=34.7s
+v3_default_07_r8.png	t=30.4s
+v3_default_08_r10.png	t=34.7s
+v3_default_09_final.png	t=34.8s
 
 media identifiers observed (順番):
-  [0] media-video-2-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
-  [1] media-video-2-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
-  [2] media-video-3-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
-  [3] media-video-3-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
-  [4] media-video-3-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
-  [5] media-video-4-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
-  [6] media-video-4-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
-  [7] media-video-5-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
-  [8] media-video-5-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
-  [9] media-video-5-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
+  [0] media-photo-4-B3E5CC04-05DA-44F6-B2D5-A8B17DBE6577/L0/001
+  [1] media-video-5-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
+  [2] media-video-5-4A53E569-E0EE-4C6A-9F74-3FD2A0A61462/L0/001
+  [3] media-photo-6-CC95F08C-88C3-4012-9D6D-64A413D254B3/L0/001
+  [4] media-photo-6-CC95F08C-88C3-4012-9D6D-64A413D254B3/L0/001
+  [5] media-photo-7-9F983DBA-EC35-42B8-8773-B597CF782EDD/L0/001
+  [6] media-photo-7-9F983DBA-EC35-42B8-8773-B597CF782EDD/L0/001
+  [7] media-photo-7-9F983DBA-EC35-42B8-8773-B597CF782EDD/L0/001
+  [8] media-photo-7-9F983DBA-EC35-42B8-8773-B597CF782EDD/L0/001
+  [9] media-photo-7-9F983DBA-EC35-42B8-8773-B597CF782EDD/L0/001
 
-remaining seconds observed (順番): [295, 293, 290, 288, 286, 284, 282, 280, 278, 276]
+remaining seconds observed (順番): [11, 9, 7, 5, 3, 0, 0, 0, 0, 0]
 distinct media count: 4
 video observed: true

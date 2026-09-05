@@ -14,11 +14,22 @@ struct FilterSettings: Codable, Equatable {
     var selectedPlaceIDs: Set<String> = []
     /// 空 = 絞り込みなし。
     var selectedCategories: Set<CategoryTag> = []
+    /// 「よく撮れてる度」が高い写真を優先して流すか(2026-09-05追加。iOS 18以降でのみ有効)。
+    /// 「近い順に流す」設計(CandidateEngine.score参照)の1軸として、他の条件と同様に
+    /// スコアへ加算する形にしている(足切りはしない。低いスコアの写真も、他に条件が無ければ流れる)。
+    var preferHighAesthetics: Bool = false
+    /// AI(よく撮れてる度のisUtilityフラグ)も使って、書類・レシート・メモ写真などの
+    /// 「実用目的の画像」をスクリーンショットと同様に除外するか(2026-09-05追加。iOS 18以降のみ)。
+    /// `excludeScreenshots` がメタ情報(mediaSubtypes)だけを見るのに対し、こちらは画像の中身を見て
+    /// 判定する分だけ精度が高いが、判定に画像解析(Vision)が必要になる。
+    /// `excludeScreenshots` がオフの時にこれだけオンにしても意味が無いため、UI側(FilterOptionsView)は
+    /// `excludeScreenshots` がオンの時だけこの項目を出す。
+    var strictScreenshotDetection: Bool = false
 
-    /// 画像解析(雰囲気 or カテゴリ)が必要かどうか。
+    /// 画像解析(雰囲気・カテゴリ・よく撮れてる度優先・AIでのスクショ除外強化)が必要かどうか。
     /// 原則2の「遅延評価」に載せるべき条件がひとつでもあるかの判定に使う。
     var needsImageAnalysis: Bool {
-        !selectedMoods.isEmpty || !selectedCategories.isEmpty
+        !selectedMoods.isEmpty || !selectedCategories.isEmpty || preferHighAesthetics || strictScreenshotDetection
     }
 
     static let `default` = FilterSettings()

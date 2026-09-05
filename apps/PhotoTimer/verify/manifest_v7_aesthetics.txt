@@ -1,0 +1,3 @@
+photos permission dialog found=true
+v7_aesthetics_01_aesthetics_section.png	t=7.9s
+v7_aesthetics_02_aesthetics_enabled.png	t=8.5s

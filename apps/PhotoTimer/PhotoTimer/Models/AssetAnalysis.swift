@@ -5,6 +5,16 @@ import Foundation
 struct AssetAnalysis: Codable {
     var mood: MoodTag?
     var categories: [CategoryTag]
+    /// 「よく撮れてる度」(2026-09-05追加。CEO指示によりMVPから復活)。
+    /// Visionの CalculateImageAestheticsScoresRequest(iOS 18以降専用)による-1〜1のスコア
+    /// (高いほど「よく撮れている」)。iOS 17以下の端末では判定できないため常にnil。
+    var aestheticsScore: Double?
+    /// 「実用目的の画像(スクリーンショット・書類・レシート・メモ等)らしいか」のフラグ。
+    /// 同じくiOS 18以降でのみ判定できる(iOS 17以下では常にnil)。
+    /// MVPの「スクリーンショットを除く」モードは撮影時のメタ情報(mediaSubtypes)だけを見ているため、
+    /// カメラで書類を撮っただけの「スクショではないが実用目的の写真」までは除けなかった。
+    /// このフラグが使えるiOS 18以降では、その精度を補うために使う(FilterSettings.strictScreenshotDetection参照)。
+    var isUtilityImage: Bool?
     /// この結果を作った時のロジックのバージョン。判定ロジックを改善した時に再解析させるための版番号。
     var analyzerVersion: Int
 
@@ -14,7 +24,9 @@ struct AssetAnalysis: Codable {
     /// (原則3「同じ写真は二度と解析しない」の対象は「今のロジックで解析済みのもの」に限る)。
     /// 【2026-09-05: 2→3に更新】「緑」を選択肢から削除し、旧・緑の色相帯を暖色/寒色に
     /// 振り分け直したため、古いバージョンで "緑" と判定されキャッシュされた結果を再解析させる。
-    static let currentVersion = 3
+    /// 【2026-09-05: 3→4に更新】「よく撮れてる度」(aestheticsScore・isUtilityImage)を追加したため、
+    /// 既存のキャッシュ済み結果(この2つが常にnilのまま)を再解析させ、値を埋める。
+    static let currentVersion = 4
 }
 
 /// AssetAnalysis を localIdentifier ごとに端末内(Application Support配下のJSONファイル。

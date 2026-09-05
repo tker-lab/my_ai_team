@@ -1,0 +1,289 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test -project PhotoTimer.xcodeproj -scheme PhotoTimer -destination id=E929CB6C-E759-4321-8CC3-10FA08F8B58A -derivedDataPath build "-only-testing:PhotoTimerUITests/PhotoTimerUITests/testNearMatchStreaming_AlwaysShowsSomething"
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (2 targets)
+    Target 'PhotoTimerUITests' in project 'PhotoTimer'
+        ➜ Explicit dependency on target 'PhotoTimer' in project 'PhotoTimer'
+    Target 'PhotoTimer' in project 'PhotoTimer' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk /Users/takahashitakayuki/my_ai_team/apps/PhotoTimer/build/SDKStatCaches.noindex/iphonesimulator26.5-23F81a-6cfe768891a92b912361537c460fe42b.sdkstatcache
+    cd /Users/takahashitakayuki/my_ai_team/apps/PhotoTimer/PhotoTimer.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk -o /Users/takahashitakayuki/my_ai_team/apps/PhotoTimer/build/SDKStatCaches.noindex/iphonesimulator26.5-23F81a-6cfe768891a92b912361537c460fe42b.sdkstatcache
+
+2026-09-05 08:26:47.746785+0900 PhotoTimerUITests-Runner[70047:1562909] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-09-05 08:26:48.116.
+Test Suite 'PhotoTimerUITests.xctest' started at 2026-09-05 08:26:48.116.
+Test Suite 'PhotoTimerUITests' started at 2026-09-05 08:26:48.116.
+Test Case '-[PhotoTimerUITests.PhotoTimerUITests testNearMatchStreaming_AlwaysShowsSomething]' started.
+    t =     0.00s Start Test at 2026-09-05 08:26:48.117
+    t =     0.02s Set Up
+    t =     0.02s Open com.aiteam.PhotoTimer
+    t =     0.02s     Launch com.aiteam.PhotoTimer
+2026-09-05 08:26:48.176 xcodebuild[70041:1562616] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-09-05 08:26:48.177 xcodebuild[70041:1562616] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.47s         Setting up automation session
+objc[70047]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x1062c8310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x10573c398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.88s         Wait for com.aiteam.PhotoTimer to idle
+    t =     2.25s Waiting 5.0s for "写真へのアクセスを許可する" Button to exist
+    t =     3.30s     Checking `Expect predicate `existsNoRetry == 1` for object "写真へのアクセスを許可する" Button`
+    t =     3.30s         Checking existence of `"写真へのアクセスを許可する" Button`
+    t =     3.61s         Capturing element debug description
+    t =     4.34s     Checking `Expect predicate `existsNoRetry == 1` for object "写真へのアクセスを許可する" Button`
+    t =     4.34s         Checking existence of `"写真へのアクセスを許可する" Button`
+    t =     4.41s         Capturing element debug description
+    t =     5.25s     Checking `Expect predicate `existsNoRetry == 1` for object "写真へのアクセスを許可する" Button`
+    t =     5.26s         Checking existence of `"写真へのアクセスを許可する" Button`
+    t =     5.32s         Capturing element debug description
+    t =     6.27s     Checking `Expect predicate `existsNoRetry == 1` for object "写真へのアクセスを許可する" Button`
+    t =     6.27s         Checking existence of `"写真へのアクセスを許可する" Button`
+    t =     6.34s         Capturing element debug description
+    t =     7.26s     Checking `Expect predicate `existsNoRetry == 1` for object "写真へのアクセスを許可する" Button`
+    t =     7.26s         Checking existence of `"写真へのアクセスを許可する" Button`
+    t =     7.32s         Capturing element debug description
+    t =     7.32s     Checking existence of `"写真へのアクセスを許可する" Button`
+    t =     7.36s Collecting debug information to assist test failure triage
+    t =     7.36s     Requesting snapshot of accessibility hierarchy for app with pid 70054
+    t =     7.41s Waiting 15.0s for PickerWheel (Element at index 0) to exist
+    t =     8.45s     Checking `Expect predicate `existsNoRetry == 1` for object PickerWheel (Element at index 0)`
+    t =     8.46s         Checking existence of `PickerWheel (Element at index 0)`
+    t =     8.52s Waiting 5.0s for PickerWheel (Element at index 1) to exist
+    t =     9.57s     Checking `Expect predicate `existsNoRetry == 1` for object PickerWheel (Element at index 1)`
+    t =     9.57s         Checking existence of `PickerWheel (Element at index 1)`
+    t =     9.63s Set value of PickerWheel (Element at index 0) to 3
+    t =     9.63s     Wait for com.aiteam.PhotoTimer to idle
+    t =     9.64s     Find the PickerWheel (Element at index 0)
+    t =     9.67s     Check for interrupting elements affecting "3" PickerWheel
+    t =     9.71s     Synthesize event
+    t =     9.72s     Wait for com.aiteam.PhotoTimer to idle
+    t =     9.72s Set value of PickerWheel (Element at index 1) to 0
+    t =     9.72s     Wait for com.aiteam.PhotoTimer to idle
+    t =     9.72s     Find the PickerWheel (Element at index 1)
+    t =     9.76s     Check for interrupting elements affecting "0" PickerWheel
+    t =     9.79s     Synthesize event
+    t =     9.81s     Wait for com.aiteam.PhotoTimer to idle
+    t =    10.12s Waiting 10.0s for "filterButton" Button to exist
+    t =    11.17s     Checking `Expect predicate `existsNoRetry == 1` for object "filterButton" Button`
+    t =    11.17s         Checking existence of `"filterButton" Button`
+    t =    11.24s Tap "filterButton" Button
+    t =    11.24s     Wait for com.aiteam.PhotoTimer to idle
+    t =    11.24s     Find the "filterButton" Button
+    t =    11.28s     Check for interrupting elements affecting "filterButton" Button
+    t =    11.31s     Synthesize event
+    t =    11.32s         Scroll element to visible
+    t =    11.32s         Find the "filterButton" Button
+    t =    11.36s         Computed hit point {-1, -1} after scrolling to visible
+    t =    11.65s     Wait for com.aiteam.PhotoTimer to idle
+    t =    11.65s Waiting 5.0s for "すべて解除" Button to exist
+    t =    12.70s     Checking `Expect predicate `existsNoRetry == 1` for object "すべて解除" Button`
+    t =    12.70s         Checking existence of `"すべて解除" Button`
+    t =    12.77s         Capturing element debug description
+    t =    13.73s     Checking `Expect predicate `existsNoRetry == 1` for object "すべて解除" Button`
+    t =    13.73s         Checking existence of `"すべて解除" Button`
+    t =    13.79s         Capturing element debug description
+    t =    14.74s     Checking `Expect predicate `existsNoRetry == 1` for object "すべて解除" Button`
+    t =    14.74s         Checking existence of `"すべて解除" Button`
+    t =    14.80s         Capturing element debug description
+    t =    15.74s     Checking `Expect predicate `existsNoRetry == 1` for object "すべて解除" Button`
+    t =    15.74s         Checking existence of `"すべて解除" Button`
+    t =    15.80s         Capturing element debug description
+    t =    16.66s     Checking `Expect predicate `existsNoRetry == 1` for object "すべて解除" Button`
+    t =    16.66s         Checking existence of `"すべて解除" Button`
+    t =    16.72s         Capturing element debug description
+    t =    16.73s     Checking existence of `"すべて解除" Button`
+    t =    16.76s Collecting debug information to assist test failure triage
+    t =    16.76s     Requesting snapshot of accessibility hierarchy for app with pid 70054
+    t =    16.81s Waiting 2.0s for "暗め" Button to exist
+    t =    17.87s     Checking `Expect predicate `existsNoRetry == 1` for object "暗め" Button`
+    t =    17.87s         Checking existence of `"暗め" Button`
+    t =    17.94s         Capturing element debug description
+    t =    18.81s     Checking `Expect predicate `existsNoRetry == 1` for object "暗め" Button`
+    t =    18.81s         Checking existence of `"暗め" Button`
+    t =    18.88s         Capturing element debug description
+    t =    18.88s     Checking existence of `"暗め" Button`
+    t =    18.91s Collecting debug information to assist test failure triage
+    t =    18.91s     Requesting snapshot of accessibility hierarchy for app with pid 70054
+    t =    18.96s Swipe up Target Application 'com.aiteam.PhotoTimer'
+    t =    18.96s     Wait for com.aiteam.PhotoTimer to idle
+    t =    18.97s     Find the Target Application 'com.aiteam.PhotoTimer'
+    t =    18.99s     Check for interrupting elements affecting "写真タイマー" Application
+    t =    19.03s     Synthesize event
+    t =    19.44s     Wait for com.aiteam.PhotoTimer to idle
+    t =    19.55s Waiting 1.0s for "暗め" Button to exist
+    t =    20.55s     Checking `Expect predicate `existsNoRetry == 1` for object "暗め" Button`
+    t =    20.56s         Checking existence of `"暗め" Button`
+    t =    20.62s         Capturing element debug description
+    t =    20.62s     Checking existence of `"暗め" Button`
+    t =    20.66s Collecting debug information to assist test failure triage
+    t =    20.66s     Requesting snapshot of accessibility hierarchy for app with pid 70054
+    t =    20.71s Swipe up Target Application 'com.aiteam.PhotoTimer'
+    t =    20.71s     Wait for com.aiteam.PhotoTimer to idle
+    t =    20.71s     Find the Target Application 'com.aiteam.PhotoTimer'
+    t =    20.73s     Check for interrupting elements affecting "写真タイマー" Application
+    t =    20.77s     Synthesize event
+    t =    21.19s     Wait for com.aiteam.PhotoTimer to idle
+    t =    21.30s Waiting 1.0s for "暗め" Button to exist
+    t =    22.30s     Checking `Expect predicate `existsNoRetry == 1` for object "暗め" Button`
+    t =    22.31s         Checking existence of `"暗め" Button`
+    t =    22.34s         Capturing element debug description
+    t =    22.34s     Checking existence of `"暗め" Button`
+    t =    22.38s Collecting debug information to assist test failure triage
+    t =    22.38s     Requesting snapshot of accessibility hierarchy for app with pid 70054
+    t =    22.43s Swipe up Target Application 'com.aiteam.PhotoTimer'
+    t =    22.43s     Wait for com.aiteam.PhotoTimer to idle
+    t =    22.43s     Find the Target Application 'com.aiteam.PhotoTimer'
+    t =    22.46s     Check for interrupting elements affecting "写真タイマー" Application
+    t =    22.49s     Synthesize event
+    t =    22.91s     Wait for com.aiteam.PhotoTimer to idle
+    t =    23.01s Waiting 1.0s for "暗め" Button to exist
+    t =    24.02s     Checking `Expect predicate `existsNoRetry == 1` for object "暗め" Button`
+    t =    24.02s         Checking existence of `"暗め" Button`
+    t =    24.09s         Capturing element debug description
+    t =    24.09s     Checking existence of `"暗め" Button`
+    t =    24.13s Collecting debug information to assist test failure triage
+    t =    24.13s     Requesting snapshot of accessibility hierarchy for app with pid 70054
+    t =    24.17s Swipe up Target Application 'com.aiteam.PhotoTimer'
+    t =    24.17s     Wait for com.aiteam.PhotoTimer to idle
+    t =    24.18s     Find the Target Application 'com.aiteam.PhotoTimer'
+    t =    24.20s     Check for interrupting elements affecting "写真タイマー" Application
+    t =    24.24s     Synthesize event
+    t =    24.66s     Wait for com.aiteam.PhotoTimer to idle
+    t =    24.76s Waiting 1.0s for "暗め" Button to exist
+    t =    25.76s     Checking `Expect predicate `existsNoRetry == 1` for object "暗め" Button`
+    t =    25.77s         Checking existence of `"暗め" Button`
+    t =    25.83s         Capturing element debug description
+    t =    25.83s     Checking existence of `"暗め" Button`
+    t =    25.87s Collecting debug information to assist test failure triage
+    t =    25.87s     Requesting snapshot of accessibility hierarchy for app with pid 70054
+    t =    25.92s Swipe up Target Application 'com.aiteam.PhotoTimer'
+    t =    25.92s     Wait for com.aiteam.PhotoTimer to idle
+    t =    25.92s     Find the Target Application 'com.aiteam.PhotoTimer'
+    t =    25.94s     Check for interrupting elements affecting "写真タイマー" Application
+    t =    25.98s     Synthesize event
+    t =    26.40s     Wait for com.aiteam.PhotoTimer to idle
+    t =    26.50s Waiting 1.0s for "暗め" Button to exist
+    t =    27.50s     Checking `Expect predicate `existsNoRetry == 1` for object "暗め" Button`
+    t =    27.51s         Checking existence of `"暗め" Button`
+    t =    27.57s         Capturing element debug description
+    t =    27.57s     Checking existence of `"暗め" Button`
+    t =    27.61s Collecting debug information to assist test failure triage
+    t =    27.61s     Requesting snapshot of accessibility hierarchy for app with pid 70054
+    t =    27.66s Swipe up Target Application 'com.aiteam.PhotoTimer'
+    t =    27.66s     Wait for com.aiteam.PhotoTimer to idle
+    t =    27.66s     Find the Target Application 'com.aiteam.PhotoTimer'
+    t =    27.68s     Check for interrupting elements affecting "写真タイマー" Application
+    t =    27.72s     Synthesize event
+    t =    28.13s     Wait for com.aiteam.PhotoTimer to idle
+    t =    28.23s Waiting 1.0s for "暗め" Button to exist
+    t =    29.24s     Checking `Expect predicate `existsNoRetry == 1` for object "暗め" Button`
+    t =    29.24s         Checking existence of `"暗め" Button`
+    t =    29.30s         Capturing element debug description
+    t =    29.30s     Checking existence of `"暗め" Button`
+    t =    29.34s Collecting debug information to assist test failure triage
+    t =    29.34s     Requesting snapshot of accessibility hierarchy for app with pid 70054
+    t =    29.39s Swipe up Target Application 'com.aiteam.PhotoTimer'
+    t =    29.39s     Wait for com.aiteam.PhotoTimer to idle
+    t =    29.39s     Find the Target Application 'com.aiteam.PhotoTimer'
+    t =    29.42s     Check for interrupting elements affecting "写真タイマー" Application
+    t =    29.45s     Synthesize event
+    t =    29.87s     Wait for com.aiteam.PhotoTimer to idle
+    t =    29.97s Waiting 1.0s for "暗め" Button to exist
+    t =    30.99s     Checking `Expect predicate `existsNoRetry == 1` for object "暗め" Button`
+    t =    30.99s         Checking existence of `"暗め" Button`
+    t =    31.05s         Capturing element debug description
+    t =    31.05s     Checking existence of `"暗め" Button`
+    t =    31.09s Collecting debug information to assist test failure triage
+    t =    31.09s     Requesting snapshot of accessibility hierarchy for app with pid 70054
+    t =    31.14s Swipe up Target Application 'com.aiteam.PhotoTimer'
+    t =    31.14s     Wait for com.aiteam.PhotoTimer to idle
+    t =    31.14s     Find the Target Application 'com.aiteam.PhotoTimer'
+    t =    31.17s     Check for interrupting elements affecting "写真タイマー" Application
+    t =    31.20s     Synthesize event
+    t =    31.61s     Wait for com.aiteam.PhotoTimer to idle
+    t =    31.72s Waiting 1.0s for "暗め" Button to exist
+    t =    32.73s     Checking `Expect predicate `existsNoRetry == 1` for object "暗め" Button`
+    t =    32.73s         Checking existence of `"暗め" Button`
+    t =    32.79s         Capturing element debug description
+    t =    32.79s     Checking existence of `"暗め" Button`
+    t =    32.82s Collecting debug information to assist test failure triage
+    t =    32.82s     Requesting snapshot of accessibility hierarchy for app with pid 70054
+    t =    32.87s Swipe up Target Application 'com.aiteam.PhotoTimer'
+    t =    32.87s     Wait for com.aiteam.PhotoTimer to idle
+    t =    32.87s     Find the Target Application 'com.aiteam.PhotoTimer'
+    t =    32.90s     Check for interrupting elements affecting "写真タイマー" Application
+    t =    32.93s     Synthesize event
+    t =    33.35s     Wait for com.aiteam.PhotoTimer to idle
+    t =    33.46s Waiting 1.0s for "暗め" Button to exist
+    t =    34.47s     Checking `Expect predicate `existsNoRetry == 1` for object "暗め" Button`
+    t =    34.47s         Checking existence of `"暗め" Button`
+    t =    34.53s         Capturing element debug description
+    t =    34.53s     Checking existence of `"暗め" Button`
+    t =    34.57s Collecting debug information to assist test failure triage
+    t =    34.57s     Requesting snapshot of accessibility hierarchy for app with pid 70054
+    t =    34.62s Swipe up Target Application 'com.aiteam.PhotoTimer'
+    t =    34.62s     Wait for com.aiteam.PhotoTimer to idle
+    t =    34.62s     Find the Target Application 'com.aiteam.PhotoTimer'
+    t =    34.65s     Check for interrupting elements affecting "写真タイマー" Application
+    t =    34.68s     Synthesize event
+    t =    35.09s     Wait for com.aiteam.PhotoTimer to idle
+    t =    35.19s Waiting 1.0s for "暗め" Button to exist
+    t =    36.20s     Checking `Expect predicate `existsNoRetry == 1` for object "暗め" Button`
+    t =    36.21s         Checking existence of `"暗め" Button`
+    t =    36.27s         Capturing element debug description
+    t =    36.27s     Checking existence of `"暗め" Button`
+    t =    36.31s Collecting debug information to assist test failure triage
+    t =    36.31s     Requesting snapshot of accessibility hierarchy for app with pid 70054
+/Users/takahashitakayuki/my_ai_team/apps/PhotoTimer/PhotoTimerUITests/PhotoTimerUITests.swift:1052: error: -[PhotoTimerUITests.PhotoTimerUITests testNearMatchStreaming_AlwaysShowsSomething] : XCTAssertTrue failed - 雰囲気の選択肢「暗め」が見つからない
+    t =    36.38s Tap "暗め" Button
+    t =    36.38s     Wait for com.aiteam.PhotoTimer to idle
+    t =    36.38s     Find the "暗め" Button
+    t =    37.42s         Find the "暗め" Button (retry 1)
+    t =    38.47s         Find the "暗め" Button (retry 2)
+    t =    38.54s Requesting snapshot of accessibility hierarchy for app with pid 70054
+/Users/takahashitakayuki/my_ai_team/apps/PhotoTimer/PhotoTimerUITests/PhotoTimerUITests.swift:1053: error: -[PhotoTimerUITests.PhotoTimerUITests testNearMatchStreaming_AlwaysShowsSomething] : Failed to tap "暗め" Button: No matches found for Elements matching predicate '"暗め" IN identifiers' from input {(
+    Button, identifier: 'closeButton', label: 'Close',
+    Button, label: '閉じる',
+    Button, identifier: 'helpButton', label: 'questionmark.circle',
+    Button, identifier: 'alarmSettingsButton', label: 'Notifications',
+    Button, identifier: 'playbackSettingsButton', label: 'gearshape',
+    Button, identifier: 'filterButton', label: '絞り込み条件, スクショ除く / 雰囲気1件 / カテゴリ1件',
+    Button, identifier: 'startButton', label: 'スタート'
+)}
+    t =    38.59s Tear Down
+Test Case '-[PhotoTimerUITests.PhotoTimerUITests testNearMatchStreaming_AlwaysShowsSomething]' failed (38.853 seconds).
+Test Suite 'PhotoTimerUITests' failed at 2026-09-05 08:27:26.971.
+	 Executed 1 test, with 2 failures (0 unexpected) in 38.853 (38.854) seconds
+Test Suite 'PhotoTimerUITests.xctest' failed at 2026-09-05 08:27:26.971.
+	 Executed 1 test, with 2 failures (0 unexpected) in 38.853 (38.855) seconds
+Test Suite 'Selected tests' failed at 2026-09-05 08:27:26.972.
+	 Executed 1 test, with 2 failures (0 unexpected) in 38.853 (38.856) seconds
+2026-09-05 08:27:33.110 xcodebuild[70041:1562616] [MT] IDETestOperationsObserverDebug: 46.154 elapsed -- Testing started completed.
+2026-09-05 08:27:33.110 xcodebuild[70041:1562616] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-05 08:27:33.110 xcodebuild[70041:1562616] [MT] IDETestOperationsObserverDebug: 46.154 sec, +46.154 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/takahashitakayuki/my_ai_team/apps/PhotoTimer/build/Logs/Test/Test-PhotoTimer-2026.09.05_08-26-46-+0900.xcresult
+
+Failing tests:
+	PhotoTimerUITests.testNearMatchStreaming_AlwaysShowsSomething()
+	PhotoTimerUITests.testNearMatchStreaming_AlwaysShowsSomething()
+
+** TEST FAILED **
+
+Testing started

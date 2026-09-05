@@ -10,8 +10,15 @@ struct SlideshowView: View {
     let alarmSettings: AlarmSettings
     let placeClusters: [PlaceCluster]
 
+    /// 新規開始の時は nil(=今から始める)。前回のタイマーを再開する時だけ、
+    /// 前回計算済みの終了予定時刻(絶対時刻)を渡す(RootView参照。CEO要望C)。
+    var resumingUntil: Date? = nil
+
     @StateObject private var controller = TimerController()
     @Environment(\.dismiss) private var dismiss
+    /// CEO要望C(2026-09-05):バックグラウンドに回っている間は解析・表示を止め、
+    /// 戻ってきたら経過時間を正しく反映して再開する。
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack {
@@ -53,7 +60,7 @@ struct SlideshowView: View {
         }
         .statusBarHidden()
         .onAppear {
-            controller.start(totalDurationSeconds: totalSeconds, settings: settings, playbackSettings: playbackSettings, alarmSettings: alarmSettings, placeClusters: placeClusters)
+            controller.start(totalDurationSeconds: totalSeconds, settings: settings, playbackSettings: playbackSettings, alarmSettings: alarmSettings, placeClusters: placeClusters, resumingUntil: resumingUntil)
             // 指摘C: スライドショー中は画面の自動ロックを止める(この画面にいる間だけ)。
             UIApplication.shared.isIdleTimerDisabled = true
         }
@@ -62,7 +69,35 @@ struct SlideshowView: View {
             // この画面を離れたら元に戻す(スライドショー中以外は通常どおり自動ロックさせる)。
             UIApplication.shared.isIdleTimerDisabled = false
         }
+        .onChange(of: scenePhase) { _, newPhase in
+            // CEO要望C(2026-09-05):バックグラウンドに回ったら解析・表示を止め、
+            // 戻ってきたら経過時間を正しく反映して表示を再開する。
+            switch newPhase {
+            case .background:
+                controller.enterBackground()
+            case .active:
+                controller.returnToForeground()
+            case .inactive:
+                break // 通知センターを開く等の一時的な状態。ここでは何もしない。
+            @unknown default:
+                break
+            }
+        }
         .animation(.easeInOut(duration: 0.4), value: controller.currentAsset?.localIdentifier)
+        // CEO要望D(2026-09-05): 削除に失敗した場合だけユーザーに知らせる
+        // (キャンセルは正常系なので何も表示しない。TimerController.deleteCurrentAsset()参照)。
+        .alert("削除できませんでした", isPresented: deletionFailureAlertBinding) {
+            Button("閉じる", role: .cancel) {}
+        } message: {
+            Text("時間をおいてもう一度お試しください。")
+        }
+    }
+
+    private var deletionFailureAlertBinding: Binding<Bool> {
+        Binding(
+            get: { controller.deletionFailure != nil },
+            set: { if !$0 { controller.clearDeletionFailure() } }
+        )
     }
 
     private var topBar: some View {
@@ -88,6 +123,22 @@ struct SlideshowView: View {
                 .background(.black.opacity(0.4), in: Capsule())
                 // 自動テストがカウントダウンの残り秒数を読み取るための目印。
                 .accessibilityIdentifier("remainingTimeLabel")
+
+            Spacer()
+
+            // CEO要望D(2026-09-05): 流れている写真・動画をその場で削除できるようにする。
+            // 削除中(表示中の1枚が無い時)・見つからなかった表示の時は押しても意味が無いので隠す。
+            // 将来課金者限定にする可能性があるため、表示可否の判定はFeatureFlags 1箇所に集約している。
+            if FeatureFlags.isPhotoDeletionEnabled, controller.currentAsset != nil {
+                Button {
+                    controller.deleteCurrentAsset()
+                } label: {
+                    Image(systemName: "trash.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.white, .black.opacity(0.4))
+                }
+                .accessibilityIdentifier("deleteCurrentAssetButton")
+            }
         }
     }
 

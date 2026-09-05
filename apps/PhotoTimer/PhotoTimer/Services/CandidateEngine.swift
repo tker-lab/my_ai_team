@@ -45,16 +45,34 @@ actor CandidateEngine {
     /// 現在の「窓」の中で、採点済みだがまだ表示していない候補(スコアの高い順に並んでいる)。
     private var scoredWindow: [(asset: PHAsset, score: Double)] = []
     private let settings: FilterSettings
-    /// 【2026-09-04追加:先読み(プリフェッチ)】
+    /// 【2026-09-04追加 → 2026-09-05拡張:先読み(プリフェッチ)を1枚→2枚先まで】
     /// 「該当が少ないカテゴリ×短い表示秒数だと、判定が表示時間に追いつかれる」という実機での
     /// CEO確認(雰囲気=雪で表示2秒設定→切り替えに2秒の時と5秒かかる時がある)を受けて追加。
     /// 以前は「今表示している1枚の表示時間が終わってから、次の1枚を探し始める」という順番だったため、
     /// 探すのに時間がかかる条件では表示時間ぴったりで待ちが発生していた。
-    /// 今は「今の1枚を表示し始めた直後」に、次の1枚の判定をこのTaskとして裏で始めておく。
+    /// 今は「今の1枚を表示し始めた直後」に、次の1枚以降の判定を裏で始めておく。
     /// 表示時間(数秒)の間に判定が終われば、次に進む時には既に結果が出ている=待ちがゼロになる。
     /// 判定のほうが時間がかかる場合は、これまで通りその分だけ待つ(先読みは「隠せる分だけ隠す」仕組みで、
     /// 判定そのものを速くするものではない)。
-    private var prefetchTask: Task<PHAsset?, Never>?
+    ///
+    /// 【2026-09-05変更:1枚先読み→2枚先読みへ(CEO指示)】
+    /// 以前は「次の1枚」だけを1つのTaskで先読みしていたが、「該当が非常に少ない条件が連続する」場合、
+    /// 1枚分の先読みだけでは「今の表示時間中に次の1枚は間に合ったが、その次はまだ」という状態になりやすく、
+    /// 2枚目の切り替わりでまた待ちが発生していた。そこで「捨てずに順番管理するキュー」
+    /// (prefetchedQueue)を導入し、常に最大 maxPrefetchDepth 枚ぶんを裏で判定済みにしておく方式に変えた。
+    /// 判定順序(近い順・原則2の遅延評価)は`findNextMatch()`が一元管理しており、キューは
+    /// その結果を「表示するまでの間、順番を保ったまま一時的に保管しておく場所」に過ぎない
+    /// (キューを導入したことで判定ロジック自体〔窓単位の近い順並べ替え〕は変わっていない)。
+    private var prefetchedQueue: [PHAsset] = []
+    /// キューを maxPrefetchDepth 件まで満たすための裏Task。存在する間は「補充中」を意味する
+    /// (二重に補充が走らないようにするためのガード)。
+    private var prefetchTask: Task<Void, Never>?
+    /// 先読みしておく件数(現在表示中の1枚とは別に、裏で判定を済ませておく件数)。
+    /// 【2026-09-05 CEO指示:1枚先読み→2〜3枚先読みへ拡張】
+    /// 窓のサイズ(scoringBatchSize=6)の半分程度に留め、先読みだけで窓の判定枠を使い切って
+    /// しまわないようにする値として2を選んだ(3にするとより手厚くなるが、窓の残りが1枚しか
+    /// 無い状態が増え、次の窓への切り替わり頻度が上がる)。値を増減したい場合はここの定数のみでよい。
+    private static let maxPrefetchDepth = 2
     /// 【指摘H対応】雰囲気・カテゴリの判定用サムネイルが取得できず、「合うかどうか判定できなかった」
     /// 候補が今回のひと巡り(prepare()〜候補を使い切るまで)で1件でもあったか。
     /// 「iPhoneのストレージを最適化」設定を使っていると、端末内に無い写真が多くを占めることがあり、
@@ -77,6 +95,7 @@ actor CandidateEngine {
         // シャッフルし直す(=候補の並びが変わる)ので、古い並びを前提に先読みしていた分は捨てる。
         prefetchTask?.cancel()
         prefetchTask = nil
+        prefetchedQueue = []
         let assets = Self.fetchBaseAssets(settings: settings)
         let filtered = assets.filter { Self.passesMetadataFilters($0, settings: settings) }
         shuffledAssets = filtered.shuffled()
@@ -101,6 +120,12 @@ actor CandidateEngine {
     var hadUndeterminedCandidates: Bool { hadUndeterminedCandidatesThisPass }
 
     /// 次に表示する1枚を返す。無ければ nil(=「条件に合う写真が見つかりませんでした」)。
+    ///
+    /// 【2026-09-05変更:先読みを「1枚だけ」から「キュー(最大2枚)」方式へ】
+    /// 以前は「1つだけの先読みTask」の結果を待つだけだったが、今は`prefetchedQueue`に
+    /// 既に判定済みの候補が溜まっていれば、それを順番(=近い順に並べた判定順)を保ったまま
+    /// 取り出すだけで済む。キューが空(まだ一度も先読みが間に合っていない、または絞り込みなしで
+    /// 先読み自体が不要)の場合は、これまで通りその場で判定する。
     func next() async -> PHAsset? {
         guard settings.needsImageAnalysis else {
             // 雰囲気・カテゴリの指定が無ければメタ情報の絞り込みだけで確定済み。即座に返せる。
@@ -109,23 +134,38 @@ actor CandidateEngine {
             return shuffledAssets[cursor]
         }
 
-        // 先読み(prefetchNext)が既に始まっていれば、その結果を待つだけでよい
-        // (表示時間中に判定が終わっていれば、ここは実質即座に返る)。
-        if let task = prefetchTask {
-            prefetchTask = nil
-            return await task.value
+        if !prefetchedQueue.isEmpty {
+            return prefetchedQueue.removeFirst()
         }
+        // キューが空(先読みがまだ間に合っていない最初の1枚、または候補プールを使い切った直後)。
+        // その場で判定する(これまで通りの「待つしかない」経路)。
         return await findNextMatch()
     }
 
-    /// 今表示している1枚の表示時間を使って、次の1枚の判定を裏で始めておく(先読み)。
-    /// 判定不要な設定(雰囲気・カテゴリどちらも指定なし)の時は next() 自体が一瞬で終わるため、
-    /// 先読みする意味が無い(むしろ余計なTaskを作るだけ)ので何もしない。
-    /// 既に先読み中なら二重に始めない。
+    /// 今表示している1枚の表示時間を使って、次以降(最大 maxPrefetchDepth 枚先まで)の判定を
+    /// 裏で進めておく(先読み)。判定不要な設定(雰囲気・カテゴリどちらも指定なし)の時は
+    /// next() 自体が一瞬で終わるため、先読みする意味が無い(むしろ余計なTaskを作るだけ)ので何もしない。
+    /// 既に補充中(prefetchTaskが動いている)なら二重に始めない
+    /// (次に表示を始めるたびに呼ばれるので、補充が終わっていれば毎回また呼ばれてキューが満杯を保つ)。
     func prefetchNext() {
         guard settings.needsImageAnalysis, prefetchTask == nil else { return }
         prefetchTask = Task {
-            await self.findNextMatch()
+            await self.refillPrefetchQueue()
+            self.prefetchTask = nil
+        }
+    }
+
+    /// キューが maxPrefetchDepth 件になるまで、`findNextMatch()`を繰り返し呼んで補充する。
+    /// 【なぜ1件ずつ逐次か】`findNextMatch()`は「シャッフル済み候補の中の今の位置(cursor)」や
+    /// 「窓の中の残り」といった状態を直接書き換える(このactor内の状態)ため、並行に何個も
+    /// 同時実行すると同じ写真を重複して払い出す・cursorが競合するおそれがある。このメソッド自体は
+    /// prefetchTaskという単一のTaskの中だけで呼ばれる(prefetchNext()のガードで二重起動を防止)ため、
+    /// actor全体が単一実行(直列)であることと合わせて、逐次呼び出しで安全に順番を保てる。
+    private func refillPrefetchQueue() async {
+        while prefetchedQueue.count < Self.maxPrefetchDepth {
+            if Task.isCancelled { return }
+            guard let asset = await findNextMatch() else { return } // 候補プールを使い切った(この巡はここまで)
+            prefetchedQueue.append(asset)
         }
     }
 
@@ -169,6 +209,13 @@ actor CandidateEngine {
                     hadUndeterminedCandidatesThisPass = true
                     continue
                 }
+                // 【2026-09-05追加:AIでのスクショ・書類らしい写真の除外(iOS 18以降)】
+                // excludeScreenshots(メタ情報だけの判定)と同じ「除外」の考え方なので、近い順の
+                // スコアには乗せず、この窓からはそもそも外す(mood/categoryのような「近さ」の軸ではなく、
+                // excludeScreenshotsの精度を底上げする追加条件という位置づけのため)。
+                if settings.strictScreenshotDetection, analysis.isUtilityImage == true {
+                    continue
+                }
                 let score = Self.score(analysis: analysis, settings: settings)
                 newlyScored.append((asset, score))
             }
@@ -193,7 +240,7 @@ actor CandidateEngine {
         // キャンセル後にVisionでの解析(CPUを使う処理)へ進んでしまうことを防ぐ。
         if Task.isCancelled { return nil }
 
-        guard let analysis = ImageAnalyzer.analyze(cgImage: cgImage) else {
+        guard let analysis = await ImageAnalyzer.analyze(cgImage: cgImage) else {
             // 【2026-09-04発見・修正:実機不具合「該当があるのに数枚で止まる」の調査で発覚】
             // 以前はVisionでの解析(ImageAnalyzer.analyze)が内部で失敗した場合も
             // 「カテゴリ0件」という"正常な解析結果"として扱い、AnalysisCacheに永久保存していた。
@@ -327,6 +374,14 @@ actor CandidateEngine {
             total += Double(matchedCount) / Double(settings.selectedCategories.count)
         }
 
+        // 【2026-09-05追加:よく撮れてる度を優先(iOS 18以降)】
+        // 他の軸と同じく「近い順」の考え方に沿って、足切りはせずスコアに加算するだけにする
+        // (よく撮れてる度が低い写真も、他に強く条件に合うものが無ければ普通に流れる)。
+        // aestheticsScoreは-1〜1の範囲なので、他の軸(0〜1)とスケールを揃えるため(x+1)/2で正規化する。
+        if settings.preferHighAesthetics, let aestheticsScore = analysis.aestheticsScore {
+            total += (aestheticsScore + 1) / 2
+        }
+
         return total
     }
 
@@ -339,7 +394,10 @@ actor CandidateEngine {
         options.resizeMode = .fast
 
         return await withCheckedContinuation { continuation in
-            PHImageManager.default().requestImage(for: asset, targetSize: CGSize(width: 256, height: 256), contentMode: .aspectFill, options: options) { image, _ in
+            PHImageManager.default().requestImage(for: asset, targetSize: CGSize(width: 256, height: 256), contentMode: .aspectFill, options: options) { image, info in
+                if image == nil {
+                    NSLog("[PhotoTimer][DIAG3] nil image. info=\(String(describing: info)) authStatus=\(PHPhotoLibrary.authorizationStatus(for: .readWrite).rawValue)")
+                }
                 continuation.resume(returning: image?.cgImage)
             }
         }

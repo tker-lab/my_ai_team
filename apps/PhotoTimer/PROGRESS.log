@@ -94,3 +94,24 @@ ImageAnalyzer.analyzeMoodの旧・緑色相帯を暖色/寒色に再配分。Fil
 「緑」を自動除去する移行処理を追加。AssetAnalysis.currentVersionを2→3に上げ再解析を強制。5: HelpView.swift
 (新規)を追加、ホーム画面右上「?」から開けるようにした(位置情報設定・AI判定の限界・プライバシーの案内)。
 xcodegen再生成、シミュレータ向けBUILD SUCCEEDED確認済み。
+2026-09-05 (CEO実機フィードバック対応・2/検証+フェーズ2実装) フェーズ1(5件)の検証を実施。4/5は
+シミュレータで成功確認(緑削除・説明画面・アラーム鳴らし方の切替・止めるまで鳴り続ける→止めるボタン、
+いずれもXCUITestで自動確認)。1番(近い順に流す)の検証中に、windowベースの採点方式自体は正しく動作する
+ことをNSLogでの詳細計測で確認(採点は1件あたりミリ秒未満)。ただし検証中、シミュレータで
+「写真アクセスを許可した直後の一瞬」だけPHImageManager.requestImageが
+PHPhotosErrorDomain Code=3303("Image request failed")で一時的に失敗する現象を発見。
+実際のユーザーは許可ダイアログをタップしてから操作するまで数秒はかかるため実害は低いと判断し、
+アプリ側のコードは変更せず、テスト側(ensurePhotosAccessGranted)に許可直後1.5秒の間を空ける対応、
+および「テスト実行中にxcodebuild testプロセスを強制終了すると、CEO要望Cで追加した
+「前回のタイマー自動再開」機能により次のテスト起動時に古いタイマー画面が残ってしまう」ことも判明したため、
+dismissAnyStrayRunningTimer()をテスト共通処理に追加。CandidateEngine.swiftに残した調査用NSLog
+(TEMP_TIMING等)は検証完了後に削除予定。
+2026-09-05 (フェーズ2実装) A:先読みを1枚→2枚(prefetchedQueue, maxPrefetchDepth=2)に拡張。
+B:よく撮れてる度(CalculateImageAestheticsScoresRequest, iOS18以降)をAssetAnalysis/ImageAnalyzer/
+FilterSettings/CandidateEngine.score/FilterOptionsViewに追加(iOS18未満では選択肢を出さない設計)。
+C:バックグラウンド動作をAlarmNotificationScheduler(ローカル通知)+RunningTimerState(端末内永続化)+
+TimerController.enterBackground()/returnToForeground()+ContentViewでのコールドリランチ復帰で実装。
+D:写真削除機能をTimerController.deleteCurrentAsset()(PHAssetChangeRequest.deleteAssets、
+OS標準の確認ダイアログ経由)+FeatureFlags.isPhotoDeletionEnabled(将来の課金切り分け用の1箇所)で実装。
+新規ファイル: FeatureFlags.swift, RunningTimerState.swift, AlarmNotificationScheduler.swift,
+NotificationSoundFiles.swift。XCUITestにv7シナリオ(バックグラウンド復帰・削除確認・aesthetics UI)を追加。

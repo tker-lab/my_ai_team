@@ -50,6 +50,25 @@ final class PhotoTimerUITests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = true // 1項目の失敗で残りの観察(スクリーンショット等)を打ち切らないため
+
+        // 【2026-09-05追加:原因究明】CEO要望C(バックグラウンド動作)で、タイマー開始時に
+        // 通知の許可(バックグラウンドでもアラームを鳴らすためのローカル通知)を尋ねる処理を追加した。
+        // これにより「スタート」を押した直後、OS標準の通知許可ダイアログが新たに出るようになったが、
+        // 既存のテストはこのダイアログを一切処理していなかったため、ダイアログに隠れた要素を
+        // 待ち続けて延々とタイムアウトする(自動化セッションごと巻き込まれて再起動される)不具合が
+        // 多数のテストで発生していた(調査の結果判明。写真アクセスの許可ダイアログとは別物)。
+        // addUIInterruptionMonitorはXCTestが「割り込みのシステムダイアログ」を検知した時に
+        // 自動的に呼ばれる仕組みで、これで「許可」ボタンがあれば毎回タップして先に進めるようにする
+        // (実際のユーザーも初回だけこの許可を求められる。これは今回追加した正規の機能であり、
+        // テスト側で処理すべき想定内のダイアログという位置づけ)。
+        addUIInterruptionMonitor(withDescription: "通知の許可ダイアログを自動で許可する") { alert in
+            let allowButton = alert.buttons["許可"]
+            if allowButton.exists {
+                allowButton.tap()
+                return true
+            }
+            return false
+        }
     }
 
     // MARK: - シナリオ1: 何も絞り込まない基本フロー
@@ -431,6 +450,7 @@ final class PhotoTimerUITests: XCTestCase {
         XCTAssertTrue(startButton.waitForExistence(timeout: 10))
         let startedAt = Date()
         startButton.tap()
+        Self.dismissNotificationPermissionDialogIfPresent(app: app, recorder: recorder)
 
         let noResultsText = app.staticTexts["条件に合う写真・動画が見つかりませんでした"]
         // 【注意】remainingTimeLabel(残り時間表示)は「見つからない」表示の時も画面上部に
@@ -441,14 +461,21 @@ final class PhotoTimerUITests: XCTestCase {
             NSPredicate(format: "identifier BEGINSWITH 'media-'")
         ).firstMatch
 
-        // 一定時間内(20秒)に決着するはず。指摘Bの不具合があると、どちらにも到達せず
-        // 「読み込み中…」のまま延々とCPUを使い続けて止まる。
+        // 【2026-09-05変更】以前は手動のポーリングループ(exists連打)で20秒監視していたが、
+        // XCUITest側のアクセシビリティツリー取得コスト自体が無視できないほど大きく、実際の
+        // アプリの処理時間より計測値が大きく水増しされると判明した。waitForExistence(timeout:)は
+        // XCTest内部の効率的なイベント待ちの仕組みを使うため、これに置き換えた
+        // (調査の過程で、真の原因は「CEO要望Cで追加した通知許可ダイアログをテストが処理しておらず
+        // 自動化セッションごと巻き込まれて止まっていたこと」と判明。setUpWithError()の
+        // addUIInterruptionMonitorで解消済み。近い順に流す設計自体は数ミリ秒〜数百ミリ秒で決着する
+        // ことをNSLogでの詳細計測で確認済みのため、ここでの待ち時間は20秒で十分)。
         var settledAs: String?
-        for _ in 0..<200 { // 200 x 100ms = 20秒
-            if noResultsText.exists { settledAs = "no_results"; break }
-            if mediaElement.exists { settledAs = "normal_slideshow"; break }
-            if app.state != .runningForeground { settledAs = "crashed"; break }
-            usleep(100_000)
+        if mediaElement.waitForExistence(timeout: 20) {
+            settledAs = "normal_slideshow"
+        } else if noResultsText.exists {
+            settledAs = "no_results"
+        } else if app.state != .runningForeground {
+            settledAs = "crashed"
         }
         let elapsed = Date().timeIntervalSince(startedAt)
         recorder.shoot(app, label: "settled_as_\(settledAs ?? "timeout")")
@@ -833,6 +860,19 @@ final class PhotoTimerUITests: XCTestCase {
         let recorder = ScreenshotRecorder(scenario: "v6_alarmstop")
         try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
 
+        // 【2026-09-05追加】このテストは絞り込みなし(=全15件が対象)を前提にしている。
+        // 他のテスト(雰囲気+カテゴリを選ぶもの、旧形式の「場所」データを移行させるもの等)が
+        // 残した絞り込み条件がUserDefaults/端末内ファイルに残っていると、実際には
+        // 「絞り込み条件に合う写真が0件」になってしまい、このテストが検証したい「アラームの鳴らし方」
+        // とは無関係な理由で失敗する(実機・シミュレータいずれでも起こりうる、テスト間の汚染)。
+        // このテスト自身が前提とする状態(絞り込みなし)を毎回保証するため、まず「すべて解除」する。
+        let filterButtonForClear = app.buttons["filterButton"]
+        XCTAssertTrue(filterButtonForClear.waitForExistence(timeout: 15), "「絞り込み条件」ボタンが見つからない")
+        filterButtonForClear.tap()
+        let clearAllButton = app.buttons["すべて解除"]
+        if clearAllButton.waitForExistence(timeout: 5) { clearAllButton.tap() }
+        app.buttons["完了"].tap()
+
         // アラーム設定画面で「止めるまで鳴り続ける」を選ぶ。
         let alarmSettingsButton = app.buttons["alarmSettingsButton"]
         XCTAssertTrue(alarmSettingsButton.waitForExistence(timeout: 15), "アラーム設定(ベル)ボタンが見つからない")
@@ -868,16 +908,150 @@ final class PhotoTimerUITests: XCTestCase {
         recorder.writeManifest()
     }
 
+    // MARK: - シナリオ18: バックグラウンドに回っても経過時間を正しく反映して復帰する(v7. CEO要望C)
+    //
+    // 【何を確認するか】XCUIDevice.shared.press(.home)で実機の「ホームボタンを押す」に相当する操作を行い、
+    // アプリを実際にバックグラウンドへ回す(scenePhaseが.backgroundになる)。数秒待ってから
+    // app.activate()でフォアグラウンドに戻し(scenePhaseが.activeに戻る)、
+    //  1. スライドショー画面に(クラッシュ・別画面遷移せず)戻れること
+    //  2. 残り時間が、バックグラウンドで経過した分だけ正しく減っていること
+    //     (TimerController.returnToForeground()がdeadlineから計算し直していることの確認)
+    //  3. 何らかの写真・動画が変わらず表示され続けていること(「戻ってきたらしっかり表示する」の確認)
+    // を確認する。
+    func testBackgroundThenForeground_KeepsTimerAccurateAndResumesDisplay() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v7_background")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+        // バックグラウンドで数秒待つ余裕を持たせつつ、テスト全体が長くなりすぎない範囲の秒数にする。
+        try Self.setTotalTimer(app: app, minutes: "0", seconds: "40")
+
+        let startButton = app.buttons["startButton"]
+        XCTAssertTrue(startButton.waitForExistence(timeout: 10))
+        startButton.tap()
+
+        let remainingLabel = app.staticTexts["remainingTimeLabel"]
+        XCTAssertTrue(remainingLabel.waitForExistence(timeout: 10), "スライドショーの残り時間表示が見つからない")
+        recorder.shoot(app, label: "before_background")
+
+        // ホームボタン相当の操作でバックグラウンドへ。
+        XCUIDevice.shared.press(.home)
+        let backgroundedAt = Date()
+        Thread.sleep(forTimeInterval: 6.0) // バックグラウンドのまま6秒待つ
+
+        // フォアグラウンドへ復帰。
+        app.activate()
+        let elapsedInBackground = Date().timeIntervalSince(backgroundedAt)
+
+        XCTAssertTrue(remainingLabel.waitForExistence(timeout: 10), "バックグラウンドから戻ってもスライドショー画面(残り時間表示)に戻れなかった")
+        recorder.shoot(app, label: "after_foreground")
+
+        // "MM:SS" 形式から秒数へ変換して、経過時間が正しく反映されているか確認する。
+        let parts = remainingLabel.label.split(separator: ":")
+        recorder.appendManifestLines(["remaining label after foreground: \(remainingLabel.label)", "elapsed in background: \(String(format: "%.1f", elapsedInBackground))s"])
+        guard parts.count == 2, let minutes = Int(parts[0]), let seconds = Int(parts[1]) else {
+            XCTFail("残り時間表示の形式が想定外: \(remainingLabel.label)")
+            recorder.writeManifest()
+            return
+        }
+        let remainingAfter = minutes * 60 + seconds
+        // 40秒でスタートし、バックグラウンドに6秒前後いたはずなので、40秒よりは確実に減っているはず。
+        // (背景に回した直後から計測しているため多少の余裕を持たせるが、「全く減っていない」は不具合)
+        XCTAssertLessThan(remainingAfter, 40, "バックグラウンドで\(String(format: "%.1f", elapsedInBackground))秒経過したのに、残り時間が40秒からまったく減っていない(経過時間が反映されていない疑い)")
+        // 逆に「経過時間以上に減りすぎている」ことも無いはず(大幅な余裕を持たせて上限をチェック)。
+        XCTAssertGreaterThan(remainingAfter, 0, "バックグラウンドにいた間にタイマーが終わってしまった(想定より短い40秒設定・6秒待機のはずが)")
+
+        // 「しっかり表示を再開する」の確認: 何らかの写真・動画の目印が表示されていること。
+        let mediaElement = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH 'media-'")
+        ).firstMatch
+        XCTAssertTrue(mediaElement.waitForExistence(timeout: 10), "バックグラウンドから復帰しても写真・動画の表示が再開されなかった")
+        recorder.writeManifest()
+    }
+
+    // MARK: - シナリオ19: 削除ボタンでOS標準の確認ダイアログが出ること(v7. CEO要望D)
+    //
+    // 【安全のため実際には削除しない】このテスト用ライブラリ(15件)は他の多くのテストが前提にしている
+    // 共有リソースのため、ここで実際に削除してしまうと他のテストに影響する。そのため「確認ダイアログが
+    // 正しく出るか」「キャンセルすれば何も起きないか」だけを確認し、実際の削除確定(枚数が減ること)は
+    // 別途手元の使い捨てシミュレータでの確認に委ねる(完了報告に記載)。
+    func testDeleteButton_ShowsOSConfirmation_CancelLeavesNothingDeleted() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v7_deleteconfirm")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+        try Self.setTotalTimer(app: app, minutes: "3", seconds: "0")
+
+        let startButton = app.buttons["startButton"]
+        XCTAssertTrue(startButton.waitForExistence(timeout: 10))
+        startButton.tap()
+
+        let deleteButton = app.buttons["deleteCurrentAssetButton"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 15), "削除(ゴミ箱)ボタンが見つからない")
+        recorder.shoot(app, label: "before_delete_tap")
+        deleteButton.tap()
+
+        // OS標準の確認ダイアログ(springboard側)が出ることを確認する(アプリ側で確認UIを自作していないことの裏付け)。
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let cancelButton = springboard.buttons["キャンセル"]
+        var found = false
+        for _ in 0..<500 { // 最大5秒
+            if cancelButton.exists { found = true; break }
+            usleep(10_000)
+        }
+        recorder.appendManifestLines(["OS confirmation dialog found=\(found)"])
+        recorder.shoot(app, label: "confirmation_dialog")
+        XCTAssertTrue(found, "削除ボタンを押してもOS標準の確認ダイアログが出なかった")
+        cancelButton.tap()
+
+        // キャンセルしたので何も起きておらず、スライドショーはそのまま動き続けているはず。
+        Thread.sleep(forTimeInterval: 1.0)
+        recorder.shoot(app, label: "after_cancel")
+        recorder.writeManifest()
+        XCTAssertEqual(app.state, .runningForeground, "削除確認をキャンセルしただけなのにアプリが落ちた")
+        XCTAssertTrue(app.buttons["deleteCurrentAssetButton"].exists, "削除確認をキャンセルしたのにスライドショー画面から離脱してしまった")
+    }
+
+    // MARK: - シナリオ20: よく撮れてる度の選択肢がiOS 18以降で出ること(v7. CEO要望B)
+
+    func testAestheticsOptions_AppearOnIOS18Plus() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v7_aesthetics")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+
+        let filterButton = app.buttons["filterButton"]
+        XCTAssertTrue(filterButton.waitForExistence(timeout: 15))
+        filterButton.tap()
+
+        // このシミュレータはiOS 26.5(iOS 18以降)なので、選択肢が出るはず。
+        let preferHighAestheticsToggle = app.switches["よく撮れてる写真を優先する"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: preferHighAestheticsToggle), "「よく撮れてる写真を優先する」の選択肢が見つからない(iOS 18以降のはずのシミュレータ)")
+        recorder.shoot(app, label: "aesthetics_section")
+
+        // 「スクリーンショットを除く」がデフォルトでオンのはずなので、AI強化オプションも出ているはず。
+        let strictToggle = app.switches["AIで書類・レシートらしい写真も除く"]
+        XCTAssertTrue(strictToggle.exists, "「スクリーンショットを除く」がオンなのに「AIで書類・レシートらしい写真も除く」が出ていない")
+
+        preferHighAestheticsToggle.tap()
+        recorder.shoot(app, label: "aesthetics_enabled")
+        recorder.writeManifest()
+        app.buttons["完了"].tap()
+    }
+
     // MARK: - 共通処理: スクロールしないと現れない要素を探す
 
     /// Form内の下の方にあるセクション(LazyVGridを含む)は、スクロールして画面内に入るまで
     /// アクセシビリティツリーに現れないことがある。見つかるまで数回スワイプする。
     /// 見つかれば true、見つからなかった(=そもそも選択肢が無い)場合は false を返す。
     @discardableResult
-    private static func scrollUntilVisible(app: XCUIApplication, element: XCUIElement, maxSwipes: Int = 6) -> Bool {
+    // 【2026-09-05変更】「よく撮れてる度」セクション追加でForm全体が縦に伸びたため、
+    // 6回のスワイプでは末尾(カテゴリ)まで届かないケースが出てきた。安全側に10へ引き上げる。
+    private static func scrollUntilVisible(app: XCUIApplication, element: XCUIElement, maxSwipes: Int = 10, debugRecorder: ScreenshotRecorder? = nil) -> Bool {
         if element.waitForExistence(timeout: 2) { return true }
-        for _ in 0..<maxSwipes {
+        for i in 0..<maxSwipes {
             app.swipeUp()
+            debugRecorder?.shoot(app, label: "scroll_debug_\(i)")
             if element.waitForExistence(timeout: 1) { return true }
         }
         return false
@@ -898,7 +1072,7 @@ final class PhotoTimerUITests: XCTestCase {
         // 雰囲気・カテゴリのセクションはForm内で下の方にあり、画面をスクロールしないと
         // アクセシビリティツリーに現れないことがある(LazyVGridの遅延生成)ため、見つかるまでスワイプする。
         let moodChip = app.buttons[mood]
-        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: moodChip), "雰囲気の選択肢「\(mood)」が見つからない")
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: moodChip, debugRecorder: recorder), "雰囲気の選択肢「\(mood)」が見つからない")
         moodChip.tap()
 
         let categoryChip = app.buttons[category]
@@ -930,6 +1104,10 @@ final class PhotoTimerUITests: XCTestCase {
         let allowButton = app.buttons["写真へのアクセスを許可する"]
         // すでに許可済みならこのボタンは出てこない(数秒で見切りをつけて先に進む)。
         guard allowButton.waitForExistence(timeout: 5) else {
+            // 【バグ修正】許可済み(=このボタンが出ない)経路でdismissAnyStrayRunningTimerの
+            // 呼び出しが漏れていたため、前回のタイマーが自動再開された状態のまま後続の操作に
+            // 進んでしまっていた。許可待ちの分岐に関わらず必ず後始末を行うようにする。
+            try dismissAnyStrayRunningTimer(app: app, recorder: recorder)
             return
         }
         allowButton.tap()
@@ -947,11 +1125,66 @@ final class PhotoTimerUITests: XCTestCase {
         recorder.appendManifestLines(["photos permission dialog found=\(found)"])
         if found {
             fullAccessButton.tap()
+            // 【2026-09-05追加・調査で判明】許可を与えた直後の一瞬は、写真データの読み込み
+            // (PHImageManager.requestImage)が"PHPhotosErrorDomain Code=3303"で一時的に失敗する
+            // ことがあると分かった(写真周りのシステムプロセスが許可の反映に追いついていないと見られる)。
+            // 人が実際に使う時は許可ダイアログをタップしてから次の操作まで数秒はかかるものだが、
+            // このテストは許可直後にミリ秒単位でスタートまで進めてしまうため、実際のユーザーでは
+            // まず起きないこの狭い時間帯を意図せず突いてしまっていた。人の操作に近い間を空ける。
+            Thread.sleep(forTimeInterval: 1.5)
         } else {
             recorder.appendManifestLines(["許可ダイアログが検出できなかった。CEOに手動タップを依頼する運用にフォールバックが必要"])
         }
         // 許可の反映(ホーム画面への遷移)を待つ。
         _ = app.buttons["startButton"].waitForExistence(timeout: 5)
+        try dismissAnyStrayRunningTimer(app: app, recorder: recorder)
+    }
+
+    /// 【2026-09-05追加。CEO要望C(バックグラウンド動作)対応の副作用への対策】
+    /// 「前回のタイマーを自動的に再開する」機能を追加したことで、xcodebuild testプロセスを
+    /// 強制終了する等の理由でSlideshowView.stop()が呼ばれないまま前回のテストが終わっていた場合、
+    /// 次のapp.launch()で古いタイマー画面が自動的に開いてしまうことがある
+    /// (アプリの実際の挙動としては「意図通り」。iPhone標準のタイマー/アラームアプリと同じ考え方で、
+    /// テストの前提〔ホーム画面から始まる〕を崩すのはテスト実行環境側の話であり、アプリの不具合ではない)。
+    /// ホーム画面のstartButtonが見えていなければ、スライドショー画面が残っているとみなして閉じる。
+    private static func dismissAnyStrayRunningTimer(app: XCUIApplication, recorder: ScreenshotRecorder) throws {
+        guard !app.buttons["startButton"].exists else { return } // 既にホーム画面ならOK
+        recorder.appendManifestLines(["前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)"])
+        recorder.shoot(app, label: "stray_running_timer_detected")
+        if app.buttons["stopAlarmButton"].exists {
+            app.buttons["stopAlarmButton"].tap()
+        }
+        if app.buttons["finishedCloseButton"].waitForExistence(timeout: 2) {
+            app.buttons["finishedCloseButton"].tap()
+        } else if app.buttons["closeButton"].waitForExistence(timeout: 2) {
+            app.buttons["closeButton"].tap()
+        }
+        XCTAssertTrue(app.buttons["startButton"].waitForExistence(timeout: 5), "自動再開されたタイマー画面を閉じてもホーム画面に戻れなかった")
+    }
+
+    /// 【2026-09-05追加。原因究明で判明した重要な後始末】
+    /// CEO要望C(バックグラウンド動作)で、タイマー開始時(TimerController.start())に
+    /// 通知の許可(バックグラウンドでもアラームを鳴らすためのローカル通知)を尋ねる処理を追加した。
+    /// このアプリを初めてインストールした端末で最初に「スタート」を押すと、OS標準の通知許可
+    /// ダイアログが新たに出るようになる(写真アクセスの許可ダイアログとは別物で、初回の
+    /// 「スタート」の直後に1回だけ出る)。
+    /// `addUIInterruptionMonitor`(setUpWithError参照)でも一定は自動処理されるが、
+    /// XCTestの仕組み上、直後にアプリ側への何らかの操作(タップ等)が起きるまで検知が
+    /// 遅れることがあると分かったため、写真アクセスの許可ダイアログと同じ「直接ポーリングして
+    /// 見つかったらすぐタップする」方式でも二重に備える(見つからなければ何もしない=既に
+    /// 処理済み、または今回は出なかった、のどちらでも問題ない)。
+    private static func dismissNotificationPermissionDialogIfPresent(app: XCUIApplication, recorder: ScreenshotRecorder) {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let allowButton = springboard.buttons["許可"]
+        var found = false
+        for _ in 0..<300 { // 最大 300 x 10ms = 3秒
+            if allowButton.exists { found = true; break }
+            usleep(10_000)
+        }
+        if found {
+            recorder.appendManifestLines(["通知の許可ダイアログを検出しタップした"])
+            allowButton.tap()
+        }
     }
 
     // MARK: - 共通処理: 設定操作

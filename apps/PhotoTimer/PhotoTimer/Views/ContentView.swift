@@ -16,6 +16,14 @@ struct ContentView: View {
     @State private var showingAlarmSettingsSheet = false
     @State private var showingHelpSheet = false
     @State private var showingSlideshow = false
+    /// 前回のタイマーを再開する時だけ値が入る(CEO要望C. 2026-09-05:バックグラウンド動作)。
+    /// 通常の「スタート」ボタンからの開始では nil のまま(=今から新規に始める)。
+    @State private var resumingUntil: Date?
+    /// 【2026-09-05追加】前回のタイマーを自動再開する確認は「アプリを開いた最初の1回だけ」でよい。
+    /// このフラグが無いと、絞り込み条件の設定画面などを開いて閉じるたびにonAppearが再度呼ばれ、
+    /// そのたびに再開確認が走ってしまう(たとえば「閉じる」ボタンで手動終了した直後に何らかの
+    /// 理由で古い記録がまだ残っていた場合、設定画面を開いただけで意図せず再開してしまうおそれがある)。
+    @State private var hasCheckedForResumeOnLaunch = false
 
     /// 設定できる範囲(秒)。
     /// 下限1秒(CEO要望・2026-09-04):「一瞬だけ写真が映ってもそれはそれで面白い」という考えから、
@@ -105,6 +113,7 @@ struct ContentView: View {
                 .accessibilityIdentifier("filterButton")
 
                 Button {
+                    resumingUntil = nil // 通常の「スタート」は常に新規開始(前回の再開情報が残っていても無視する)
                     showingSlideshow = true
                 } label: {
                     Text("スタート")
@@ -167,10 +176,11 @@ struct ContentView: View {
                 HelpView()
             }
             .fullScreenCover(isPresented: $showingSlideshow) {
-                SlideshowView(totalSeconds: selectedSeconds, settings: filterSettings, playbackSettings: playbackSettings, alarmSettings: alarmSettings, placeClusters: libraryIndex.placeClusters)
+                SlideshowView(totalSeconds: selectedSeconds, settings: filterSettings, playbackSettings: playbackSettings, alarmSettings: alarmSettings, placeClusters: libraryIndex.placeClusters, resumingUntil: resumingUntil)
             }
             .onAppear {
                 libraryIndex.refreshIfNeeded()
+                resumeRunningTimerIfNeeded()
             }
         }
     }
@@ -207,6 +217,23 @@ struct ContentView: View {
     /// 分が1以上の時は合計が必ず60秒以上になるので、下限(1秒)を気にせず0〜59を出せる。
     private var secondsWheelRange: Range<Int> {
         minutesBinding.wrappedValue == 0 ? 1..<60 : 0..<60
+    }
+
+    /// CEO要望C(2026-09-05):バックグラウンド中にアプリのプロセスごと終了してしまった場合でも、
+    /// 次に開いた時にタイマー画面へ自動的に戻れるようにする。
+    /// 【なぜここ(ホーム画面のonAppear)で判定するか】RootView→ContentViewの表示に来る=写真への
+    /// アクセスが許可済みで、いつも通り使える状態になった、ということなので、ここで「前回動いていた
+    /// タイマーが無いか」を確認するのが一番自然(許可待ちの画面の裏で急に別画面が出てくることが無い)。
+    private func resumeRunningTimerIfNeeded() {
+        guard !hasCheckedForResumeOnLaunch else { return }
+        hasCheckedForResumeOnLaunch = true
+        guard !showingSlideshow, let resumed = RunningTimerStateStore.loadIfFresh() else { return }
+        filterSettings = resumed.filterSettings
+        playbackSettings = resumed.playbackSettings
+        alarmSettings = resumed.alarmSettings
+        selectedSeconds = resumed.totalSeconds
+        resumingUntil = resumed.endDate
+        showingSlideshow = true
     }
 
     private var filterSummary: String {

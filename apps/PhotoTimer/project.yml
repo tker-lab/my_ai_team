@@ -19,7 +19,7 @@ targets:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
-        NSPhotoLibraryUsageDescription: "スライドショーに表示する写真・動画を読み込むために使用します。すべての処理は端末内で完結し、外部へは送信しません。"
+        NSPhotoLibraryUsageDescription: "スライドショーに表示する写真・動画の読み込み、およびあなたが選んだ写真・動画の削除に使用します。すべての処理は端末内で完結し、外部へは送信しません。"
         ITSAppUsesNonExemptEncryption: false
     settings:
       base:
