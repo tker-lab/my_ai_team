@@ -15,3 +15,4 @@
 - [AudioServicesPlaySystemSoundはマナースイッチを無視できない](audioservices-ignores-mute-switch.md) — 音声セッションのカテゴリを一切見ない仕様。AVAudioPlayerで自前生成した音を再生する必要あり
 - [devicectlでの実機ログ診断手法](devicectl-console-diagnostic-technique.md) — DEBUG+環境変数ゲートの一度きり診断+`--console`でNSLog取得。ロック中は起動不可、CEOに解除依頼が必要
 - [XCUITestのシステムダイアログ追加・自動復元機能の落とし穴](xcuitest-system-dialog-and-autoresume-pitfalls.md) — 新規ダイアログはaddUIInterruptionMonitor必須、自動復元機能はテスト連続実行と衝突しやすい
+- [UIテスト用シミュレータのeraseは未記録の写真ライブラリを破壊する](xcuitest-simulator-erase-destroys-unseeded-photo-library.md) — レシピ不明なら破壊的操作前に必ず立ち止まる

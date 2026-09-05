@@ -1,3 +1,4 @@
-photos permission dialog found=true
-v7_aesthetics_01_aesthetics_section.png	t=7.9s
-v7_aesthetics_02_aesthetics_enabled.png	t=8.5s
+前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)
+v7_aesthetics_01_stray_running_timer_detected.png	t=5.2s
+v7_aesthetics_02_aesthetics_section.png	t=10.8s
+v7_aesthetics_03_aesthetics_enabled.png	t=11.4s

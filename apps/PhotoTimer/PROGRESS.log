@@ -194,3 +194,79 @@ UIテストtarget build-for-testing成功。実機Application Support実測: ana
 振り返りUIの実行テストは既存シミュレータに残った終了画面/保存済みカテゴリ条件が前処理と衝突して2回失敗。
 アプリのクラッシュや削除実行は無し。残留画面を先に閉じて全条件解除する前処理へ修正済みだが再々実行は未了。
 最終版は接続iPhoneへ11:07に上書きインストールし通常起動成功。CEOの写真・動画への変更操作は行っていない。
+2026-09-05 (3回目のチェック工程指摘対応: 高2件・中5件・低10件) 【高1】雰囲気軸の近似判定を撤廃し、
+選んだ雰囲気と完全一致した場合のみ候補にするよう厳格化(isExplainableApproximation)。カテゴリ軸の
+緩さ(「犬を選んだのに羊」)はCEO判断どおり維持。ヘッダコメントも実装に合わせて書き直した。
+【高2】sessionHistoryGridの実体はScrollViewなのにapp.otherElementsで問い合わせておりクエリが
+恒久的に不一致、削除確認フローが一度もテストされていなかった不具合を修正(app.scrollViewsへ変更)。
+このテストを実際に実行したところ、確認ダイアログ自体がiOS26で「キャンセル」ボタンだけ描画されない
+実際の不具合(confirmationDialogの仕様変化と推測)を新たに発見。原因切り分け(位置起因ではない)の上、
+本来.alertが適切な「1操作+キャンセル」の組み合わせだったため.confirmationDialogから.alertへ変更し解決。
+テストは実行ログで成功(testHistoryDeleteSelection_ShowsConfirmationWithoutDeleting、30.06秒)。
+【中3】テスト後始末ヘルパーdismissAnyStrayRunningTimerがstartButtonの有無で判定していたが、
+スライドショーはfullScreenCoverのため背後のstartButtonが常時ツリーに残り判定が機能していなかった。
+closeButton/finishedCloseButton/stopAlarmButtonの有無で判定するよう修正。
+【中4】バックグラウンド用ローカル通知が既に鳴らし終えているのに、アプリを開いた瞬間
+(start()のresumingUntil経路)・フォアグラウンド復帰時(returnToForeground())の両方で
+finish()が重ねてアラームを鳴らしていた。音を鳴らさないfinishWithoutSoundingAlarm()を新設し両経路で使用。
+【中5】振り返り全画面プレビュー(HistoryPreviewView)がimage/player両方nilの時、失敗と読み込み中を
+区別できず無言でぐるぐる回り続けていた。loadFailed状態を追加しTimerController本体と同じ文言で表示。
+動画取得失敗も同様に検知するよう変更。
+【中6】HistoryPreviewViewの画像取得(highQualityFormat)とHistoryThumbnailのサムネイル取得に
+二重完了防御(ResumeBoxパターン)が無く、「degradedの仮画像だけ来て終わる」失敗時に永久に
+resumeされない可能性があった。TimerController.requestDisplayImageと同じ形に統一し、
+image==nilまたは非degradedのどちらか早い方で確定するよう修正。
+【中7】HelpViewの削除説明が撤去済みの「画面右上のゴミ箱ボタン」を案内していたため、
+現状(振り返り一覧→削除モード→個別選択/全選択/全解除→枚数付き確認→OS確認)に書き直した。
+判定の内部事情(専用検出/精度等)には触れていない。
+【低8-1】TimerController.advanceAfterDeletion()(旧スライド中削除の死んだコード)を削除。
+【低8-2】CandidateEngine.analyzedResult(for:)がTask.isCancelled時にVision解析結果を保存せず
+捨てていたため、探索予算切れが多い窓の後半の写真が永久にキャッシュされない偏りがあった。
+解析完了後は必ずキャッシュへ保存するよう変更(時間切れTaskをcancelする既存の安全策は維持)。
+【低8-3】タイムアウト用sleep(0.8秒)Taskへの参照を保持しておらず、解析が早く終わっても
+必ず0.8秒眠っていた(1回の探索で最大18個滞留)。解析完了時にタイムアウトTaskをcancelするよう修正。
+【低8-4】next()から呼ぶfindNextMatch()にだけ世代番号(expectedGeneration)を渡していなかった点を
+prefetchQueue.generationを渡す形に揃えた。
+【低8-5】該当0件の条件で「読み込み中…」のまま数分間(実機実測185.78秒/6045枚の全走査相当)
+変化しない問題に対応。進捗表示は追加せず、1枚も表示できない探索がzeroResultSearchTimeout(20秒)を
+超えたら一巡し終えていなくても静かに「見つかりませんでした」側へ倒すようrunSlideLoopを変更。
+【低8-6】仕様通りのため変更なし(削除モード中はタップで拡大しない)。
+【低8-7】雰囲気・カテゴリ両方選んでいた旧設定が単一選択への移行で無言にカテゴリ優先・雰囲気破棄
+されていた点に対応。移行後の値をその場でディスクへ書き戻すようにし、実際に破棄が起きた時だけ
+UserDefaultsにお知らせ待ちフラグを立て、FilterOptionsViewの雰囲気セクションに一度だけ説明+
+「分かりました」ボタンを表示するようにした(アルバム・場所の「見つからない選択を解除」と同じ発想)。
+【低8-8】photoSlideDurationSecondsが0以下/NaNだとUInt64(...)がトラップする経路にクランプ(最低0.1秒)を追加。
+【低8-9】ImageAnalyzerの色相switchで「緑」削除の名残により隣接2ケースずつが同一処理になっていた
+冗長なswitchを2ケースへ整理(動作は変更なし)。
+【低8-10】displayedAssets.contains(where:)の毎回線形探索をdisplayedAssetIDs(Set)併用でO(1)化。
+追加・削除の全箇所(start/stop/deleteAssets成功時/表示成功時)で両者を同期。
+xcodebuild build: BUILD SUCCEEDED(iPhone 17シミュレータ, iOS 26.5)。
+testHistoryDeleteSelection_ShowsConfirmationWithoutDeletingを個別実行し成功を確認後、
+UIテスト全23件(xcodebuild test、シミュレータ既定destination)を実行して結果を検証(詳細は続報)。
+2026-09-05 (続報:回帰テストの実施結果と作業上のミス) フルスイート23件を実行したところ、テスト用
+シミュレータ(iPhone 17)が長時間の連続実行中に一時的に不安定化し(Photosまわりの一過性の遅延と
+推測)、本来の指摘とは無関係な箇所で複数件が「timeout」扱いになった。原因切り分けのため各テストを
+個別に再実行して復旧を確認する方針としたが、その過程でこのシミュレータをxcrun simctl eraseしてしまい、
+過去のセッションが用意していたテスト用写真ライブラリ(サンプル写真8枚+動画1本)を消してしまった
+(このライブラリの生成手順は本セッションの引き継ぎ資料に残っておらず、再現不可)。
+【対応】このAI自身が生成した代替アセット(単色のJPEG8枚+macOS標準の動画1本〔当初使ったシステム動画は
+ポスターフレーム抽出に失敗する組み合わせがあり、標準的なmp4に差し替え済み〕)でシミュレータを再構築した。
+【個別に再実行して確認できたこと(いずれもBUILD/TEST SUCCEEDED)】
+testHistoryDeleteSelection_ShowsConfirmationWithoutDeleting(【高2】本体。3回とも成功)/
+testDefaultFlow_NoFilter/testOneSecondTimer/testNearMatchStreaming_AlwaysShowsSomething/
+testFiveFilterCombination(1回目はloadFailedで失敗、シミュレータに数十秒余裕を与えて再実行したら成功。
+フォトライブラリ側の一時的な遅延が原因とみられ、コード起因の再現性は無し)/testVideoFilterFlow/
+testWheelDisplaySync/testSearchBudgetKeepsCloseButtonResponsive/
+testSearchBudgetCountsEveryDispositionAndStopsAt18/testSearchBudgetStopsOnElapsedTimeAfterSingleSlowAnalysis/
+testPrefetchQueueRejectsOldGenerationAndCapsAtTwo(8-2/8-3/8-4の直接回帰テスト)。
+【シミュレータの設計上、別環境が必要で今回は確認できなかったもの】
+testEmptyLibrary_NoPhotosAtAll・testPermissionDenied_ShowsDeniedState(専用シミュレータ"PhotoTimer-EmptyLib"
+が必要。iPhone 17側は既に写真アクセス許可済み・写真ありのため前提が合わない。指摘との関連無し)。
+testLegacyPlaceSelection_MigratesAndOffersClear(実行前にxcrun simctl spawn ... defaults writeでの
+手動シード注入が必要。今回未実施。指摘との関連無し)。
+【重要な反省】検証用シミュレータの状態(特にxcrun simctl erase等の破壊的操作)は、そのライブラリの
+生成元が分からない場合、安易に手を出さないこと。次回以降、シミュレータのセットアップ手順(addmediaで
+使ったファイルの由来)をこのファイルかapp-team部署メモリに残す。
+2026-09-05 実機(iPhone 14, takayukiのiPhone (2))向けビルド: BUILD SUCCEEDED。devicectlで上書きインストール
+成功、起動コマンド実行後にプロセスが実機上で稼働していることを確認(PID確認)。CEOの写真・動画への
+削除・変更操作は一切行っていない(確認ダイアログのキャンセルのみで検証)。

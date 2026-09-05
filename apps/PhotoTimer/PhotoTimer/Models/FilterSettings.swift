@@ -80,7 +80,14 @@ enum FilterSettingsStore {
         #endif
         if let data = try? Data(contentsOf: fileURL),
            let decoded = try? JSONDecoder().decode(FilterSettings.self, from: data) {
-            return migrate(decoded)
+            let migrated = migrate(decoded)
+            // 【8-7対応・2026-09-05】以前は移行後の値をメモリ上で返すだけで、ディスク(filter_settings.json)
+            // 自体は移行前のまま書き換えていなかった。実害は無い(次回起動時も同じ移行を毎回やり直すだけ)が、
+            // 「移行済みの値を正」として扱うなら、その場でディスクへ書き戻しておくのが素直な形なので揃える。
+            if migrated != decoded {
+                save(migrated)
+            }
+            return migrated
         }
         // 新しい保存先にまだ何も無い場合、旧保存先(UserDefaults)に残っている可能性がある
         // (アップデート前から使っていた場合)。あれば1回だけ読み込み、新しい保存先に書き直した上で
@@ -115,8 +122,27 @@ enum FilterSettingsStore {
 
     private static func migrate(_ settings: FilterSettings) -> FilterSettings {
         var migrated = migrateAwayFromGreen(settings)
+        // 【8-7対応・2026-09-05】雰囲気・カテゴリを両方選んでいた旧設定は、単一選択への移行で
+        // カテゴリが優先され、雰囲気の選択が黙って外れる。アルバム・場所には「見つからない選択を
+        // 解除」という気づける導線があるのに、ここだけ無言だったという指摘への対応として、
+        // 実際に雰囲気が外れる時だけ「お知らせ待ち」を立てておく。FilterOptionsView側が
+        // これを見て、雰囲気のセクションに一度だけ説明を出す(見た後は自分でfalseに戻す)。
+        if !migrated.selectedMoods.isEmpty, !migrated.selectedCategories.isEmpty {
+            moodsDroppedByMigrationNoticePending = true
+        }
         migrated.normalizeSingleSubject()
         return migrated
+    }
+
+    /// 【8-7対応】UserDefaultsに持たせる、表示専用の一時的な「お知らせ待ち」フラグ。
+    /// 場所・アルバムの選択(座標・個人の写真の内訳が推測できる情報)とは違い、
+    /// 「移行の説明をまだ見せていない」というだけの情報でしかないため、
+    /// filter_settings.json(バックアップ対象外にしている本体)とは分けてUserDefaultsに置く。
+    private static let moodsDroppedByMigrationNoticeKey = "PhotoTimer.FilterSettings.moodsDroppedByMigrationNoticePending"
+
+    static var moodsDroppedByMigrationNoticePending: Bool {
+        get { UserDefaults.standard.bool(forKey: moodsDroppedByMigrationNoticeKey) }
+        set { UserDefaults.standard.set(newValue, forKey: moodsDroppedByMigrationNoticeKey) }
     }
 
     static func save(_ settings: FilterSettings) {

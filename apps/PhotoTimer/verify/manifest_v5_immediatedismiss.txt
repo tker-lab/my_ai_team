@@ -1,6 +1,9 @@
-v5_immediatedismiss_01_mood_暗め_category_花火_set.png	t=18.7s
-v5_immediatedismiss_02_before_close.png	t=23.9s
-v5_immediatedismiss_03_after_close.png	t=24.7s
+前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)
+v5_immediatedismiss_01_stray_running_timer_detected.png	t=5.2s
+v5_immediatedismiss_02_scroll_debug_0.png	t=20.1s
+v5_immediatedismiss_03_mood_暗め_category_花火_set.png	t=27.3s
+v5_immediatedismiss_04_before_close.png	t=32.6s
+v5_immediatedismiss_05_after_close.png	t=33.4s
 dismiss duration: 0.75s
 came back home: true
-filter button responsive after: 1.09s
+filter button responsive after: 1.07s

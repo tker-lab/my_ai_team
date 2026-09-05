@@ -1,6 +1,5 @@
-photos permission dialog found=true
-v6_nearmatch_01_scroll_debug_0.png	t=17.8s
-v6_nearmatch_02_mood_暗め_category_花火_set.png	t=25.0s
-通知の許可ダイアログを検出しタップした
-v6_nearmatch_03_settled_as_timeout.png	t=50.0s
-settledAs=timeout(未決着) elapsed=21.5s
+前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)
+v6_nearmatch_01_stray_running_timer_detected.png	t=5.2s
+v6_nearmatch_02_settled_as_normal_slideshow.png	t=20.8s
+settledAs=normal_slideshow elapsed=8.8s
+v6_nearmatch_03_after_close.png	t=22.6s

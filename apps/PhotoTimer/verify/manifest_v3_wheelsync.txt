@@ -1,6 +1,8 @@
-v3_wheelsync_01_combo0_m0_s15.png	t=8.6s
+前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)
+v3_wheelsync_01_stray_running_timer_detected.png	t=5.2s
+v3_wheelsync_02_combo0_m0_s15.png	t=13.7s
 combo0: wheel=0分15秒 / homeTimeLabel=00:15 / expected=00:15
-v3_wheelsync_02_combo1_m2_s20.png	t=10.0s
+v3_wheelsync_03_combo1_m2_s20.png	t=15.1s
 combo1: wheel=2分20秒 / homeTimeLabel=02:20 / expected=02:20
-v3_wheelsync_03_combo2_m0_s45.png	t=11.5s
+v3_wheelsync_04_combo2_m0_s45.png	t=16.6s
 combo2: wheel=0分45秒 / homeTimeLabel=00:45 / expected=00:45

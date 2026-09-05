@@ -100,6 +100,28 @@ struct SlideshowView: View {
         } message: {
             Text("時間をおいてもう一度お試しください。")
         }
+        // 【高2の回帰テスト修正で発覚した実際の不具合・2026-09-05】
+        // 以前はここを.confirmationDialog(...)にしていた。テストのクエリ自体を直したところ
+        // (元々のバグ:app.otherElements["sessionHistoryGrid"]がScrollViewと一致せず、
+        // このダイアログの確認自体が一度も実行されていなかった)、このアプリが動作するiOS
+        // (26系)では.confirmationDialogに「削除」(destructive)と「キャンセル」(cancel)の
+        // 2つのボタンを渡すと、「キャンセル」だけが画面にもアクセシビリティツリーにも
+        // 一切現れない(タップする手段が無い)という実際の不具合が見つかった
+        // (finishedViewから画面全体のZStackへ付け替えても症状は変わらず、位置や大きさの
+        // 問題ではないと切り分けた)。単純な「1つの破壊的操作+キャンセル」という組み合わせは
+        // 本来.alertが想定する形そのものであり、削除失敗時の通知(上のdeletionFailureAlertBinding)
+        // も既に.alertで正しく動いていたため、こちらも.alertに変更したところ両方のボタンが
+        // 正しく表示・タップできるようになった(自動テストで確認済み。完了報告に実行ログを記載)。
+        .alert("選択した\(selectedHistoryIDs.count)件を削除しますか？", isPresented: $showingDeleteConfirmation) {
+            Button("削除", role: .destructive) {
+                let assets = controller.displayedAssets.filter { selectedHistoryIDs.contains($0.localIdentifier) }
+                selectedHistoryIDs.removeAll()
+                controller.deleteAssets(assets)
+            }
+            Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text("次に表示されるiPhone標準の確認画面でも削除を確定する必要があります。")
+        }
     }
 
     private var deletionFailureAlertBinding: Binding<Bool> {
@@ -243,16 +265,6 @@ struct SlideshowView: View {
         .frame(maxWidth: .infinity)
         .background(.black.opacity(0.5), in: RoundedRectangle(cornerRadius: 16))
         .padding(.bottom, 40)
-        .confirmationDialog("選択した\(selectedHistoryIDs.count)件を削除しますか？", isPresented: $showingDeleteConfirmation, titleVisibility: .visible) {
-            Button("削除", role: .destructive) {
-                let assets = controller.displayedAssets.filter { selectedHistoryIDs.contains($0.localIdentifier) }
-                selectedHistoryIDs.removeAll()
-                controller.deleteAssets(assets)
-            }
-            Button("キャンセル", role: .cancel) {}
-        } message: {
-            Text("次に表示されるiPhone標準の確認画面でも削除を確定する必要があります。")
-        }
     }
 
     private func toggleHistorySelection(_ id: String) {
@@ -277,12 +289,23 @@ private struct HistoryPreviewView: View {
     let close: () -> Void
     @State private var image: UIImage?
     @State private var player: AVPlayer?
+    /// 【中5対応】取得できなかった(iCloud上のみ・取得失敗)場合にtrueにする。
+    /// これが無いと、image・playerがどちらもnilのまま「読み込み中」と見分けが付かず、
+    /// ProgressViewが無言で回り続けてしまっていた。
+    @State private var loadFailed = false
 
     var body: some View {
         ZStack(alignment: .topLeading) {
             Color.black.ignoresSafeArea()
             if let player { VideoPlayer(player: player).ignoresSafeArea() }
             else if let image { Image(uiImage: image).resizable().scaledToFit() }
+            else if loadFailed {
+                // スライドショー本体(TimerController)のloadFailed文言と揃える。
+                Text("写真・動画を読み込めませんでした\n(iCloud上にしか無い、または「ストレージを最適化」で端末内に無い写真の可能性があります。電波の良い場所でお試しください)")
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                    .padding()
+            }
             else { ProgressView().tint(.white) }
             Button { close() } label: {
                 Image(systemName: "chevron.backward.circle.fill").font(.largeTitle).foregroundStyle(.white, .black.opacity(0.4))
@@ -293,22 +316,47 @@ private struct HistoryPreviewView: View {
         .task {
             if asset.mediaType == .video {
                 let options = PHVideoRequestOptions(); options.isNetworkAccessAllowed = true
-                player = await withCheckedContinuation { continuation in
+                let item = await withCheckedContinuation { continuation in
                     PHImageManager.default().requestPlayerItem(forVideo: asset, options: options) { item, _ in
-                        continuation.resume(returning: item.map(AVPlayer.init(playerItem:)))
+                        continuation.resume(returning: item)
                     }
                 }
-                player?.play()
+                if let item {
+                    player = AVPlayer(playerItem: item)
+                    player?.play()
+                } else {
+                    loadFailed = true
+                }
             } else {
                 let options = PHImageRequestOptions(); options.isNetworkAccessAllowed = true; options.deliveryMode = .highQualityFormat
-                image = await withCheckedContinuation { continuation in
-                    PHImageManager.default().requestImage(for: asset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: options) { image, info in
-                        if (info?[PHImageResultIsDegradedKey] as? Bool) != true { continuation.resume(returning: image) }
-                    }
-                }
+                image = await Self.requestFullQualityImage(for: asset, options: options)
+                if image == nil { loadFailed = true }
             }
         }
         .onDisappear { player?.pause() }
+    }
+
+    /// 【中6対応】highQualityFormatは「まず低画質の仮画像→続いて高画質の本画像」と
+    /// 2回コールバックが来ることがある(TimerController.requestDisplayImageと同じ理由)。
+    /// 以前はここに二重完了の防御が無く(継続を2回resumeするとクラッシュしうる)、かつ
+    /// 「低画質の仮画像だけが来て、その後の本画像がついに来ない」失敗時に、最終判定
+    /// (degraded以外)を待ち続けて永久にresumeされない可能性もあった。
+    /// ①最終画質(degradedでない)が来た、②取得自体に失敗しimageがnilで来た、のどちらか
+    /// 早い方で必ず1回だけ確定させることで、両方の不具合を同時に塞ぐ。
+    private static func requestFullQualityImage(for asset: PHAsset, options: PHImageRequestOptions) async -> UIImage? {
+        await withCheckedContinuation { continuation in
+            final class ResumeBox: @unchecked Sendable { var didResume = false }
+            let box = ResumeBox()
+            PHImageManager.default().requestImage(for: asset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: options) { image, info in
+                guard !box.didResume else { return }
+                let degraded = (info?[PHImageResultIsDegradedKey] as? Bool) == true
+                // 仮画像(degraded)がまだ来ただけで、imageも取れている場合だけ本画像を待つ。
+                // それ以外(最終画質が来た/imageがnilで失敗した)は、ここで確定させる。
+                guard !degraded || image == nil else { return }
+                box.didResume = true
+                continuation.resume(returning: image)
+            }
+        }
     }
 }
 
@@ -336,18 +384,25 @@ private struct HistoryThumbnail: View {
         .task(id: asset.localIdentifier) { image = await Self.thumbnail(for: asset) }
     }
 
+    /// 【中6対応】以前はローカル変数(var completed)をエスケープするクロージャの中で直接
+    /// 書き換えていたが、他所(TimerController.requestDisplayImage・
+    /// HistoryPreviewView.requestFullQualityImage)と同じ「小さなBoxクラス」の形に揃えた
+    /// (書き方の統一。加えて、degraded=trueの仮画像だけが来て終わる失敗ケースでも
+    /// 待ち続けずに済むよう、image==nilの時は即確定させるようにした)。
     private static func thumbnail(for asset: PHAsset) async -> UIImage? {
         let options = PHImageRequestOptions()
         options.deliveryMode = .opportunistic
         options.resizeMode = .fast
         options.isNetworkAccessAllowed = false
         return await withCheckedContinuation { continuation in
-            var completed = false
+            final class ResumeBox: @unchecked Sendable { var didResume = false }
+            let box = ResumeBox()
             PHImageManager.default().requestImage(for: asset, targetSize: CGSize(width: 240, height: 240), contentMode: .aspectFill, options: options) { image, info in
-                guard !completed else { return }
+                guard !box.didResume else { return }
                 let degraded = (info?[PHImageResultIsDegradedKey] as? Bool) == true
-                if image != nil, !degraded { completed = true; continuation.resume(returning: image) }
-                else if image == nil, !degraded { completed = true; continuation.resume(returning: nil) }
+                guard !degraded || image == nil else { return }
+                box.didResume = true
+                continuation.resume(returning: image)
             }
         }
     }

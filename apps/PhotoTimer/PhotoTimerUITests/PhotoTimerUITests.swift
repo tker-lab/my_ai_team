@@ -1045,11 +1045,11 @@ final class PhotoTimerUITests: XCTestCase {
 
         let stopAlarm = app.buttons["stopAlarmButton"]
         if stopAlarm.waitForExistence(timeout: 12) { stopAlarm.tap() }
-        XCTAssertTrue(app.otherElements["sessionHistoryGrid"].waitForExistence(timeout: 5), "終了後の振り返り一覧が出ない")
+        XCTAssertTrue(app.scrollViews["sessionHistoryGrid"].waitForExistence(timeout: 5), "終了後の振り返り一覧が出ない")
         app.buttons["enterHistoryDeleteModeButton"].tap()
         let deleteButton = app.buttons["deleteSelectedHistoryButton"]
         XCTAssertFalse(deleteButton.exists, "0件選択なのに削除ボタンが有効")
-        app.otherElements["sessionHistoryGrid"].buttons.firstMatch.tap()
+        app.scrollViews["sessionHistoryGrid"].buttons.firstMatch.tap()
         XCTAssertTrue(deleteButton.waitForExistence(timeout: 2), "1件を個別選択しても削除ボタンが出ない")
         deleteButton.tap()
         let cancelButton = app.buttons["キャンセル"]
@@ -1194,9 +1194,19 @@ final class PhotoTimerUITests: XCTestCase {
     /// 次のapp.launch()で古いタイマー画面が自動的に開いてしまうことがある
     /// (アプリの実際の挙動としては「意図通り」。iPhone標準のタイマー/アラームアプリと同じ考え方で、
     /// テストの前提〔ホーム画面から始まる〕を崩すのはテスト実行環境側の話であり、アプリの不具合ではない)。
-    /// ホーム画面のstartButtonが見えていなければ、スライドショー画面が残っているとみなして閉じる。
+    /// スライドショー画面(closeButton/finishedCloseButton/stopAlarmButtonのいずれかが見えている)が
+    /// 残っているとみなして閉じる。
+    ///
+    /// 【中3修正・2026-09-05】以前は「startButtonが存在しなければスライドショー中」と判定していたが、
+    /// スライドショーは`fullScreenCover`で表示されるため、手前に出ている間も背後のホーム画面の
+    /// startButtonはアクセシビリティツリーに残ったまま(existsがtrueのまま)になる。そのため
+    /// この判定は常に「既にホーム画面」側に倒れ、後始末(タップして閉じる処理)が一度も実行されて
+    /// いなかった。スライドショー中にしか存在しないボタン(closeButton/finishedCloseButton/
+    /// stopAlarmButton)の有無で判定するよう修正する。
     private static func dismissAnyStrayRunningTimer(app: XCUIApplication, recorder: ScreenshotRecorder) throws {
-        guard !app.buttons["startButton"].exists else { return } // 既にホーム画面ならOK
+        guard app.buttons["closeButton"].exists
+            || app.buttons["finishedCloseButton"].exists
+            || app.buttons["stopAlarmButton"].exists else { return } // 既にホーム画面ならOK
         recorder.appendManifestLines(["前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)"])
         recorder.shoot(app, label: "stray_running_timer_detected")
         if app.buttons["stopAlarmButton"].exists {

@@ -34,7 +34,12 @@ private final class FirstResultBox<Value>: @unchecked Sendable {
 /// 6枚窓ごとに最高点を必ず返す方式では、窓に犬がいなくても「犬に一番近い非犬」が流れていた。
 /// 窓を大きくしても欠陥は消えず、最初の表示待ちだけが増えるため、窓そのものを廃止した。
 /// 選んだカテゴリ・雰囲気に実際に該当する候補を見つけ次第返し、該当しない写真は飛ばす。
-/// 全候補を一巡して専用検出が0件でも、一般分類に対象ラベルの根拠がある候補だけを返す。
+/// **軸によって「該当しない」の緩さが異なる。**カテゴリ軸は一般分類が対象ラベルの根拠を返した
+/// 近似候補まで許可する(「犬を選んだのに羊が出る」は説明できる範囲として歓迎)。
+/// 雰囲気軸は近似を許可せず、選んだ雰囲気と完全一致した候補のみを返す(「暖色を選んだのに
+/// 寒色が出る」はCEOが「面白くない」と判断したため。詳細はSubjectMatch.isExplainableApproximation参照)。
+/// 該当が1件も無いまま全候補を一巡した場合のみ、カテゴリは根拠のある近似を最後に1回返す
+/// (雰囲気はこの最後の1回も含めて近似候補が無いため、正直に「見つかりませんでした」になる)。
 /// 解析済みキャッシュと2枚先読みはそのまま使うので、初回は必要な所までだけ調べ、使うほど速くなる。
 actor CandidateEngine {
 
@@ -164,7 +169,10 @@ actor CandidateEngine {
         }
         // キューが空(先読みがまだ間に合っていない最初の1枚、または候補プールを使い切った直後)。
         // その場で判定する(これまで通りの「待つしかない」経路)。
-        return await findNextMatch()
+        // 【8-4対応】refillPrefetchQueue()と同じく、呼び出し時点の世代番号を渡すよう揃える。
+        // 今のところ next() 実行中に prepare()/cancelPrefetch() が並行に割り込むことは無いため
+        // 実害は無かったが、渡さないと「世代が変わっても気づけない」経路になってしまっていた。
+        return await findNextMatch(expectedGeneration: prefetchQueue.generation)
     }
 
     /// 今表示している1枚の表示時間を使って、次以降(最大 maxPrefetchDepth 枚先まで)の判定を
@@ -296,15 +304,26 @@ actor CandidateEngine {
     }
 
     /// 解析Taskをキャンセル可能な別Taskとして走らせ、残り時間を超えたら待機だけを終了する。
-    /// 遅れて完了したTaskはキャンセル状態のためanalyzedResult内でキャッシュ保存せず終了する。
+    /// 解析が完了しても(打ち切られていても)結果自体はキャッシュへ保存される(8-2対応。
+    /// analyzedResult(for:)参照)。
     private func analyzedResult(for asset: PHAsset, timeout: Duration) async -> AssetAnalysis? {
         await withCheckedContinuation { continuation in
             let box = FirstResultBox<AssetAnalysis?>(continuation)
-            let analysisTask = Task { [weak self] in
-                guard let self else { box.finish(nil); return }
-                box.finish(await self.analyzedResult(for: asset))
+            // 【8-3対応・2026-09-05】以前はタイムアウト用の待機Taskへの参照を保持しておらず、
+            // 解析が予算より早く終わってもこのTaskを止める手段が無かった。そのため解析1回ごとに
+            // 「使い道の無くなったsleep(timeout)だけのTask」が必ず1つ残り、1回の探索(最大18枚)で
+            // 最大18個も滞留していた。参照を保持し、解析が先に終わった時点でキャンセルするようにする。
+            final class TimeoutTaskBox: @unchecked Sendable {
+                var task: Task<Void, Never>?
             }
-            Task {
+            let timeoutBox = TimeoutTaskBox()
+            let analysisTask = Task { [weak self] in
+                guard let self else { timeoutBox.task?.cancel(); box.finish(nil); return }
+                let result = await self.analyzedResult(for: asset)
+                timeoutBox.task?.cancel()
+                box.finish(result)
+            }
+            timeoutBox.task = Task {
                 try? await Task.sleep(for: timeout)
                 guard !Task.isCancelled else { return }
                 analysisTask.cancel()
@@ -330,14 +349,25 @@ enum SubjectMatch {
         return true
     }
 
+    /// 【2026-09-05修正:雰囲気軸は近似を許可しない】
+    /// 以前は雰囲気の近さがMoodSimilarity(手作りの目安表)で0.4以上あれば近似候補として許可していたが、
+    /// 「暖色」を選ぶと鮮やか・淡い・明るめが、「淡い」を選ぶと暖色・寒色・明るめ・モノトーンまで
+    /// 通ってしまうほど緩く、CEOが実機で「暖色を選んだのに寒色が出るのは面白くない」と判断した。
+    /// 一方カテゴリ軸の緩さ(「犬を選んだのに羊が出る」)は仕様として歓迎されている(理由が
+    /// 説明できる範囲であれば良い、という判断)。同じ関数で軸ごとに緩さの意味が違うと分かりづらいため、
+    /// 雰囲気軸は「選んだ雰囲気と完全一致するかどうか」(=isStrongと同じ条件)のみを許可するよう
+    /// 引き上げた。呼び出し順としてisStrongが必ず先にチェックされ、真ならその時点で結果が確定して
+    /// この関数まで来ないため、雰囲気だけを選んだ検索ではこの関数が真を返すことは実質無くなり、
+    /// 「雰囲気は完全一致以外の候補を絶対に出さない」という意図どおりの動きになる
+    /// (一致が1件も無ければ、この一巡では説明可能な近似も無し=正直に「見つかりませんでした」側へ回る)。
     static func isExplainableApproximation(analysis: AssetAnalysis, settings: FilterSettings) -> Bool {
         if !settings.selectedMoods.isEmpty {
-            guard let mood = analysis.mood,
-                  settings.selectedMoods.map({ MoodSimilarity.similarity(mood, $0) }).max() ?? 0 >= 0.4 else { return false }
+            guard let mood = analysis.mood, settings.selectedMoods.contains(mood) else { return false }
         }
         if settings.selectedCategories.isEmpty {
             return !settings.selectedMoods.isEmpty
         }
+        // カテゴリ軸はこれまでどおり緩いまま維持する(CEO判断:「犬を選んだのに羊が出る」は歓迎)。
         // 一般分類で15%以上の犬/猫等ラベルが実際に返った候補だけを許可する。
         // 単に窓内最高点だった無関係写真(score=0)はここを通らない。
         return settings.selectedCategories.contains { (analysis.categoryConfidences?[$0] ?? 0) >= 0.15 }
@@ -372,8 +402,17 @@ extension CandidateEngine {
             // 結果をキャッシュしない(次に選ばれた時にもう一度判定し直す機会を残す)ことで修正した。
             return nil
         }
-        if Task.isCancelled { return nil }
+        // 【8-2対応・2026-09-05】以前はここで Task.isCancelled を確認し、真であれば
+        // (=呼び出し元が0.8秒/18枚の予算切れで既に諦めた後だった場合)せっかく完了した解析結果を
+        // 保存せずに捨てていた。探索予算は「候補を進めるほど残り時間が短くなる」ため、
+        // 窓の後半にある写真ほど打ち切られやすく、この書き方だと後半の写真がいつまで経っても
+        // キャッシュされない偏りが生まれてしまう。Vision解析(重い処理)自体は既に終わっている
+        // ので、その成果を捨てる理由はなく、キャンセル済みかどうかに関わらず保存する
+        // (「新しくVision解析を始めない」「時間切れTaskをcancelする」という既存の安全策=
+        // 上のガード〔サムネイル取得直後の isCancelled 確認〕はそのまま残しており、ここで
+        // 変えたのは「既に終わった仕事の後始末」だけ)。
         await AnalysisCache.shared.store(analysis, for: asset.localIdentifier)
+        if Task.isCancelled { return nil }
         return analysis
     }
 
@@ -482,6 +521,9 @@ extension CandidateEngine {
             if let mood = analysis.mood {
                 // 選んだ雰囲気の中で最も近いものとの近さを採用する(複数選んだ場合、どれか1つに
                 // 近ければ十分近いとみなす。原則2の判定対象がANDではなくORの考え方に合わせている)。
+                // 【2026-09-05注記】isExplainableApproximationが雰囲気の近似を許可しなくなったため、
+                // この加点が「説明可能な近似」の採用可否を左右することは今は無い(完全一致の場合は
+                // isStrongが先に確定させる)。将来また雰囲気の近似順位付けを使う時のために残している。
                 total += settings.selectedMoods.map { MoodSimilarity.similarity(mood, $0) }.max() ?? 0
             }
             // 平均色の判定自体ができなかった写真(analysis.mood == nil)は、この軸の加点が無いまま

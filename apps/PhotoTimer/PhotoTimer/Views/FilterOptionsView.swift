@@ -9,6 +9,10 @@ struct FilterOptionsView: View {
 
     @State private var customFrom: Date = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
     @State private var customTo: Date = Date()
+    /// 【8-7対応】以前は雰囲気・カテゴリを両方選べたが、単一選択への移行でカテゴリが優先され、
+    /// 雰囲気の選択が黙って外れていた場合にtrue。この画面を開いた時点の値を保持し、
+    /// 「分かりました」を押した時だけfalseに戻す(=毎回出さない)。
+    @State private var moodMigrationNoticeVisible = FilterSettingsStore.moodsDroppedByMigrationNoticePending
 
     var body: some View {
         NavigationStack {
@@ -197,10 +201,22 @@ struct FilterOptionsView: View {
             chipGrid(items: MoodTag.allCases, isSelected: { settings.selectedMoods.contains($0) }, title: { $0.rawValue }) { tag in
                 selectMood(tag)
             }
+            if moodMigrationNoticeVisible {
+                Button {
+                    moodMigrationNoticeVisible = false
+                    FilterSettingsStore.moodsDroppedByMigrationNoticePending = false
+                } label: {
+                    Text("分かりました")
+                }
+            }
         } header: {
             Text("雰囲気・色")
         } footer: {
-            Text("雰囲気・色・カテゴリを通して主題は1つだけ選べます。写真全体の色味からおおまかに分類します。表示時間を長くすると、その間に次の候補を探せるため切り替わりが滑らかになりやすくなります。")
+            if moodMigrationNoticeVisible {
+                Text("以前は雰囲気とカテゴリを両方選べましたが、今はどちらか1つだけになりました。カテゴリの選択を優先したため、以前選んでいた雰囲気の指定は解除されています。")
+            } else {
+                Text("雰囲気・色・カテゴリを通して主題は1つだけ選べます。写真全体の色味からおおまかに分類します。表示時間を長くすると、その間に次の候補を探せるため切り替わりが滑らかになりやすくなります。")
+            }
         }
     }
 

@@ -51,6 +51,14 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
     @Published private(set) var isAlarmSounding: Bool = false
     /// このタイマーで実際に表示できた項目。タイマー画面を閉じるとstop()で破棄する。
     @Published private(set) var displayedAssets: [PHAsset] = []
+    /// 【8-10対応】displayedAssetsに「すでに入っているか」をO(1)で調べるための索引。
+    /// displayedAssetsの要素と常に一致するよう、追加・削除のたびに一緒に更新する
+    /// (displayedAssetsを配列のまま=表示順を保ったまま振り返り一覧に使えるようにしつつ、
+    /// 判定だけはSetで速くする、という二重持ちの構成)。
+    /// 3時間・0.5秒間隔などの長時間設定だと、1枚判定するたびに配列を毎回線形探索
+    /// (displayedAssets.contains(where:))していると、累積の計算量が写真の枚数の2乗に近づき
+    /// 無視できなくなるため導入した。
+    private var displayedAssetIDs: Set<String> = []
 
     /// 写真1枚あたりの表示秒数・動画の再生時間の扱い。CEO要望(2026-09-04)によりユーザー設定可能。
     /// `start(...)` の呼び出し時に渡された値をここに保持する(既定値は元の固定値と同じ)。
@@ -89,6 +97,7 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
 
         phase = .running
         displayedAssets = []
+        displayedAssetIDs = []
         noCandidatesReason = nil
         totalSeconds = totalDurationSeconds
         self.playbackSettings = playbackSettings
@@ -123,8 +132,14 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
         // 【resumingUntilが既に過ぎていた場合】バックグラウンド中(またはプロセス終了中)に、
         // 本来ならとっくにタイマーが終わっていたケース。写真の検索・表示を始めるまでもなく、
         // 直接「タイマー終了」の状態にする(=戻ってきたら"即座に"しっかり表示する、という要望への対応)。
+        // 【中4修正・2026-09-05】このケースは「ずっと前に終わったタイマーを、今アプリを開いた瞬間」
+        // であり、鳴らすべき時刻(endDate)は既に過ぎている。その時刻に鳴らす役目はstart()で予約した
+        // バックグラウンド用ローカル通知が既に正しく担っている(ローカル通知はOS側の責任で届くため、
+        // プロセスが終了していても、開き直す前に既に鳴り終わっているはず)。ここでも同じ音を
+        // 鳴らすと「何もしていないのにアプリを開いた瞬間から鳴り続ける」という二重鳴動になるため、
+        // 音は鳴らさず「終了した」旨の表示だけにする。
         guard remainingSeconds > 0 else {
-            finish()
+            finishWithoutSoundingAlarm()
             return
         }
 
@@ -149,6 +164,7 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
         currentImage = nil
         currentAsset = nil
         displayedAssets = []
+        displayedAssetIDs = []
         // 【2026-09-04追加】先読み(prefetchNext)は runLoopTask とは別の独立したTaskとして動いているため、
         // runLoopTask をキャンセルしただけではこの先読みタスクは止まらない。指摘Aで直した
         // 「✕で閉じたらすぐ裏の処理も止まる」を、先読み追加によって再び壊さないための後始末。
@@ -191,13 +207,16 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
 
     /// アプリがフォアグラウンドに戻った時に呼ぶ。
     /// 「経過時間を正しく反映して表示を再開する」を実現する: deadline(絶対時刻)から
-    /// 残り秒数を計算し直し、まだ残っていれば表示ループを再開、すでに終わっていれば
-    /// (バックグラウンド中に本来鳴っているはずだった)アラームをここで鳴らす。
+    /// 残り秒数を計算し直し、まだ残っていれば表示ループを再開する。
+    /// 【中4修正・2026-09-05】すでに終わっていた場合、以前はここでアラームを鳴らしていたが、
+    /// バックグラウンド中に鳴らす役目は既にローカル通知(AlarmNotificationScheduler)が
+    /// 正しい時刻に果たし終えているため、ここで重ねて鳴らすと二重鳴動になる。
+    /// 音は鳴らさず「終了した」旨の表示だけにする(finishWithoutSoundingAlarm参照)。
     func returnToForeground() {
         guard phase == .running, let deadline else { return }
         remainingSeconds = max(0, Int(deadline.timeIntervalSinceNow.rounded()))
         guard remainingSeconds > 0 else {
-            finish()
+            finishWithoutSoundingAlarm()
             return
         }
         guard runLoopTask == nil, let engine else { return } // 既に動いている(=一瞬の切り替えだった)場合は何もしない
@@ -237,6 +256,7 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
                     }
                     let deleted = Set(identifiersToDelete)
                     self.displayedAssets.removeAll { deleted.contains($0.localIdentifier) }
+                    self.displayedAssetIDs.subtract(deleted)
                 } else if error != nil {
                     // success=false かつ error が nil の場合は「ユーザーが確認ダイアログでキャンセルした」
                     // という正常系(Appleの仕様どおり)であり、何もしない(=表示を続ける)のが正しい。
@@ -252,27 +272,6 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
     /// 削除失敗のアラートを閉じた後、同じ内容をもう一度表示しないようにするための後始末。
     func clearDeletionFailure() {
         deletionFailure = nil
-    }
-
-    /// 削除が成功した直後、今表示していた分をスキップしてスライドショーを続ける。
-    ///
-    /// 【なぜ「表示中の待ち時間だけを打ち切る」複雑な仕組みを作らず、ループを丸ごと再始動するか】
-    /// 削除操作自体は頻繁には起きない特別な操作なので、表示ループの内部状態(先読みキュー・窓の
-    /// 途中経過など)を精密に維持したまま「今の1枚だけ差し替える」ような作り込みをするよりも、
-    /// 「候補プールを作り直して(prepare)最初から再開する」という既存の仕組みをそのまま使うほうが、
-    /// 状態管理の複雑さと不具合のリスクを抑えられると判断した。削除した写真は実際に写真ライブラリ
-    /// から無くなっているため、次のprepare()では自然にこの写真が候補から外れる(=同じ写真が
-    /// もう一度出てくることはない)。
-    private func advanceAfterDeletion() {
-        guard phase == .running, let engine else { return }
-        runLoopTask?.cancel()
-        currentPlayer?.pause()
-        currentPlayer = nil
-        currentImage = nil
-        currentAsset = nil
-        runLoopTask = Task { [weak self] in
-            await self?.runSlideLoop(engine: engine)
-        }
     }
 
     /// 【軽微指摘対応: カウントダウンが実時間からズレていく不具合】
@@ -307,6 +306,23 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
         // 【CEO要望C対応】ここに来た時点で(フォアグラウンドの、いつも通りの繰り返しパターンで)
         // アラームを鳴らし始めたので、バックグラウンド用に予約していたローカル通知は不要になる
         // (鳴らさずに済ませることで、後から二重に音が鳴るのを防ぐ)。
+        AlarmNotificationScheduler.cancelPendingAlarm()
+    }
+
+    /// 【中4修正・2026-09-05】「復帰した時点で、鳴るべき時刻を既に過ぎていた」場合に使う、
+    /// 音を鳴らさないバージョンのfinish()。
+    /// 呼び出し元は2箇所: ①アプリ自体が終了していて、再び開いた直後(start()のresumingUntil)
+    /// ②バックグラウンドに回っていただけで、フォアグラウンドに戻った直後(returnToForeground())。
+    /// どちらの場合も「鳴らすべき時刻」には既にローカル通知(AlarmNotificationScheduler)が
+    /// 正しく音を鳴らし終えているはずなので、ここで改めてplayAlarm()を呼ぶと、
+    /// ユーザーが何もしていないのに「アプリを開いた瞬間」に音・バイブレーションが鳴り出す
+    /// (=本来鳴るべきタイミングより後ろにずれた、二重の鳴動)という不具合になっていた。
+    /// 音は鳴らさず、finish()と同様に「終了した」状態(表示)にするだけに留める。
+    private func finishWithoutSoundingAlarm() {
+        guard phase == .running else { return }
+        phase = .finished
+        runLoopTask?.cancel()
+        currentPlayer?.pause()
         AlarmNotificationScheduler.cancelPendingAlarm()
     }
 
@@ -421,6 +437,20 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
     /// 今は「1周(prepareしてからnext()がnilを返すまで)の間に1枚でも実際に表示できたか」を
     /// 必ず記録し、1枚も表示できなかった1周が終わった時点で確実に止める。同じ絞り込み条件・
     /// 同じ写真ライブラリでは何周しても結果は変わらない(判定は決定的)ため、これで無限ループは起きない。
+    ///
+    /// 【8-5対応・2026-09-05】「1周し終えるまで待つ」だけだと、該当が0件の条件を大きな写真ライブラリ
+    /// (実機実測で6045枚・キャッシュ無しの全走査に185.78秒)で試した時、「読み込み中…」のまま
+    /// 数分間なにも変わらない状態になりうる。**「探しています」のような途中経過の表示は入れない**
+    /// (CEO指示)。代わりに、1枚も表示できないまま`zeroResultSearchTimeout`だけ経過したら、
+    /// たとえ1周を終えていなくても「一巡した」時と同じ終わり方(見つかりませんでした/読み込めません
+    /// でした)で静かに確定させる。1周を待たずに終える分だけ「本当は該当があった」を見逃す
+    /// 可能性はゼロではないが、判定結果は解析キャッシュに逐次保存されているため(8-2対応)、
+    /// 次回同じ条件で試した時はキャッシュ済みの分だけ速く先に進める=使うほど機会を取りこぼしにくくなる。
+    /// 【8-5対応】1枚も表示できていない探索をこの時間だけ試して、それでも見つからなければ
+    /// 一周し終えていなくても諦める上限。実機実測(全走査185.78秒/6045枚)を踏まえ、
+    /// 「数分待たせる」ことは避けつつ、キャッシュが無い1回目でもある程度は探せる長さとして選んだ。
+    private static let zeroResultSearchTimeout: Duration = .seconds(20)
+
     private func runSlideLoop(engine: CandidateEngine) async {
         await engine.prepare()
         if await engine.candidatePoolCount == 0 {
@@ -432,12 +462,20 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
         while phase == .running, !Task.isCancelled {
             var sawAnyCandidateThisPass = false // 雰囲気・カテゴリの条件に合う写真が1枚でもあったか
             var displayedAnyThisPass = false // 実際に1枚でも表示できたか(読み込み失敗を除く)
+            let passStartedAt = ContinuousClock.now // 8-5対応: この1周にかけている時間を計るため
 
             while phase == .running, !Task.isCancelled {
                 guard let asset = await engine.next() else {
                     // 18件/0.8秒の探索予算で一旦区切っただけなら、UIへ制御を返して次の呼び出しで続行。
                     // nilを「全件0」と誤解してタイマーを終了しない。
                     if await engine.hasPendingSearchWork {
+                        // 【8-5対応】1枚も表示できないまま探索がzeroResultSearchTimeoutを超えたら、
+                        // 候補プールを一周し終えていなくてもここで諦める(下の「1周しても1枚も
+                        // 表示できなかった」分岐へ進み、静かに終わる)。大きな写真ライブラリで
+                        // 該当0件の条件だと、律儀に一周し終えるまで待つと数分かかることがあるため。
+                        if !displayedAnyThisPass, passStartedAt.duration(to: .now) >= Self.zeroResultSearchTimeout {
+                            break
+                        }
                         await Task.yield()
                         continue
                     }
@@ -455,7 +493,9 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
                 let displayed = await displayAndWait(asset: asset)
                 if displayed {
                     displayedAnyThisPass = true
-                    if !displayedAssets.contains(where: { $0.localIdentifier == asset.localIdentifier }) {
+                    // 【8-10対応】以前はここで毎回displayedAssets(配列)を線形探索していた。
+                    // displayedAssetIDs(Set)で先にO(1)判定してから、表示順を保つための配列にも追加する。
+                    if displayedAssetIDs.insert(asset.localIdentifier).inserted {
                         displayedAssets.append(asset)
                     }
                 }
@@ -526,7 +566,13 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
             guard let image = await Self.requestDisplayImage(for: asset) else { return false }
             if Task.isCancelled { return false }
             currentImage = image
-            try? await Task.sleep(nanoseconds: UInt64(playbackSettings.photoSlideDurationSeconds * 1_000_000_000))
+            // 【8-8対応】UIからは1秒未満・0以下・NaNには到達しないはずだが、万一そのような値が
+            // 設定ファイルに入っていた場合、UInt64(...)への変換がクラッシュ(トラップ)する
+            // (0以下やNaNは負の数・不正な値としてUInt64の範囲外になるため)。念のため
+            // 最低0.1秒を下限にクランプしておく(実用上ここに到達しなくても安全側に倒すだけの保険)。
+            let safeSlideSeconds = playbackSettings.photoSlideDurationSeconds.isFinite
+                ? max(0.1, playbackSettings.photoSlideDurationSeconds) : 0.1
+            try? await Task.sleep(nanoseconds: UInt64(safeSlideSeconds * 1_000_000_000))
             return true
         }
     }
