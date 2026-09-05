@@ -1,6 +1,6 @@
 photos permission dialog found=true
-v6_nearmatch_01_scroll_debug_0.png	t=17.0s
-v6_nearmatch_02_mood_暗め_category_花火_set.png	t=24.3s
+v6_nearmatch_01_scroll_debug_0.png	t=17.8s
+v6_nearmatch_02_mood_暗め_category_花火_set.png	t=25.0s
 通知の許可ダイアログを検出しタップした
-v6_nearmatch_03_settled_as_timeout.png	t=49.3s
+v6_nearmatch_03_settled_as_timeout.png	t=50.0s
 settledAs=timeout(未決着) elapsed=21.5s

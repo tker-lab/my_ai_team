@@ -394,10 +394,7 @@ actor CandidateEngine {
         options.resizeMode = .fast
 
         return await withCheckedContinuation { continuation in
-            PHImageManager.default().requestImage(for: asset, targetSize: CGSize(width: 256, height: 256), contentMode: .aspectFill, options: options) { image, info in
-                if image == nil {
-                    NSLog("[PhotoTimer][DIAG3] nil image. info=\(String(describing: info)) authStatus=\(PHPhotoLibrary.authorizationStatus(for: .readWrite).rawValue)")
-                }
+            PHImageManager.default().requestImage(for: asset, targetSize: CGSize(width: 256, height: 256), contentMode: .aspectFill, options: options) { image, _ in
                 continuation.resume(returning: image?.cgImage)
             }
         }

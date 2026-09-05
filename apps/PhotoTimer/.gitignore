@@ -12,3 +12,8 @@ PhotoTimer/Info.plist
 # 自動確認テスト(XCUITest)が毎回上書き生成するスクリーンショット・記録。再実行すれば作り直せるため追跡しない
 verify/*.png
 verify/manifest.txt
+verify/manifest_*.txt
+
+# xcodebuildの実行ログ(調査用に都度作る一時ファイル。再実行すれば作り直せるため追跡しない)
+test_run_*.log
+device_*.log
