@@ -26,6 +26,11 @@ struct FilterSettings: Codable, Equatable {
     /// `excludeScreenshots` がオンの時だけこの項目を出す。
     var strictScreenshotDetection: Bool = false
 
+    /// 選んだ「保存したリスト」(CustomPhotoList.id)の集合。空 = 絞り込みなし(2026-09-05追加)。
+    /// アルバムと同じ「メタ情報だけで絞れる」条件(画像解析は不要)。アルバムと両方選んだ場合は
+    /// 「アルバムの中の写真」∪「リストの中の写真」(足し算)として扱う(CandidateEngine参照)。
+    var selectedCustomListIDs: Set<String> = []
+
     /// 画像解析(雰囲気・カテゴリ・よく撮れてる度優先・AIでのスクショ除外強化)が必要かどうか。
     /// 原則2の「遅延評価」に載せるべき条件がひとつでもあるかの判定に使う。
     var needsImageAnalysis: Bool {
@@ -33,6 +38,30 @@ struct FilterSettings: Codable, Equatable {
     }
 
     static let `default` = FilterSettings()
+
+    init() {}
+
+    /// 【2026-09-05追加:項目を増やしても既存の保存データを壊さないためのカスタムデコード】
+    /// PlaybackSettingsで発覚したのと同じ罠(Swiftの自動生成Decodableは、構造体にあるプロパティの
+    /// キーがJSON側に無い場合、デフォルト値を無視してデコード全体を失敗させる)がこの構造体にも
+    /// 当てはまる。`selectedCustomListIDs` を追加する今回、これより前に保存されていた設定ファイルは
+    /// このキー自体を持たないため、自動生成のデコードのままでは読み込み全体が失敗し、CEOが選んでいた
+    /// 日時・アルバム・雰囲気などの設定がまとめて既定値に巻き戻ってしまう
+    /// (詳細はPlaybackSettings.swiftの同種のコメント、および app-team部署メモリ参照)。
+    /// `decodeIfPresent` を使い、無ければデフォルト値を使う自前の初期化にすることで回避する。
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        dateRange = try container.decodeIfPresent(DateRangeFilter.self, forKey: .dateRange) ?? .all
+        mediaType = try container.decodeIfPresent(MediaTypeFilter.self, forKey: .mediaType) ?? .all
+        excludeScreenshots = try container.decodeIfPresent(Bool.self, forKey: .excludeScreenshots) ?? true
+        selectedAlbumIDs = try container.decodeIfPresent(Set<String>.self, forKey: .selectedAlbumIDs) ?? []
+        selectedMoods = try container.decodeIfPresent(Set<MoodTag>.self, forKey: .selectedMoods) ?? []
+        selectedPlaceIDs = try container.decodeIfPresent(Set<String>.self, forKey: .selectedPlaceIDs) ?? []
+        selectedCategories = try container.decodeIfPresent(Set<CategoryTag>.self, forKey: .selectedCategories) ?? []
+        preferHighAesthetics = try container.decodeIfPresent(Bool.self, forKey: .preferHighAesthetics) ?? false
+        strictScreenshotDetection = try container.decodeIfPresent(Bool.self, forKey: .strictScreenshotDetection) ?? false
+        selectedCustomListIDs = try container.decodeIfPresent(Set<String>.self, forKey: .selectedCustomListIDs) ?? []
+    }
 
     /// 雰囲気・色・カテゴリは全体で1つだけ選べる「主題」。旧版の複数選択設定も壊さず、
     /// 決定的に1件へ縮める。日時・場所などの整理条件には触れない。
@@ -120,8 +149,19 @@ enum FilterSettingsStore {
         return migrated
     }
 
+    /// 【2026-09-05追加】「飲み物」を選択肢から削除した(FixedChoices.swift参照)ことに伴う移行処理。
+    /// 考え方は migrateAwayFromGreen と同じ: 過去に「飲み物」を選んでいた場合、その選択だけを
+    /// 静かに外す(他の選択はそのまま維持する)。
+    private static func migrateAwayFromDrink(_ settings: FilterSettings) -> FilterSettings {
+        guard settings.selectedCategories.contains(.drink) else { return settings }
+        var migrated = settings
+        migrated.selectedCategories.remove(.drink)
+        return migrated
+    }
+
     private static func migrate(_ settings: FilterSettings) -> FilterSettings {
         var migrated = migrateAwayFromGreen(settings)
+        migrated = migrateAwayFromDrink(migrated)
         // 【8-7対応・2026-09-05】雰囲気・カテゴリを両方選んでいた旧設定は、単一選択への移行で
         // カテゴリが優先され、雰囲気の選択が黙って外れる。アルバム・場所には「見つからない選択を
         // 解除」という気づける導線があるのに、ここだけ無言だったという指摘への対応として、

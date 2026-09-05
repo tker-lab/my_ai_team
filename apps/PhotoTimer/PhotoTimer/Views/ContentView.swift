@@ -242,6 +242,7 @@ struct ContentView: View {
         if filterSettings.mediaType != .all { parts.append(filterSettings.mediaType.rawValue) }
         if filterSettings.excludeScreenshots { parts.append("スクショ除く") }
         if !filterSettings.selectedAlbumIDs.isEmpty { parts.append("アルバム\(filterSettings.selectedAlbumIDs.count)件") }
+        if !filterSettings.selectedCustomListIDs.isEmpty { parts.append("リスト\(filterSettings.selectedCustomListIDs.count)件") }
         if !filterSettings.selectedMoods.isEmpty { parts.append("雰囲気\(filterSettings.selectedMoods.count)件") }
         if !filterSettings.selectedPlaceIDs.isEmpty { parts.append("場所\(filterSettings.selectedPlaceIDs.count)件") }
         if !filterSettings.selectedCategories.isEmpty { parts.append("カテゴリ\(filterSettings.selectedCategories.count)件") }

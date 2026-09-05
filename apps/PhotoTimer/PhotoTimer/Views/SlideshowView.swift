@@ -28,7 +28,17 @@ struct SlideshowView: View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            if let image = controller.currentImage {
+            if let presentationFrame = controller.currentPresentationFrame {
+                // 演出パターン(結婚式ムービー風・スタジアムビジョン風)が選ばれている時の見せ方。
+                // 演出パターンを選ばない(.classic)時はcontroller.currentPresentationFrameが常にnilなので、
+                // この分岐には来ず、これまで通り下のcurrentImage/currentPlayerの描画のみが使われる
+                // (=既存の挙動・既存の自動テストへの影響が無い)。
+                PresentationFrameView(frame: presentationFrame)
+                    .ignoresSafeArea()
+                    // 表示通し番号(displayToken)を含めているのは既存のmedia-photo-と同じ理由
+                    // ([[xcuitest-accessibility-id-content-change-detection]]参照)。
+                    .accessibilityIdentifier("presentationFrame-\(controller.displayToken)")
+            } else if let image = controller.currentImage {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fit)

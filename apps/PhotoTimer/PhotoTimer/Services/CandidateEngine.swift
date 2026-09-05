@@ -438,16 +438,35 @@ extension CandidateEngine {
             }
         }
 
-        if settings.selectedAlbumIDs.isEmpty {
+        let hasAlbumRestriction = !settings.selectedAlbumIDs.isEmpty
+        let hasListRestriction = !settings.selectedCustomListIDs.isEmpty
+
+        if !hasAlbumRestriction && !hasListRestriction {
             appendAssets(from: PHAsset.fetchAssets(with: options))
         } else {
             // 【指摘F関連】選んだアルバムが写真アプリ側で削除されていた場合、ここでは
             // 単にそのIDが見つからず何も追加されない(=黙って0枚扱い)。ユーザーが
             // 「選んだはずのアルバムが消えている」ことに気づいて解除できるようにする対応は
             // FilterOptionsView側(表示できるアルバム一覧と選択IDを突き合わせるUI)で行っている。
-            let collections = PHAssetCollection.fetchAssetCollections(withLocalIdentifiers: Array(settings.selectedAlbumIDs), options: nil)
-            collections.enumerateObjects { collection, _, _ in
-                appendAssets(from: PHAsset.fetchAssets(in: collection, options: options))
+            if hasAlbumRestriction {
+                let collections = PHAssetCollection.fetchAssetCollections(withLocalIdentifiers: Array(settings.selectedAlbumIDs), options: nil)
+                collections.enumerateObjects { collection, _, _ in
+                    appendAssets(from: PHAsset.fetchAssets(in: collection, options: options))
+                }
+            }
+            // 【2026-09-05追加:自作リスト】アルバムと同じ「メタ情報だけで絞れる」条件として扱う。
+            // 両方選んでいる場合は足し算(アルバムの中の写真 ∪ リストの中の写真)。
+            // リストが指す写真が後で削除されていた場合、fetchAssets(withLocalIdentifiers:)は
+            // 単にその分を返さないだけで、落ちたり例外になったりしない(絶対制約どおり)。
+            if hasListRestriction {
+                let listAssetIDs = Set(
+                    CustomPhotoListStore.load()
+                        .filter { settings.selectedCustomListIDs.contains($0.id) }
+                        .flatMap(\.assetLocalIdentifiers)
+                )
+                if !listAssetIDs.isEmpty {
+                    appendAssets(from: PHAsset.fetchAssets(withLocalIdentifiers: Array(listAssetIDs), options: options))
+                }
             }
         }
         return result

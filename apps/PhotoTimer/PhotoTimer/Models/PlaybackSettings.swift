@@ -21,6 +21,15 @@ struct PlaybackSettings: Codable, Equatable {
     /// VideoAudioMixMode のコメント・TimerController.activateAudioSessionIfNeeded参照。
     var videoAudioMixMode: VideoAudioMixMode = .duckOthers
 
+    /// 演出パターン(結婚式ムービー風・スタジアムビジョン風 等)。CEO要望(2026-09-05)により追加。
+    /// 既定値の `.classic` は、これまで通り「1枚ずつ・フェードで切り替え」の見せ方(変更なし)。
+    /// 【2026-09-05 CEO決定:演出パターンを選ぶと表示秒数の設定が無効になる】
+    /// `.classic` 以外を選んだ場合、`photoSlideDurationSeconds`・`videoPlaybackMode`・
+    /// `videoCapSeconds` はもう使われない(パターン自身が「間」ごとの秒数を決めるため。
+    /// TimerController.PresentationBeat参照)。UI側(PlaybackSettingsView)は `.classic` 以外を
+    /// 選んだ時、この2項目の設定行を隠す(混乱を避けるため)。
+    var presentationPattern: PresentationPattern = .classic
+
     static let `default` = PlaybackSettings()
 
     init() {}
@@ -42,6 +51,7 @@ struct PlaybackSettings: Codable, Equatable {
         videoPlaybackMode = try container.decodeIfPresent(VideoPlaybackMode.self, forKey: .videoPlaybackMode) ?? .capped
         videoCapSeconds = try container.decodeIfPresent(Double.self, forKey: .videoCapSeconds) ?? 20.0
         videoAudioMixMode = try container.decodeIfPresent(VideoAudioMixMode.self, forKey: .videoAudioMixMode) ?? .duckOthers
+        presentationPattern = try container.decodeIfPresent(PresentationPattern.self, forKey: .presentationPattern) ?? .classic
     }
 }
 

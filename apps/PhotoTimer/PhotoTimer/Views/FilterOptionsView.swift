@@ -13,6 +13,9 @@ struct FilterOptionsView: View {
     /// 雰囲気の選択が黙って外れていた場合にtrue。この画面を開いた時点の値を保持し、
     /// 「分かりました」を押した時だけfalseに戻す(=毎回出さない)。
     @State private var moodMigrationNoticeVisible = FilterSettingsStore.moodsDroppedByMigrationNoticePending
+    /// 自作リスト一覧(2026-09-05追加)。CustomListsView(リストの管理画面)から戻ってきた時に
+    /// 増減が反映されるよう、この画面が再度表示されるたびに読み込み直す(.onAppear参照)。
+    @State private var customLists: [CustomPhotoList] = CustomPhotoListStore.load()
 
     var body: some View {
         NavigationStack {
@@ -22,8 +25,14 @@ struct FilterOptionsView: View {
                 screenshotSection
                 aestheticsSection
                 albumSection
+                if FeatureFlags.isCustomListsEnabled {
+                    customListSection
+                }
                 placeSection
                 subjectSection
+            }
+            .onAppear {
+                customLists = CustomPhotoListStore.load()
             }
             .navigationTitle("絞り込み条件")
             .toolbar {
@@ -194,6 +203,49 @@ struct FilterOptionsView: View {
     }
 
 
+    // MARK: - 保存したリスト(自作リスト。2026-09-05追加)
+
+    /// 選択済みだが、もう自作リスト一覧に存在しないID(削除された等)。アルバム・場所と同じ考え方。
+    private var missingSelectedCustomListIDs: Set<String> {
+        settings.selectedCustomListIDs.subtracting(customLists.map(\.id))
+    }
+
+    private var customListSection: some View {
+        Section {
+            if customLists.isEmpty {
+                Text("保存したリストがありません").foregroundStyle(.secondary)
+            } else {
+                ForEach(customLists) { list in
+                    multiSelectRow(
+                        title: "\(list.name)(\(list.assetLocalIdentifiers.count)枚)",
+                        isSelected: settings.selectedCustomListIDs.contains(list.id)
+                    ) {
+                        toggle(list.id, in: &settings.selectedCustomListIDs)
+                    }
+                }
+            }
+            if !missingSelectedCustomListIDs.isEmpty {
+                Button(role: .destructive) {
+                    settings.selectedCustomListIDs.subtract(missingSelectedCustomListIDs)
+                } label: {
+                    Text("見つからないリストの選択を解除(\(missingSelectedCustomListIDs.count)件)")
+                }
+            }
+            NavigationLink("リストを管理") {
+                CustomListsView()
+            }
+            .accessibilityIdentifier("manageCustomListsLink")
+        } header: {
+            Text("保存したリスト")
+        } footer: {
+            if missingSelectedCustomListIDs.isEmpty {
+                Text("写真ライブラリから自分で選んで作ったリストです。選ぶと、そのリストの写真・動画だけを対象にします(何も選ばない場合は絞り込みなし)。")
+            } else {
+                Text("選択していたリストが削除されたため見つかりません。上のボタンで選択を解除できます。")
+            }
+        }
+    }
+
     // MARK: - 場所
 
     /// 選択済みだが、もう「場所」の選択肢一覧に存在しないID。
@@ -246,20 +298,51 @@ struct FilterOptionsView: View {
         }
     }
 
-    // MARK: - カテゴリ(雰囲気・色とあわせて1つのまとまりに統合。2026-09-05変更)
+    // MARK: - カテゴリ(雰囲気・色とあわせて1つのまとまりに統合。2026-09-05変更 →完全統合)
     //
     // 【なぜ1つの枠にまとめたか】以前は「雰囲気・色」と「カテゴリ」を別々のSection(別の枠)に
     // 分けていたが、選択は全体を通して1つだけ(単一選択)であるにもかかわらず、枠が2つあると
-    // 「両方から1つずつ選べる」ように見えてしまう、というCEOの指摘による。場所の下に
-    // 「カテゴリ」という1つの枠として統合し、その中に雰囲気・色の選択肢とカテゴリの選択肢を
-    // 並べ、そこから1つだけ選ぶ形にする(選択の仕組み自体〔selectMood/selectCategoryが
-    // 互いの選択を解除する〕は変更していない)。
+    // 「両方から1つずつ選べる」ように見えてしまう、というCEOの指摘による。
+    //
+    // 【2026-09-05 さらに変更:見出しも分けず、完全に同じ場所の1つのチップ一覧にする】
+    // 一度Section(枠)は1つにまとめたが、中に「雰囲気・色」「カテゴリ」という2つの小見出し
+    // (キャプション)が残っていたため、まだ視覚的に区切って見えていた。区切りを一切設けず、
+    // 雰囲気・色の選択肢とカテゴリの選択肢を1つの配列にまとめて、1つのチップ一覧として並べる
+    // (選択の仕組み自体〔selectMood/selectCategoryが互いの選択を解除する〕は変更していない)。
+    private enum Subject: Hashable {
+        case mood(MoodTag)
+        case category(CategoryTag)
+
+        var title: String {
+            switch self {
+            case .mood(let tag): return tag.rawValue
+            case .category(let tag): return tag.rawValue
+            }
+        }
+    }
+
+    private var subjectItems: [Subject] {
+        MoodTag.allCases.map(Subject.mood) + libraryIndex.orderedCategories.map(Subject.category)
+    }
+
+    private func isSubjectSelected(_ subject: Subject) -> Bool {
+        switch subject {
+        case .mood(let tag): return settings.selectedMoods.contains(tag)
+        case .category(let tag): return settings.selectedCategories.contains(tag)
+        }
+    }
+
+    private func selectSubject(_ subject: Subject) {
+        switch subject {
+        case .mood(let tag): selectMood(tag)
+        case .category(let tag): selectCategory(tag)
+        }
+    }
 
     private var subjectSection: some View {
         Section {
-            Text("雰囲気・色").font(.caption).foregroundStyle(.secondary)
-            chipGrid(items: MoodTag.allCases, isSelected: { settings.selectedMoods.contains($0) }, title: { $0.rawValue }) { tag in
-                selectMood(tag)
+            chipGrid(items: subjectItems, isSelected: isSubjectSelected, title: \.title) { subject in
+                selectSubject(subject)
             }
             if moodMigrationNoticeVisible {
                 Button {
@@ -268,11 +351,6 @@ struct FilterOptionsView: View {
                 } label: {
                     Text("分かりました")
                 }
-            }
-
-            Text("カテゴリ").font(.caption).foregroundStyle(.secondary)
-            chipGrid(items: libraryIndex.orderedCategories, isSelected: { settings.selectedCategories.contains($0) }, title: { $0.rawValue }) { tag in
-                selectCategory(tag)
             }
             if libraryIndex.isSamplingCategories {
                 HStack {

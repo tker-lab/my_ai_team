@@ -23,4 +23,11 @@ enum FeatureFlags {
 
     /// タイマー終了後の振り返り一覧。将来の課金状態をここへ接続する。
     static var isSessionHistoryEnabled: Bool { true }
+
+    /// 自作リスト(写真ライブラリから自分で選んだ写真をリスト化し、絞り込み条件として使う機能)。
+    /// 【2026-09-05追加】CEO要望「自分で写真を選んでリスト化し、いつでも呼び出して再生」は
+    /// 将来の課金コンテンツ候補のひとつ。今回はCEOが実機で試せるよう true(全員に見せる)にしてある。
+    /// 課金機能として切り分ける時は、削除機能(isHistoryDeletionEnabled)と同じく、ここの中身だけを
+    /// 差し替えれば済む(呼び出し側=FilterOptionsView等は変更不要)。
+    static var isCustomListsEnabled: Bool { true }
 }

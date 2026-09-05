@@ -42,7 +42,15 @@ extension MoodTag: CaseIterable {
 /// カテゴリの選択肢(固定20種類)。
 /// 「犬・猫・人」だけVisionの専用検出機能を使い、それ以外は一般分類を使う(2026-09-04方針)。
 /// サンプル解析は並べ替えにのみ使い、この一覧自体を絞り込む(隠す)ことはしない。
-enum CategoryTag: String, CaseIterable, Identifiable, Codable {
+///
+/// 【2026-09-05 CEO判断:「飲み物」をUIの選択肢から削除】
+/// 「緑」をMoodTagから削除した時(このファイル冒頭のコメント参照)と同じ手法を使う。
+/// enumのケース自体(`drink`)は残し、`allCases`だけ独自定義して選択肢一覧(UI)から外す。
+/// 過去に「飲み物」が保存されていた設定(FilterSettings.selectedCategories)や解析キャッシュ
+/// (AssetAnalysis.categories)にraw value "飲み物" が残っていても、ケースが存在する限り
+/// デコード(JSONの読み込み)は失敗しない。保存済みの設定に飲み物が残っていた場合は
+/// FilterSettingsStore.load() 側で自動的に除去する(migrateAwayFromDrink参照)。
+enum CategoryTag: String, Identifiable, Codable {
     case dog = "犬"
     case cat = "猫"
     case person = "人"
@@ -73,7 +81,17 @@ enum CategoryTag: String, CaseIterable, Identifiable, Codable {
         default: return false
         }
     }
+}
 
+extension CategoryTag: CaseIterable {
+    /// UI(絞り込み画面のチップ一覧)に出す選択肢。「飲み物」は含めない(2026-09-05 CEO判断)。
+    static var allCases: [CategoryTag] {
+        [.dog, .cat, .person, .food, .flower, .sky, .sea, .mountain, .snow, .night,
+         .fireworks, .building, .vehicle, .sport, .otherAnimal, .nature, .document, .art, .music]
+    }
+}
+
+extension CategoryTag {
     /// 一般分類(Vision の VNClassifyImageRequest)が返すラベルとの対応表。
     /// Apple側のラベル体系は非公開・変動があるため、それらしい単語を広めに拾う(見逃し防止優先)。
     var generalClassifierKeywords: [String] {

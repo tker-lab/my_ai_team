@@ -51,6 +51,10 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
     @Published private(set) var isAlarmSounding: Bool = false
     /// このタイマーで実際に表示できた項目。タイマー画面を閉じるとstop()で破棄する。
     @Published private(set) var displayedAssets: [PHAsset] = []
+    /// 演出パターン(結婚式ムービー風・スタジアムビジョン風)が選ばれている時、「今どんな見せ方をしているか」。
+    /// `.classic`(演出パターンを選ばない、これまで通りの表示)の時は常にnil。SlideshowViewはこの値が
+    /// nilならこれまで通りcurrentImage/currentPlayerを描画し、非nilならこちらを優先して描画する。
+    @Published private(set) var currentPresentationFrame: PresentationFrame?
     /// 【8-10対応】displayedAssetsに「すでに入っているか」をO(1)で調べるための索引。
     /// displayedAssetsの要素と常に一致するよう、追加・削除のたびに一緒に更新する
     /// (displayedAssetsを配列のまま=表示順を保ったまま振り返り一覧に使えるようにしつつ、
@@ -88,6 +92,21 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
     /// CandidateEngineを作り直すために必要。start()呼び出し時の値をそのまま保持するだけ)。
     private var placeClusters: [PlaceCluster] = []
 
+    // MARK: - 演出パターン(結婚式ムービー風・スタジアムビジョン風。2026-09-05追加)
+
+    /// `start(...)` 呼び出し時の playbackSettings.presentationPattern をそのまま保持する。
+    private var presentationPattern: PresentationPattern = .classic
+    /// 今どの「間(ま)」まで進んだか(PresentationPattern.beatsのインデックス。巡回する)。
+    private var patternBeatIndex = 0
+    /// 「この間(ま)が求める種類(動画/写真)と違う候補が来た」時に、その候補を捨てずに
+    /// 一時的に取っておく列。次にnextPrimaryAsset(engine:)が呼ばれた時、まずここから消費する
+    /// (CandidateEngineへ2度取りに行かせない=同じ写真を失わないための仕組み)。
+    private var pendingPrimaryQueue: [PHAsset] = []
+    /// 「間」が求める種類の候補が来ず、連続でスキップした回数。1周(beats.count回)を超えて
+    /// 一度も噛み合わなかった場合(例:「動画のみ」に絞り込んでいるのに写真前提の間ばかり続く等)、
+    /// フリーズを避けるため種類を問わず強制的に表示する安全弁として使う。
+    private var consecutiveSkippedBeats = 0
+
     /// - Parameter resumingUntil: 通常は nil(=今から`totalDurationSeconds`後に終わる、新規のタイマー開始)。
     ///   バックグラウンド中にアプリのプロセスごと終了し、その後の再起動で「前回のタイマー」を
     ///   再開する時だけ、前回計算済みの終了予定時刻(絶対時刻)をそのまま渡す
@@ -103,6 +122,11 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
         self.playbackSettings = playbackSettings
         self.alarmSettings = alarmSettings
         self.placeClusters = placeClusters
+        self.presentationPattern = playbackSettings.presentationPattern
+        patternBeatIndex = 0
+        pendingPrimaryQueue = []
+        consecutiveSkippedBeats = 0
+        currentPresentationFrame = nil
 
         let endDate = resumingUntil ?? Date().addingTimeInterval(TimeInterval(totalDurationSeconds))
         deadline = endDate
@@ -162,6 +186,7 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
         currentPlayer?.pause()
         currentPlayer = nil
         currentImage = nil
+        currentPresentationFrame = nil
         currentAsset = nil
         displayedAssets = []
         displayedAssetIDs = []
@@ -203,6 +228,7 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
         currentPlayer?.pause()
         currentPlayer = nil
         currentImage = nil
+        currentPresentationFrame = nil
     }
 
     /// アプリがフォアグラウンドに戻った時に呼ぶ。
@@ -464,39 +490,39 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
             var displayedAnyThisPass = false // 実際に1枚でも表示できたか(読み込み失敗を除く)
             let passStartedAt = ContinuousClock.now // 8-5対応: この1周にかけている時間を計るため
 
-            while phase == .running, !Task.isCancelled {
-                guard let asset = await engine.next() else {
+            innerLoop: while phase == .running, !Task.isCancelled {
+                // 【2026-09-05追加:演出パターン】presentationPatternが.classic以外の時は、
+                // 固定の「間」の並び(PresentationPattern.beats)に沿って表示する。performNextStep(engine:)
+                // が「1枚(または1組)取得して表示する/この間はスキップする/候補が尽きた」を判定する。
+                switch await performNextStep(engine: engine) {
+                case .exhausted(let hasPendingWork):
                     // 18件/0.8秒の探索予算で一旦区切っただけなら、UIへ制御を返して次の呼び出しで続行。
                     // nilを「全件0」と誤解してタイマーを終了しない。
-                    if await engine.hasPendingSearchWork {
+                    if hasPendingWork {
                         // 【8-5対応】1枚も表示できないまま探索がzeroResultSearchTimeoutを超えたら、
                         // 候補プールを一周し終えていなくてもここで諦める(下の「1周しても1枚も
                         // 表示できなかった」分岐へ進み、静かに終わる)。大きな写真ライブラリで
                         // 該当0件の条件だと、律儀に一周し終えるまで待つと数分かかることがあるため。
                         if !displayedAnyThisPass, passStartedAt.duration(to: .now) >= Self.zeroResultSearchTimeout {
-                            break
+                            break innerLoop
                         }
                         await Task.yield()
-                        continue
+                        continue innerLoop
                     }
-                    break
-                }
-                sawAnyCandidateThisPass = true
-                if Task.isCancelled { break }
-                currentAsset = asset
-                displayToken += 1
-                // 【2026-09-04追加:先読み】この1枚を表示している間(displayAndWaitの待ち時間)を使って、
-                // 次の1枚の判定を裏で始めておく。該当が少ない条件(例:カテゴリ「雪」)ほど判定に
-                // 時間がかかりやすく、表示時間内に終わらないと結局その分だけ待つことになるが、
-                // 表示時間内に終わる場合は次に進む時の待ちがゼロになる。
-                await engine.prefetchNext()
-                let displayed = await displayAndWait(asset: asset)
-                if displayed {
-                    displayedAnyThisPass = true
-                    // 【8-10対応】以前はここで毎回displayedAssets(配列)を線形探索していた。
-                    // displayedAssetIDs(Set)で先にO(1)判定してから、表示順を保つための配列にも追加する。
-                    if displayedAssetIDs.insert(asset.localIdentifier).inserted {
-                        displayedAssets.append(asset)
+                    break innerLoop
+                case .skippedBeat:
+                    // 「間」が求める種類(動画/写真)と違う候補だった。時間は消費せず次の「間」へ進む。
+                    sawAnyCandidateThisPass = true
+                    continue innerLoop
+                case .displayed(let displayed):
+                    sawAnyCandidateThisPass = true
+                    if displayed {
+                        displayedAnyThisPass = true
+                        // 【8-10対応】以前はここで毎回displayedAssets(配列)を線形探索していた。
+                        // displayedAssetIDs(Set)で先にO(1)判定してから、表示順を保つための配列にも追加する。
+                        if let asset = currentAsset, displayedAssetIDs.insert(asset.localIdentifier).inserted {
+                            displayedAssets.append(asset)
+                        }
                     }
                 }
             }
@@ -532,13 +558,176 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
         countdownTask?.cancel()
     }
 
-    /// 1枚(1本)を表示し、表示時間だけ待つ。実際に表示できた場合は true、
-    /// 読み込みに失敗して何も表示できなかった場合は false を返す(指摘B・I対応)。
-    @discardableResult
-    private func displayAndWait(asset: PHAsset) async -> Bool {
+    // MARK: - 演出パターン(結婚式ムービー風・スタジアムビジョン風)の1ステップ
+
+    /// runSlideLoopの内側ループが1回に行う仕事の結果。
+    private enum StepOutcome {
+        /// 実際に表示を試みた(true=表示できた、false=読み込み失敗で何も表示できなかった)。
+        case displayed(Bool)
+        /// この「間」が求める種類(動画/写真)の候補が今は無かったため、時間を使わずスキップした。
+        case skippedBeat
+        /// 候補プールを使い切った、または探索予算で一旦区切られた。
+        case exhausted(hasPendingWork: Bool)
+    }
+
+    /// 候補を1つ取り出す。前回「間」と噛み合わず取っておいた候補(pendingPrimaryQueue)があれば
+    /// それを優先し、無ければCandidateEngineへ新しく問い合わせる。
+    private func nextPrimaryAsset(engine: CandidateEngine) async -> PHAsset? {
+        if !pendingPrimaryQueue.isEmpty {
+            return pendingPrimaryQueue.removeFirst()
+        }
+        return await engine.next()
+    }
+
+    /// runSlideLoopの内側ループを1回進める。
+    /// `presentationPattern == .classic` の時はこれまで通り(1枚取得してそのまま表示するだけ)。
+    /// 演出パターンが選ばれている時は、固定の「間」の並びに沿って処理する。
+    private func performNextStep(engine: CandidateEngine) async -> StepOutcome {
+        guard presentationPattern != .classic else {
+            guard let asset = await nextPrimaryAsset(engine: engine) else {
+                return .exhausted(hasPendingWork: await engine.hasPendingSearchWork)
+            }
+            if Task.isCancelled { return .displayed(false) }
+            currentAsset = asset
+            displayToken += 1
+            await engine.prefetchNext()
+            let displayed = await displayAndWait(asset: asset, overrideDuration: nil)
+            return .displayed(displayed)
+        }
+
+        let beats = presentationPattern.beats
+        let beat = beats[patternBeatIndex % beats.count]
+
+        guard let asset = await nextPrimaryAsset(engine: engine) else {
+            return .exhausted(hasPendingWork: await engine.hasPendingSearchWork)
+        }
+        if Task.isCancelled { return .displayed(false) }
+
+        guard (asset.mediaType == .video) == beat.content.isVideo else {
+            // 【共通要件対応:動画前提の「間」に動画候補が無ければスキップ】
+            // この候補は今の「間」には合わないだけで、後の「間」(動画/写真、いずれかいつか噛み合う方)
+            // で使えるかもしれないので取っておく(捨てない)。
+            consecutiveSkippedBeats += 1
+            if consecutiveSkippedBeats > beats.count {
+                // 1周(beats.count回)を超えても一度も噛み合わなかった(例:「動画のみ」に
+                // 絞り込んでいるのに写真前提の間ばかり続く等)。フリーズを避けるため、
+                // この候補を種類を問わずそのまま表示して仕切り直す。
+                consecutiveSkippedBeats = 0
+                currentAsset = asset
+                displayToken += 1
+                await engine.prefetchNext()
+                let displayed = await displayAndWait(asset: asset, overrideDuration: beat.duration)
+                patternBeatIndex += 1
+                return .displayed(displayed)
+            }
+            pendingPrimaryQueue.append(asset)
+            patternBeatIndex += 1
+            return .skippedBeat
+        }
+
+        consecutiveSkippedBeats = 0
+        currentAsset = asset
+        displayToken += 1
+        await engine.prefetchNext()
+        let displayed = await displayForBeat(beat, primary: asset, engine: engine)
+        patternBeatIndex += 1
+        return .displayed(displayed)
+    }
+
+    /// 演出パターンの「間」1つぶんを表示する(写真フルスクリーン・コラージュ・動画のいずれか)。
+    private func displayForBeat(_ beat: PresentationBeat, primary: PHAsset, engine: CandidateEngine) async -> Bool {
         currentPlayer?.pause()
         currentPlayer = nil
         currentImage = nil
+        currentPresentationFrame = nil
+
+        switch beat.content {
+        case .video:
+            guard let playerItem = await Self.requestPlayerItem(for: primary) else { return false }
+            if Task.isCancelled { return false }
+            let player = AVPlayer(playerItem: playerItem)
+            currentPlayer = player
+            configureAudioForVideoPlayback(player: player) // 音の3択設定は演出パターンでも変わらない
+            player.play()
+            // 【CEO決定・2026-09-05】演出パターンが選ばれている時は、動画の再生秒数も
+            // ユーザーの設定(videoPlaybackMode/videoCapSeconds)ではなく、この「間」自身が
+            // 決めた秒数(beat.duration)を使う。
+            await Self.waitForVideoToFinish(player: player, timeout: beat.duration)
+            player.pause()
+            return true
+
+        case .photoFullScreen(let style):
+            deactivateAudioSessionIfNeeded()
+            guard let image = await Self.requestDisplayImage(for: primary) else { return false }
+            if Task.isCancelled { return false }
+            currentImage = image
+            currentPresentationFrame = PresentationFrame(
+                layout: .fullScreen(image: image, assetID: primary.localIdentifier, style: style),
+                transition: beat.transition
+            )
+            try? await Task.sleep(nanoseconds: UInt64(max(0.1, beat.duration) * 1_000_000_000))
+            return true
+
+        case .photoCollage(let secondaryCount, let arrangement):
+            deactivateAudioSessionIfNeeded()
+            guard let mainImage = await Self.requestDisplayImage(for: primary) else { return false }
+            if Task.isCancelled { return false }
+            currentImage = mainImage
+            var secondaries: [(image: UIImage, assetID: String)] = []
+            for _ in 0..<secondaryCount {
+                guard let extraAsset = await fetchSecondaryPhotoAsset(engine: engine) else { break }
+                guard let extraImage = await Self.requestDisplayImage(for: extraAsset) else { continue }
+                secondaries.append((extraImage, extraAsset.localIdentifier))
+                recordDisplayed(extraAsset)
+            }
+            if secondaries.isEmpty {
+                // 追加候補が1枚も用意できなかった(候補プールがほぼ尽きた等)。原則「必ず何か出す」に
+                // 沿って、コラージュを諦めて1枚のフルスクリーンにフォールバックする(クラッシュ・
+                // 空白表示にはしない)。
+                currentPresentationFrame = PresentationFrame(
+                    layout: .fullScreen(image: mainImage, assetID: primary.localIdentifier, style: .kenBurns),
+                    transition: beat.transition
+                )
+            } else {
+                currentPresentationFrame = PresentationFrame(
+                    layout: .collage(main: (mainImage, primary.localIdentifier), secondaries: secondaries, arrangement: arrangement),
+                    transition: beat.transition
+                )
+            }
+            try? await Task.sleep(nanoseconds: UInt64(max(0.1, beat.duration) * 1_000_000_000))
+            return true
+        }
+    }
+
+    /// コラージュ・モザイクの「小さい方」の写真を1枚取得する。動画が来た場合は、後の「間」
+    /// (動画前提の間)で使えるように取っておき、ここでは使わない(nilを返す=コラージュの枠が1つ減る)。
+    private func fetchSecondaryPhotoAsset(engine: CandidateEngine) async -> PHAsset? {
+        guard let candidate = await engine.next() else { return nil }
+        if candidate.mediaType == .video {
+            pendingPrimaryQueue.append(candidate)
+            return nil
+        }
+        return candidate
+    }
+
+    /// コラージュの脇役として表示した写真も、振り返り一覧(displayedAssets)に記録しておく
+    /// (実際にユーザーの目に触れたものなので、主役級の1枚と同じ扱いにする)。
+    private func recordDisplayed(_ asset: PHAsset) {
+        if displayedAssetIDs.insert(asset.localIdentifier).inserted {
+            displayedAssets.append(asset)
+        }
+    }
+
+    /// 1枚(1本)を表示し、表示時間だけ待つ。実際に表示できた場合は true、
+    /// 読み込みに失敗して何も表示できなかった場合は false を返す(指摘B・I対応)。
+    /// - Parameter overrideDuration: nilの時はこれまで通りplaybackSettingsの秒数を使う。
+    ///   非nilの時はその秒数を使う(演出パターンが「間」と噛み合わない候補を強制表示する時のみ使用)。
+    @discardableResult
+    private func displayAndWait(asset: PHAsset, overrideDuration: TimeInterval?) async -> Bool {
+        currentPlayer?.pause()
+        currentPlayer = nil
+        currentImage = nil
+        currentPresentationFrame = nil
 
         switch asset.mediaType {
         case .video:
@@ -549,7 +738,7 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
             configureAudioForVideoPlayback(player: player) // CEO要望(2026-09-05): 動画の音と他アプリの音楽の関係(3択)
             player.play() // 動画は音付きで再生(MVP必須要件。ただし設定次第でミュートすることがある)
             // 「指定秒数で切り上げる」設定の時だけ上限を設ける。「最後まで再生する」設定の時は上限なし(nil)。
-            let timeout: TimeInterval? = playbackSettings.videoPlaybackMode == .capped ? playbackSettings.videoCapSeconds : nil
+            let timeout: TimeInterval? = overrideDuration ?? (playbackSettings.videoPlaybackMode == .capped ? playbackSettings.videoCapSeconds : nil)
             await Self.waitForVideoToFinish(player: player, timeout: timeout)
             player.pause()
             // 【軽微指摘対応】ここでは手放さない。以前はここで毎回 deactivate していたため、
@@ -570,8 +759,8 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
             // 設定ファイルに入っていた場合、UInt64(...)への変換がクラッシュ(トラップ)する
             // (0以下やNaNは負の数・不正な値としてUInt64の範囲外になるため)。念のため
             // 最低0.1秒を下限にクランプしておく(実用上ここに到達しなくても安全側に倒すだけの保険)。
-            let safeSlideSeconds = playbackSettings.photoSlideDurationSeconds.isFinite
-                ? max(0.1, playbackSettings.photoSlideDurationSeconds) : 0.1
+            let rawDuration = overrideDuration ?? playbackSettings.photoSlideDurationSeconds
+            let safeSlideSeconds = rawDuration.isFinite ? max(0.1, rawDuration) : 0.1
             try? await Task.sleep(nanoseconds: UInt64(safeSlideSeconds * 1_000_000_000))
             return true
         }

@@ -28,9 +28,10 @@ import XCTest
 ///      (実行方法は該当テストの直前のコメント参照)。
 ///
 /// v5シナリオ(2026-09-04 チェック工程2回目の指摘対応の検証。証跡は verify/ に v5_ 接頭辞で保存):
-///  12. testImmediateDismiss_DuringLazyEvaluation_NoBackgroundHang … 雰囲気・カテゴリの絞り込みで
-///      候補全体の採点(窓単位の遅延評価)が終わる前に✕で閉じても、素早くホーム画面に戻れ、
-///      その後の操作が遅延しないことを確認(指摘A: ✕で閉じても裏で解析が走り続ける不具合の回帰テスト)。
+///  12. testImmediateDismiss_DuringFireworksLazyEvaluation_NoBackgroundHang … カテゴリ「花火」
+///      (単一選択の仕組み上、直前に選んだ「暗め」は自動的に解除されるため実質「花火」単体)の
+///      絞り込みで、候補全体の採点(窓単位の遅延評価)が終わる前に✕で閉じても、素早くホーム画面に
+///      戻れ、その後の操作が遅延しないことを確認(指摘A: ✕で閉じても裏で解析が走り続ける不具合の回帰テスト)。
 ///  13. testLegacyPlaceSelection_MigratesAndOffersClear … 場所ID方式変更前の「旧形式」の場所選択が
 ///      UserDefaultsに残っていた状態からの復帰(移行・解除ができること)を確認
 ///      (指摘B・G: 復帰手段が無い/設定がiCloudバックアップに含まれる、の回帰テスト)。
@@ -52,6 +53,22 @@ import XCTest
 ///      3択(両方そのまま鳴らす/音楽を小さくして重ねる〔既定〕/音楽が鳴っていたら動画は無音)を選び直すと
 ///      説明文が切り替わり、設定を閉じて開き直しても選択が保存されていること、動画フィルタで実際に
 ///      スタートしてもクラッシュしないことを確認する。
+///
+/// v9シナリオ(2026-09-05 演出パターン・自作リスト・カテゴリ整理・テスト後始末対応の検証):
+///  21. testDrinkRemovedFromCategoryChoices … カテゴリの選択肢一覧に「飲み物」が表示されないこと、
+///      他の選択肢は引き続き選べることを確認する。
+///  22. testSubjectChipsAreSingleUnifiedList … 「雰囲気・色」「カテゴリ」の区切り(小見出し)が
+///      無い、1つのチップ一覧になっていること・単一選択の仕組みが統合後も効いていることを確認する。
+///  23. testPresentationPatternSelection_HidesDurationPickersAndStartsSlideshow … 演出パターンを
+///      選ぶと表示秒数・動画再生秒数のピッカーが隠れること、実際にスタートしても壊れないことを確認する。
+///  24. testCustomListsManagement_OpensAndShowsEmptyState … 自作リストの管理画面が開けること、
+///      空の状態・新規作成ボタンが表示されることを確認する(写真選択そのものの自動化は対象外。
+///      理由はテスト本体のコメント参照)。
+///
+/// 【2026-09-05修正:テスト間の絞り込み条件の汚染】ほぼ全テストの冒頭で呼ばれる
+/// ensurePhotosAccessGranted内で、絞り込み条件を毎回「すべて解除」するようにした
+/// (resetFilterConditions参照)。以前は前のテストが選んだ絞り込みが次のテストに引き継がれ、
+/// 無関係な理由で失敗することがあった。
 final class PhotoTimerUITests: XCTestCase {
 
     /// utility除外・解析失敗も同じbeginCandidateを通るため、種類に関係なく18件で停止する。
@@ -719,7 +736,7 @@ final class PhotoTimerUITests: XCTestCase {
         XCTAssertEqual(app.state, .runningForeground, "写真がごくわずかな状態でスタートするとアプリが落ちた")
     }
 
-    // MARK: - シナリオ13: 雰囲気・カテゴリの遅延評価中に✕で閉じても、裏で解析が走り続けないか(v5)
+    // MARK: - シナリオ13: 花火カテゴリの遅延評価中に✕で閉じても、裏で解析が走り続けないか(v5)
     //
     // 【2回目のチェック工程・指摘A対応の回帰テスト】以前はCandidateEngine.next()のループに
     // キャンセル確認が一度も入っておらず、✕ボタンで閉じてもタイマーが0になっても、候補を最後の
@@ -731,7 +748,7 @@ final class PhotoTimerUITests: XCTestCase {
     // 終わってしまうため、「数分間裏で走り続ける」こと自体をこの環境で直接再現・確認することは
     // できない(実害が大きく出るのは実際に数千〜数万枚の写真を持つ利用者の場合)。
     // そのため、ここでは以下を確認することで間接的に裏付ける:
-    //  1. 遅延評価が必要な絞り込み(雰囲気+カテゴリ、必ず0件になる組み合わせ)でスタートした直後、
+    //  1. 遅延評価が必要な絞り込み(カテゴリ「花火」。実ライブラリでほぼ0件)でスタートした直後、
     //     結果が確定するのを待たずに✕(closeButton)を押す。
     //  2. ✕を押した直後、素早く(数秒以内に)ホーム画面に戻れること
     //     (=CandidateEngine.next()のwhileループがTask.isCancelled確認で即座に打ち切られている
@@ -739,7 +756,14 @@ final class PhotoTimerUITests: XCTestCase {
     //     「戻ってくること自体」の回帰確認として意味がある)。
     //  3. 戻った直後からアプリの操作(絞り込み画面を開く)が遅延なく効くこと
     //     (=裏でCPUを使い切る処理が続いていれば、UIの応答が遅れるはず)。
-    func testImmediateDismiss_DuringLazyEvaluation_NoBackgroundHang() throws {
+    //
+    // 【2026-09-05名称・コメント修正】以前の名前(testImmediateDismiss_DuringLazyEvaluation_
+    // NoBackgroundHang)とコメントは「雰囲気+カテゴリ」の組み合わせを検証しているかのように
+    // 書かれていたが、絞り込みが単一選択になった(FilterSettings.normalizeSingleSubject)ため、
+    // 下で「暗め」を選んだ直後に「花火」を選ぶと、単一選択の仕組みにより「暗め」は自動的に
+    // 解除される。つまり実際に効いている絞り込みはカテゴリ「花火」単体であり、雰囲気は
+    // 一切効いていない。動作(何をテストしているか)自体は変えず、名前とコメントを実態に合わせた。
+    func testImmediateDismiss_DuringFireworksLazyEvaluation_NoBackgroundHang() throws {
         let app = XCUIApplication()
         app.launch()
         let recorder = ScreenshotRecorder(scenario: "v5_immediatedismiss")
@@ -747,9 +771,10 @@ final class PhotoTimerUITests: XCTestCase {
         try Self.setTotalTimer(app: app, minutes: "3", seconds: "0")
 
         // 【2026-09-05変更】このテスト用ライブラリ(15枚程度)は窓サイズ(scoringBatchSize=20)より
-        // 小さいため、雰囲気・カテゴリを1つでも指定すれば「近い順」の並べ替えのために候補全体を
-        // 1回の窓でまとめて採点する(=遅延評価のうち最も重い処理)ことになる。どの組み合わせでも
-        // このキャンセル応答性の確認はできるため、「暗め」+「花火」を使う(「緑」はUIの選択肢から削除された)。
+        // 小さいため、カテゴリを1つ指定すれば「近い順」の並べ替えのために候補全体を1回の窓で
+        // まとめて採点する(=遅延評価のうち最も重い処理)ことになる。「暗め」に続けて「花火」を
+        // 選んでいるが、単一選択の仕組みにより最終的に効くのは「花火」のみ(「緑」はUIの
+        // 選択肢から削除されたため、直前に触れておく雰囲気の選択肢として「暗め」を使っているだけ)。
         try Self.selectMoodAndCategory(app: app, mood: "暗め", category: "花火", recorder: recorder)
 
         let startButton = app.buttons["startButton"]
@@ -780,6 +805,17 @@ final class PhotoTimerUITests: XCTestCase {
         let respondedAt = Date()
         XCTAssertTrue(filterButton.waitForExistence(timeout: 3), "ホーム画面に戻った直後、絞り込みボタンの操作が遅延している(裏で処理が続いている疑い)")
         recorder.appendManifestLines(["filter button responsive after: \(String(format: "%.2f", Date().timeIntervalSince(respondedAt)))s"])
+
+        // 【2026-09-05追加:後始末】このテストが選んだ「花火」の絞り込みは実ライブラリでほぼ0件になる
+        // ため、後始末せずに終えると、次に実行される・絞り込みを自分で設定し直さない他のテストが
+        // この状態を引き継いでしまい、内部の探索打ち切り(20秒)待ちに巻き込まれて失敗していた
+        // (2026-09-05に発覚)。ensurePhotosAccessGranted側で次のテストの冒頭にも同様のリセットを
+        // 入れたが、「このテスト自身が汚した状態は自分で片付ける」という後始末もあわせて行っておく。
+        filterButton.tap()
+        let clearAllButton = app.buttons["すべて解除"]
+        if clearAllButton.waitForExistence(timeout: 5) { clearAllButton.tap() }
+        app.buttons["完了"].tap()
+
         recorder.writeManifest()
     }
 
@@ -1150,6 +1186,168 @@ final class PhotoTimerUITests: XCTestCase {
         recorder.writeManifest()
     }
 
+    // MARK: - シナリオ21: 「飲み物」がカテゴリの選択肢から消えていること(v9)
+    //
+    // 「緑」を雰囲気の選択肢から削除した時(testGreenRemovedFromMoodChoices)と同じ手法・同じ検証内容。
+    func testDrinkRemovedFromCategoryChoices() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v9_drinkremoved")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+
+        let filterButton = app.buttons["filterButton"]
+        XCTAssertTrue(filterButton.waitForExistence(timeout: 15))
+        filterButton.tap()
+
+        // カテゴリのチップは場所セクションの下、スクロールしないと現れないことがある。
+        let dogChip = app.buttons["犬"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: dogChip), "カテゴリの「犬」が見つからない")
+        recorder.shoot(app, label: "category_section")
+
+        XCTAssertFalse(app.buttons["飲み物"].exists, "「飲み物」がカテゴリの選択肢からまだ表示されている(CEO判断で削除したはず)")
+
+        // 他の選択肢は引き続き選べることも確認する(削除の副作用で他が消えていないか)。
+        for label in ["犬", "猫", "人", "食べ物", "花", "空"] {
+            XCTAssertTrue(app.buttons[label].exists, "カテゴリの選択肢「\(label)」が見つからない(飲み物の削除で他まで消えていないか確認)")
+        }
+
+        app.buttons["食べ物"].tap() // 実際にタップできる(反応する)ことも確認しておく
+        recorder.shoot(app, label: "food_selected")
+        recorder.writeManifest()
+
+        app.buttons["完了"].tap()
+    }
+
+    // MARK: - シナリオ22: カテゴリ一覧が「雰囲気・色」「カテゴリ」の区切り無く1つに並んでいること(v9)
+    //
+    // 完全に同じ場所・1つの区切りの無いチップ一覧にする(2026-09-05 CEO指示)の検証。
+    // 見た目上の区切り線の有無はXCUITestからは判定しづらいため、代わりに「区切りのための
+    // 小見出し(雰囲気・色/カテゴリというキャプション)自体が存在しないこと」で確認する。
+    // あわせて、単一選択の仕組み(雰囲気→カテゴリの順で選ぶとカテゴリが優先される)が
+    // 統合後も変わらず効いていることも確認する。
+    func testSubjectChipsAreSingleUnifiedList() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v9_subjectunified")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+
+        let filterButton = app.buttons["filterButton"]
+        XCTAssertTrue(filterButton.waitForExistence(timeout: 15))
+        filterButton.tap()
+
+        let warmChip = app.buttons["暖色"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: warmChip), "雰囲気の選択肢「暖色」が見つからない")
+
+        // 以前あった小見出し(区切りのキャプション)が無いことを確認する。
+        XCTAssertFalse(app.staticTexts["雰囲気・色"].exists, "「雰囲気・色」という区切りの小見出しがまだ残っている")
+
+        let dogChip = app.buttons["犬"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: dogChip), "カテゴリの選択肢「犬」が見つからない")
+        recorder.shoot(app, label: "unified_chip_list")
+
+        warmChip.tap()
+        dogChip.tap()
+        recorder.shoot(app, label: "after_select_mood_then_category")
+
+        app.buttons["完了"].tap()
+
+        // 単一選択どおり、最終的に効くのは「犬」1件のみのはず。
+        let categoryCountLabel = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'カテゴリ1件'")).firstMatch
+        XCTAssertTrue(categoryCountLabel.waitForExistence(timeout: 5), "統合後も単一選択(雰囲気→カテゴリの順で選ぶとカテゴリが優先)が効いていない")
+        recorder.shoot(app, label: "home_after_done")
+        recorder.writeManifest()
+    }
+
+    // MARK: - シナリオ23: 演出パターンを選ぶと表示秒数の設定が隠れ、スタートしても壊れない(v9)
+    //
+    // CEO決定(2026-09-05):演出パターン(.classic以外)を選んだ時は、1枚あたりの表示秒数・動画の
+    // 再生秒数をユーザーに指定させない(パターン側が決めた秒数を使う)。UIはこの2項目を隠す。
+    func testPresentationPatternSelection_HidesDurationPickersAndStartsSlideshow() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v9_presentationpattern")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+
+        let settingsButton = app.buttons["playbackSettingsButton"]
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 15), "設定(歯車)ボタンが見つからない")
+        settingsButton.tap()
+
+        // 既定(シンプル)の時は、これまで通り表示秒数のピッカーが出ているはず。
+        XCTAssertTrue(app.buttons["photoDurationPicker"].waitForExistence(timeout: 5), "既定(シンプル)なのに表示秒数のピッカーが無い")
+        recorder.shoot(app, label: "classic_shows_duration_pickers")
+
+        let weddingOption = app.buttons["結婚式ムービー風"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: weddingOption), "「結婚式ムービー風」の選択肢が見つからない")
+        weddingOption.tap()
+        recorder.shoot(app, label: "wedding_selected")
+
+        XCTAssertFalse(app.buttons["photoDurationPicker"].exists, "演出パターンを選んだのに表示秒数のピッカーがまだ出ている")
+        XCTAssertFalse(app.buttons["videoModePicker"].exists, "演出パターンを選んだのに動画の再生時間のピッカーがまだ出ている")
+
+        app.buttons["完了"].tap()
+
+        // 実際にスタートしてもクラッシュしないこと、写真・動画の目印(media-)が表示されることを確認する。
+        try Self.setTotalTimer(app: app, minutes: "0", seconds: "30")
+        let startButton = app.buttons["startButton"]
+        XCTAssertTrue(startButton.waitForExistence(timeout: 10))
+        startButton.tap()
+
+        let mediaElement = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH 'media-' OR identifier BEGINSWITH 'presentationFrame-'")
+        ).firstMatch
+        XCTAssertTrue(mediaElement.waitForExistence(timeout: 15), "演出パターン選択後、スライドショーで写真・動画が表示されなかった")
+        Thread.sleep(forTimeInterval: 3.0) // 「間」の切り替わりを数回観察する
+        recorder.shoot(app, label: "wedding_running")
+        XCTAssertEqual(app.state, .runningForeground, "演出パターン選択後にスタートするとアプリが落ちた")
+
+        app.buttons["closeButton"].firstMatch.tap()
+        _ = app.buttons["startButton"].waitForExistence(timeout: 5)
+        recorder.writeManifest()
+
+        // 次回以降のテストに影響しないよう、既定(シンプル)に戻してから終える。
+        settingsButton.tap()
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: app.buttons["シンプル"]))
+        app.buttons["シンプル"].tap()
+        app.buttons["完了"].tap()
+    }
+
+    // MARK: - シナリオ24: 自作リストの管理画面が開けること(v9)
+    //
+    // 【自動化の限界について正直に書いておく】PHPickerViewController(標準の写真選択画面)は
+    // システムが描画する別プロセスのUIで、アプリ側から独自のアクセシビリティIDを付けられる部分が
+    // ほぼ無く、「一覧から特定の写真を選ぶ」操作をXCUITestから安定して自動化するのは現実的ではない
+    // (Apple自身、この種のシステムピッカーの中身までは自動テストの対象にしない考え方を取っている)。
+    // そのため、ここでは「リストを管理」画面が開けること・空の状態が正しく表示されること・
+    // 「+」ボタンが存在することまでを自動確認し、実際に写真を選んでリストを作る操作は
+    // CEOに実機で1回試してもらう(完了報告に記載)。
+    func testCustomListsManagement_OpensAndShowsEmptyState() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v9_customlists")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+
+        let filterButton = app.buttons["filterButton"]
+        XCTAssertTrue(filterButton.waitForExistence(timeout: 15))
+        filterButton.tap()
+
+        let manageLink = app.buttons["manageCustomListsLink"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: manageLink), "「リストを管理」への導線が見つからない")
+        manageLink.tap()
+
+        let title = app.navigationBars["保存したリスト"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5), "「保存したリスト」の管理画面が開かなかった")
+        XCTAssertTrue(app.buttons["addCustomListButton"].exists, "リストを新規作成する「+」ボタンが見つからない")
+        recorder.shoot(app, label: "custom_lists_screen")
+        recorder.writeManifest()
+
+        // 【2026-09-05修正】`app.navigationBars.buttons.firstMatch`だと、シート裏に隠れているだけで
+        // アクセシビリティツリーには残り続けているホーム画面(ContentView)のnavigationBarのボタン
+        // (helpButton等)を誤って拾うことがあると判明した。「保存したリスト」というタイトルの
+        // navigationBarに限定して、その中の戻るボタンだけを狙う。
+        app.navigationBars["保存したリスト"].buttons.firstMatch.tap() // 戻る
+        app.buttons["完了"].tap()
+    }
+
     // MARK: - 共通処理: スクロールしないと現れない要素を探す
 
     /// Form内の下の方にあるセクション(LazyVGridを含む)は、スクロールして画面内に入るまで
@@ -1219,6 +1417,7 @@ final class PhotoTimerUITests: XCTestCase {
             // 呼び出しが漏れていたため、前回のタイマーが自動再開された状態のまま後続の操作に
             // 進んでしまっていた。許可待ちの分岐に関わらず必ず後始末を行うようにする。
             try dismissAnyStrayRunningTimer(app: app, recorder: recorder)
+            try resetFilterConditions(app: app, recorder: recorder)
             return
         }
         allowButton.tap()
@@ -1249,6 +1448,27 @@ final class PhotoTimerUITests: XCTestCase {
         // 許可の反映(ホーム画面への遷移)を待つ。
         _ = app.buttons["startButton"].waitForExistence(timeout: 5)
         try dismissAnyStrayRunningTimer(app: app, recorder: recorder)
+        try resetFilterConditions(app: app, recorder: recorder)
+    }
+
+    /// 【2026-09-05追加。テスト間の絞り込み条件の汚染対策】
+    /// 以前は各テストが絞り込みを選びっぱなしで終わることがあり(例:testGreenRemovedFromMoodChoices
+    /// が「寒色」を選んだまま終わる、testFiveFilterCombinationが日時・アルバム・雰囲気を選んだまま
+    /// 終わる 等)、後続の・絞り込みを自分で明示的に設定し直さないテスト(testOneSecondTimer/
+    /// testPhotoDurationSettingAffectsInterval/testNearMatchStreaming 等)がその状態を引き継いでしまい、
+    /// 意図しない絞り込み条件のまま実行されて失敗する問題があった(2026-09-05発覚。詳細は
+    /// app_team_photo_timer.md参照)。ensurePhotosAccessGranted はほぼ全てのテストの冒頭で
+    /// 呼ばれるため、ここで毎回「すべて解除」しておくことで、個々のテストが必要な絞り込みだけを
+    /// 自分で選び直せば済むようにする(=各テストの冒頭でリセットする、という運用に統一)。
+    private static func resetFilterConditions(app: XCUIApplication, recorder: ScreenshotRecorder) throws {
+        let filterButton = app.buttons["filterButton"]
+        guard filterButton.waitForExistence(timeout: 5) else { return }
+        filterButton.tap()
+        let clearButton = app.buttons["すべて解除"]
+        if clearButton.waitForExistence(timeout: 5) { clearButton.tap() }
+        let doneButton = app.buttons["完了"]
+        if doneButton.waitForExistence(timeout: 5) { doneButton.tap() }
+        recorder.appendManifestLines(["絞り込み条件をリセットした(前のテストの選択を引き継がないため)"])
     }
 
     /// 【2026-09-05追加。CEO要望C(バックグラウンド動作)対応の副作用への対策】

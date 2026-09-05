@@ -1,9 +1,9 @@
-前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)
-v5_immediatedismiss_01_stray_running_timer_detected.png	t=5.2s
-v5_immediatedismiss_02_scroll_debug_0.png	t=20.3s
-v5_immediatedismiss_03_mood_暗め_category_花火_set.png	t=23.8s
-v5_immediatedismiss_04_before_close.png	t=29.0s
-v5_immediatedismiss_05_after_close.png	t=29.8s
+絞り込み条件をリセットした(前のテストの選択を引き継がないため)
+v5_immediatedismiss_01_scroll_debug_0.png	t=23.2s
+v5_immediatedismiss_02_scroll_debug_1.png	t=26.4s
+v5_immediatedismiss_03_mood_暗め_category_花火_set.png	t=29.5s
+v5_immediatedismiss_04_before_close.png	t=34.8s
+v5_immediatedismiss_05_after_close.png	t=35.6s
 dismiss duration: 0.74s
 came back home: true
-filter button responsive after: 1.10s
+filter button responsive after: 1.09s

@@ -1,6 +1,6 @@
-前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)
-v3_onesecond_01_stray_running_timer_detected.png	t=5.2s
-v3_onesecond_02_wheel_set_1s.png	t=13.4s
+絞り込み条件をリセットした(前のテストの選択を引き継がないため)
+v3_onesecond_01_wheel_set_1s.png	t=14.5s
 range label: 設定可能な範囲: 1秒 〜 180分
 home time label before start: 00:01
-v3_onesecond_03_after_wait.png	t=33.5s
+v3_onesecond_02_after_wait.png	t=17.3s
+elapsed until finished: 2.61s

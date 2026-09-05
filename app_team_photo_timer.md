@@ -408,6 +408,58 @@ CEOが写真ライブラリから自分で選んでリストを作り、名前�
   テストになっている。名前・コメントを実態に合わせる。
 - 各UIテストの冒頭で絞り込み条件をリセットする(前のテストの選択が引き継がれる問題への対処)。
 
+## 4件の実装完了(2026-09-05 app-team)
+
+上記4件すべて実装し、シミュレータ向けビルド・関連UIテストまで完了。実機(iPhone 14)への
+インストール・起動確認も実施。詳細な設計判断は各Swiftファイルのコメントに記載。
+
+### 1. テスト不備の修正
+`testImmediateDismiss_DuringLazyEvaluation_NoBackgroundHang` を
+`testImmediateDismiss_DuringFireworksLazyEvaluation_NoBackgroundHang` に改名し、コメントも
+「実質カテゴリ『花火』単体のテスト」である実態に合わせた(動作は変更なし)。
+`PhotoTimerUITests.ensurePhotosAccessGranted`(ほぼ全テストの冒頭で呼ばれる共通処理)内に
+`resetFilterConditions`を追加し、毎回「すべて解除」してから各テストを始めるようにした
+(前のテストが選んだ絞り込みが次のテストに引き継がれ、無関係な理由で失敗する問題を解消)。
+あわせて、汚染の直接原因だった `testImmediateDismiss...` 自身の末尾にも後始末を追加。
+
+### 2. カテゴリ一覧の整理
+`FilterOptionsView.swift`の絞り込み画面で、「雰囲気・色」「カテゴリ」という2つの小見出し
+(区切りのキャプション)を廃止し、`Subject`(mood/categoryをまとめるenum)を新設して
+1つの配列・1つのチップ一覧として並べるようにした(単一選択の仕組み自体は変更なし)。
+「飲み物」は`CategoryTag.allCases`から除外(`MoodTag`から「緑」を除外した時と同じ手法。
+enumのケース自体は残しているため、過去に「飲み物」を選んでいた保存データも
+`FilterSettingsStore`の移行処理〔`migrateAwayFromDrink`〕で静かに解除され、デコード自体は壊れない)。
+
+### 3. 自作リスト機能
+`CustomPhotoList`(Models)・`CustomPhotoListStore`(端末内JSON保存。写真本体は複製せず
+localIdentifierのみ保存)・`PhotoPickerView`(`PHPickerViewController`のSwiftUIラッパー)・
+`CustomListsView`(一覧・作成・削除)+`CustomListEditView`(名前変更・写真の追加/削除)を新規実装。
+`FilterSettings.selectedCustomListIDs`で絞り込み条件の1つとして選択可能にし、
+`CandidateEngine.fetchBaseAssets`でアルバムと同じ「メタ情報だけで絞れる」条件として扱う
+(アルバムとリストを両方選んだ場合は足し算=どちらかに入っていれば対象)。
+リストが指す写真が後で削除されていた場合は`PHAsset.fetchAssets(withLocalIdentifiers:)`が
+単にその分を返さないだけで、落ちたり例外になったりしない(絶対制約どおり)。
+`FeatureFlags.isCustomListsEnabled`でオン/オフを切り替えられる作りにしてあり、今回はtrueで動作確認。
+
+### 4. 演出パターン機能(結婚式ムービー風・スタジアムビジョン風)
+`PresentationPattern`(Models)に、パターンごとに固定の「間(ま)」の並び(`beats`)を定義した。
+CEO決定に従い、**ランダムではなく固定の順番で繰り返す**(一巡したら最初に戻る)。「間」は
+写真フルスクリーン(ゆっくりズーム/勢いよく登場)・写真コラージュ(大1小2/モザイク3枚)・動画の
+いずれかで、隣り合う「間」同士(最後→最初の巡回も含む)は見せ方・切り替わり方の少なくとも
+一方が必ず変わるように並べてある。切り替わりのアニメーション(クロスフェード・ホワイトアウト・
+ズーム・斜めワイプ・フラッシュ)は`PresentationFrameView`が描画する。
+`TimerController`に「間」駆動のロジック(`performNextStep`/`displayForBeat`)を追加し、
+**動画前提の「間」に再生可能な動画候補が無い場合はその間をスキップして次の間へ進む**
+(取得した候補は`pendingPrimaryQueue`に退避し、後の間で使う。1周しても一度も噛み合わない
+極端なケース〔例:「動画のみ」に絞り込んでいるのに写真前提の間ばかり続く〕では、フリーズを
+避けるため種類を問わず強制表示する安全弁も入れてある)。
+**演出パターン(.classic以外)を選んだ場合、1枚あたりの表示秒数・動画の再生秒数は
+パターン側の`beat.duration`が使われ、ユーザーの秒数設定は使われない**(CEO決定。
+`PlaybackSettingsView`は演出パターンを選んでいる間、表示秒数・動画再生時間の設定行を隠す)。
+既定値`.classic`はこれまで通りの1枚ずつフェード表示で、既存の自動テスト・既存ユーザーの挙動には
+一切影響しない。動画の音の3択設定(`videoAudioMixMode`)は演出パターンでも変更なく従う。
+将来Codex担当の2パターンは`PresentationPattern`にケースを追加し`beats`を定義するだけで足せる。
+
 ### 演出パターン内の切り替え順序(2026-09-05 CEO決定・着手中の作業への追加指示)
 
 **ランダムではなく、固定の順番で繰り返す構成にすること。** 一巡したら最初に戻る。

@@ -17,3 +17,4 @@
 - [XCUITestのシステムダイアログ追加・自動復元機能の落とし穴](xcuitest-system-dialog-and-autoresume-pitfalls.md) — 新規ダイアログはaddUIInterruptionMonitor必須、自動復元機能はテスト連続実行と衝突しやすい
 - [UIテスト用シミュレータのeraseは未記録の写真ライブラリを破壊する](xcuitest-simulator-erase-destroys-unseeded-photo-library.md) — レシピ不明なら破壊的操作前に必ず立ち止まる
 - [SwiftのCodable自動生成はデフォルト値を無視して丸ごと失敗する](swift-codable-default-value-decode-trap.md) — 設定structに項目追加時はdecodeIfPresentのカスタムinitが必須
+- [PHPickerのassetIdentifier取得条件とenumのHashable自動導出の境界線](phpicker-assetidentifier-and-enum-hashable.md) — 写真複数選択機能を作る時に必ず確認

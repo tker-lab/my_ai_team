@@ -304,3 +304,37 @@ testPhotoFilterFlow/testVideoDurationSettingAffectsCutoff/testVideoFilterFlow/te
 (花火カテゴリは新旧いずれのキーワード一致でも実測0件のため、今回の修正で悪化はしていない)。
 根本原因はtestImmediateDismiss側の後始末漏れという既存のテスト設計不備。
 credit制約のため本セッションでは修正せず、次回のテスト整備時の対応事項として記録するに留める。
+2026-09-05 演出パターン(結婚式ムービー風・スタジアムビジョン風)・自作リスト・カテゴリ整理・テスト不備修正の実装完了(app-team)。
+PresentationPattern/PresentationFrame/PresentationBeat(Models)・PresentationFrameView(演出描画)・
+CustomPhotoList/CustomPhotoListStore(自作リスト保存)・PhotoPickerView(PHPickerラッパー)・
+CustomListsView(リスト管理画面)を新規追加。TimerControllerに演出パターンの「間」駆動ロジック
+(performNextStep/displayForBeat/pendingPrimaryQueueによる動画枠スキップ)を追加。
+FilterOptionsViewの雰囲気・色/カテゴリを完全に1つのチップ一覧へ統合、「飲み物」をallCasesから除外
+(FilterSettingsのCodable化に伴う既存データ保護のため、PlaybackSettingsと同じdecodeIfPresent方式の
+カスタムinit(from:)をFilterSettingsにも追加)。UIテストの後始末漏れを修正
+(ensurePhotosAccessGranted内で毎回「すべて解除」)、testImmediateDismiss...の名称・コメントを実態
+(花火単体)に合わせて修正。シミュレータ向けbuild-for-testing成功。新規4テスト+既存回帰テスト実行中。
+2026-09-05 検証:curated 9件のUIテスト実行(シミュレータiPhone 17, PhotoTimer-EmptyLibではない方)。
+8件成功。testDefaultFlow_NoFilterのみ失敗(2回再現)。原因調査の結果、今回の4機能実装とは無関係な
+既存環境の劣化と判明:検証用ライブラリの動画(IMG_0015.MP4)の実際の長さをAVFoundationで直接計測した
+ところ35.07秒だった(過去のコメントが前提としていた「約4.9秒」から、以前の破壊的erase事故後の
+代替アセット復旧で実体が変わっていたと考えられる)。既定の動画切り上げ設定(20秒)ではこの動画は
+自然終了せず必ず20秒の上限まで表示され続けるため、20秒間の観測窓を持つtestDefaultFlow_NoFilterは
+シャッフル結果によっては動画が動かないまま観測終了してしまう。displayAndWaitのタイムアウト計算式は
+overrideDuration(常にnilのクラシック経路)を追加しただけで、既存の計算式と完全に同一(差分なし)
+であることをコード上で確認済み。今回の演出パターン等の実装が原因でないことをこの根拠で確認した。
+影響を受けるのはこの「テスト用シミュレータの動画資産の実際の長さ」に依存する既存テストのみで、
+今回追加した新機能テスト(演出パターン・自作リスト・飲み物除外・チップ統合)は全て成功。
+2026-09-05 実機(iPhone 14)向けビルド・インストールは成功(BUILD SUCCEEDED、devicectl device install app成功)。
+起動は「ロック中は起動不可」の既知の制約で失敗(FBSOpenApplicationErrorDomain error 7 Locked)。
+CEOに端末のロック解除を依頼し、解除後に起動確認を行う必要がある。
+2026-09-05 追加検証:テスト後始末修正の直接確認として、以前このセッション中に「絞り込み条件が
+引き継がれて失敗する」と報告されていたtestPhotoFilterFlow/testNearMatchStreaming_AlwaysShowsSomething
+と、testHistoryDeleteSelection_ShowsConfirmationWithoutDeleting/testVideoFilterFlowの計4件を実行。
+4件とも成功(Executed 4 tests, with 0 failures)。ensurePhotosAccessGranted内の絞り込みリセットが
+実際に問題を解消したことを確認した。
+2026-09-05 実機起動確認完了。CEOが端末のロックを解除したと見られ、devicectl device process launch成功
+(PID 7072がtakayukiのiPhone (2)上で稼働していることをdevicectl device info processesで確認)。
+CEOの写真・動画への削除・変更操作は一切行っていない(インストール・起動確認のみ)。
+1〜4の実装、シミュレータ向けビルド・関連UIテスト13件(新規4件+回帰9件、全て成功。
+テスト環境起因の1件〔testDefaultFlow_NoFilter〕を除く)、実機インストール・起動確認まで完了。

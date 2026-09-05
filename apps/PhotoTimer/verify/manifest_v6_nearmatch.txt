@@ -1,2 +1,6 @@
-v6_nearmatch_01_settled_as_timeout.png	t=38.0s
-settledAs=timeout(未決着) elapsed=28.8s
+前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)
+v6_nearmatch_01_stray_running_timer_detected.png	t=5.2s
+絞り込み条件をリセットした(前のテストの選択を引き継がないため)
+v6_nearmatch_02_settled_as_normal_slideshow.png	t=27.7s
+settledAs=normal_slideshow elapsed=9.6s
+v6_nearmatch_03_after_close.png	t=29.5s
