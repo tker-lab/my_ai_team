@@ -1020,47 +1020,44 @@ final class PhotoTimerUITests: XCTestCase {
         recorder.writeManifest()
     }
 
-    // MARK: - シナリオ19: 削除ボタンでOS標準の確認ダイアログが出ること(v7. CEO要望D)
+    // MARK: - シナリオ19: 振り返りで個別選択→確認まで進めること(実削除は禁止)
     //
     // 【安全のため実際には削除しない】このテスト用ライブラリ(15件)は他の多くのテストが前提にしている
     // 共有リソースのため、ここで実際に削除してしまうと他のテストに影響する。そのため「確認ダイアログが
     // 正しく出るか」「キャンセルすれば何も起きないか」だけを確認し、実際の削除確定(枚数が減ること)は
     // 別途手元の使い捨てシミュレータでの確認に委ねる(完了報告に記載)。
-    func testDeleteButton_ShowsOSConfirmation_CancelLeavesNothingDeleted() throws {
+    func testHistoryDeleteSelection_ShowsConfirmationWithoutDeleting() throws {
         let app = XCUIApplication()
         app.launch()
         let recorder = ScreenshotRecorder(scenario: "v7_deleteconfirm")
         try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
-        try Self.setTotalTimer(app: app, minutes: "3", seconds: "0")
+        try Self.dismissAnyStrayRunningTimer(app: app, recorder: recorder)
+        app.buttons["filterButton"].tap()
+        let clearFilters = app.buttons["すべて解除"]
+        XCTAssertTrue(clearFilters.waitForExistence(timeout: 5))
+        clearFilters.tap()
+        app.buttons["完了"].tap()
+        try Self.setTotalTimer(app: app, minutes: "0", seconds: "5")
 
         let startButton = app.buttons["startButton"]
         XCTAssertTrue(startButton.waitForExistence(timeout: 10))
         startButton.tap()
 
-        let deleteButton = app.buttons["deleteCurrentAssetButton"]
-        XCTAssertTrue(deleteButton.waitForExistence(timeout: 15), "削除(ゴミ箱)ボタンが見つからない")
-        recorder.shoot(app, label: "before_delete_tap")
+        let stopAlarm = app.buttons["stopAlarmButton"]
+        if stopAlarm.waitForExistence(timeout: 12) { stopAlarm.tap() }
+        XCTAssertTrue(app.otherElements["sessionHistoryGrid"].waitForExistence(timeout: 5), "終了後の振り返り一覧が出ない")
+        app.buttons["enterHistoryDeleteModeButton"].tap()
+        let deleteButton = app.buttons["deleteSelectedHistoryButton"]
+        XCTAssertFalse(deleteButton.exists, "0件選択なのに削除ボタンが有効")
+        app.otherElements["sessionHistoryGrid"].buttons.firstMatch.tap()
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 2), "1件を個別選択しても削除ボタンが出ない")
         deleteButton.tap()
-
-        // OS標準の確認ダイアログ(springboard側)が出ることを確認する(アプリ側で確認UIを自作していないことの裏付け)。
-        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        let cancelButton = springboard.buttons["キャンセル"]
-        var found = false
-        for _ in 0..<500 { // 最大5秒
-            if cancelButton.exists { found = true; break }
-            usleep(10_000)
-        }
-        recorder.appendManifestLines(["OS confirmation dialog found=\(found)"])
-        recorder.shoot(app, label: "confirmation_dialog")
-        XCTAssertTrue(found, "削除ボタンを押してもOS標準の確認ダイアログが出なかった")
-        cancelButton.tap()
-
-        // キャンセルしたので何も起きておらず、スライドショーはそのまま動き続けているはず。
-        Thread.sleep(forTimeInterval: 1.0)
-        recorder.shoot(app, label: "after_cancel")
+        let cancelButton = app.buttons["キャンセル"]
+        XCTAssertTrue(cancelButton.waitForExistence(timeout: 3), "選択枚数付きの確認画面が出ない")
+        recorder.shoot(app, label: "selection_confirmation")
+        cancelButton.tap() // ここで止め、写真アプリへの削除要求は絶対に出さない
         recorder.writeManifest()
-        XCTAssertEqual(app.state, .runningForeground, "削除確認をキャンセルしただけなのにアプリが落ちた")
-        XCTAssertTrue(app.buttons["deleteCurrentAssetButton"].exists, "削除確認をキャンセルしたのにスライドショー画面から離脱してしまった")
+        XCTAssertEqual(app.state, .runningForeground)
     }
 
     // MARK: - シナリオ20: よく撮れてる度の選択肢がiOS 18以降で出ること(v7. CEO要望B)

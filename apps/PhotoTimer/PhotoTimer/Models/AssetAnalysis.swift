@@ -140,6 +140,29 @@ actor AnalysisCache {
         return storage.count
     }
 
+
+    /// 解析済み結果だけから、選択中の主題に対する強一致・説明可能な近似のID索引を返す。
+    /// 保存対象は従来どおり解析JSONだけで写真本体は複製しない。起動後の全画像解析も行わない。
+    func subjectCandidateIDs(settings: FilterSettings) -> (strong: [String], approximate: [String]) {
+        loadIfNeeded()
+        var strong: [String] = []
+        var approximate: [String] = []
+        for (id, analysis) in storage where analysis.analyzerVersion == AssetAnalysis.currentVersion {
+            if SubjectMatch.isStrong(analysis: analysis, settings: settings) {
+                strong.append(id)
+            } else if SubjectMatch.isExplainableApproximation(analysis: analysis, settings: settings) {
+                approximate.append(id)
+            }
+        }
+        return (strong.shuffled(), approximate.shuffled())
+    }
+
+    /// 容量診断用。写真本体ではなく解析JSONだけの実ファイルサイズを返す。
+    func diskUsageBytes() -> Int64 {
+        loadIfNeeded()
+        return (try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? NSNumber)?.int64Value ?? 0
+    }
+
     /// 削除された写真の解析結果をキャッシュから取り除く(軽微な指摘:削除済み写真の結果が
     /// 残り続ける問題への対応)。LibraryIndexが写真ライブラリの差分検知(原則4)で
     /// 「削除された」と分かった localIdentifier をそのまま渡す想定で、ここで新たに写真を

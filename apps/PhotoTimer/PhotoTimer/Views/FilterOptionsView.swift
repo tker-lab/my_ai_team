@@ -195,12 +195,12 @@ struct FilterOptionsView: View {
     private var moodSection: some View {
         Section {
             chipGrid(items: MoodTag.allCases, isSelected: { settings.selectedMoods.contains($0) }, title: { $0.rawValue }) { tag in
-                toggle(tag, in: &settings.selectedMoods)
+                selectMood(tag)
             }
         } header: {
             Text("雰囲気・色")
         } footer: {
-            Text("写真全体の色味からおおまかに分類します。ぴったり合う写真が少ない時も、近い雰囲気の写真から順番に表示するので、何も表示されないことはありません(初めて選ぶ写真は判定に少し時間がかかることがあります)。")
+            Text("雰囲気・色・カテゴリを通して主題は1つだけ選べます。写真全体の色味からおおまかに分類します。表示時間を長くすると、その間に次の候補を探せるため切り替わりが滑らかになりやすくなります。")
         }
     }
 
@@ -261,7 +261,7 @@ struct FilterOptionsView: View {
     private var categorySection: some View {
         Section {
             chipGrid(items: libraryIndex.orderedCategories, isSelected: { settings.selectedCategories.contains($0) }, title: { $0.rawValue }) { tag in
-                toggle(tag, in: &settings.selectedCategories)
+                selectCategory(tag)
             }
             if libraryIndex.isSamplingCategories {
                 HStack {
@@ -274,7 +274,7 @@ struct FilterOptionsView: View {
         } header: {
             Text("カテゴリ")
         } footer: {
-            Text("犬・猫・人は専用の検出、それ以外は一般的な分類を使うため多少の誤検出があります(見つからないより誤って多く出す方を優先)。該当が少ない時も、近いカテゴリの写真から順番に表示するので、何も表示されないことはありません。")
+            Text("雰囲気・色・カテゴリを通して主題は1つだけ選べます。解析済みの候補を先に使い、まだ判定していない写真は表示中に探します。多少の誤検出があります。")
         }
     }
 
@@ -317,6 +317,25 @@ struct FilterOptionsView: View {
             set.remove(value)
         } else {
             set.insert(value)
+        }
+    }
+
+
+    private func selectMood(_ value: MoodTag) {
+        if settings.selectedMoods.contains(value) {
+            settings.selectedMoods.removeAll()
+        } else {
+            settings.selectedMoods = [value]
+            settings.selectedCategories.removeAll()
+        }
+    }
+
+    private func selectCategory(_ value: CategoryTag) {
+        if settings.selectedCategories.contains(value) {
+            settings.selectedCategories.removeAll()
+        } else {
+            settings.selectedCategories = [value]
+            settings.selectedMoods.removeAll()
         }
     }
 }

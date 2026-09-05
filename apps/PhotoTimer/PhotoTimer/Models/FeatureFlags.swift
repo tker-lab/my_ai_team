@@ -15,8 +15,12 @@ import Foundation
 /// 今はまだ「常にtrue(全員に見せる)」という最も単純な実装にしてある。課金機能を実装する時に、
 /// ここを例えば `PurchaseManager.shared.isPremiumUnlocked` のような条件に差し替えるだけでよい。
 enum FeatureFlags {
-    /// スライドショー中に表示中の写真・動画をその場で削除できる機能を有効にするか。
-    static var isPhotoDeletionEnabled: Bool {
+    /// 振り返り一覧から写真・動画を削除できる機能。将来の課金状態をここへ接続する。
+    static var isHistoryDeletionEnabled: Bool {
         true
     }
+
+
+    /// タイマー終了後の振り返り一覧。将来の課金状態をここへ接続する。
+    static var isSessionHistoryEnabled: Bool { true }
 }

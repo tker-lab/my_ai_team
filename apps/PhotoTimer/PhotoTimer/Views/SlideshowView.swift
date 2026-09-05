@@ -19,6 +19,10 @@ struct SlideshowView: View {
     /// CEO要望C(2026-09-05):バックグラウンドに回っている間は解析・表示を止め、
     /// 戻ってきたら経過時間を正しく反映して再開する。
     @Environment(\.scenePhase) private var scenePhase
+    @State private var selectedHistoryIDs: Set<String> = []
+    @State private var showingDeleteConfirmation = false
+    @State private var isHistoryDeleteMode = false
+    @State private var previewItem: HistoryPreviewItem?
 
     var body: some View {
         ZStack {
@@ -57,6 +61,11 @@ struct SlideshowView: View {
                 }
             }
             .padding()
+
+            if let previewItem {
+                HistoryPreviewView(asset: previewItem.asset) { self.previewItem = nil }
+                    .zIndex(10)
+            }
         }
         .statusBarHidden()
         .onAppear {
@@ -126,19 +135,7 @@ struct SlideshowView: View {
 
             Spacer()
 
-            // CEO要望D(2026-09-05): 流れている写真・動画をその場で削除できるようにする。
-            // 削除中(表示中の1枚が無い時)・見つからなかった表示の時は押しても意味が無いので隠す。
-            // 将来課金者限定にする可能性があるため、表示可否の判定はFeatureFlags 1箇所に集約している。
-            if FeatureFlags.isPhotoDeletionEnabled, controller.currentAsset != nil {
-                Button {
-                    controller.deleteCurrentAsset()
-                } label: {
-                    Image(systemName: "trash.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(.white, .black.opacity(0.4))
-                }
-                .accessibilityIdentifier("deleteCurrentAssetButton")
-            }
+            Color.clear.frame(width: 28, height: 28)
         }
     }
 
@@ -191,6 +188,52 @@ struct SlideshowView: View {
                 .tint(.red)
                 .accessibilityIdentifier("stopAlarmButton")
             } else {
+                if FeatureFlags.isSessionHistoryEnabled, !controller.displayedAssets.isEmpty {
+                    ScrollView {
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 3), spacing: 6) {
+                            ForEach(controller.displayedAssets, id: \.localIdentifier) { asset in
+                                Button {
+                                    if isHistoryDeleteMode { toggleHistorySelection(asset.localIdentifier) }
+                                    else { previewItem = HistoryPreviewItem(asset: asset) }
+                                } label: {
+                                    HistoryThumbnail(asset: asset, selected: isHistoryDeleteMode && selectedHistoryIDs.contains(asset.localIdentifier))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 360)
+                    .accessibilityIdentifier("sessionHistoryGrid")
+                    if FeatureFlags.isHistoryDeletionEnabled {
+                        if isHistoryDeleteMode {
+                            HStack {
+                                Button("削除モード終了") {
+                                    isHistoryDeleteMode = false
+                                    selectedHistoryIDs.removeAll()
+                                }
+                                Spacer()
+                                Button("全選択") {
+                                    selectedHistoryIDs = Set(controller.displayedAssets.map(\.localIdentifier))
+                                }
+                                .disabled(selectedHistoryIDs.count == controller.displayedAssets.count)
+                                Button("全解除") { selectedHistoryIDs.removeAll() }
+                                    .disabled(selectedHistoryIDs.isEmpty)
+                            }
+                            if !selectedHistoryIDs.isEmpty {
+                                Button("選択した項目を削除(\(selectedHistoryIDs.count))", role: .destructive) {
+                                    showingDeleteConfirmation = true
+                                }
+                                .accessibilityIdentifier("deleteSelectedHistoryButton")
+                            }
+                        } else {
+                            Button("削除する項目を選ぶ") {
+                                isHistoryDeleteMode = true
+                                selectedHistoryIDs.removeAll()
+                            }
+                            .accessibilityIdentifier("enterHistoryDeleteModeButton")
+                        }
+                    }
+                }
                 Button("閉じる") { dismiss() }
                     .buttonStyle(.borderedProminent)
                     .accessibilityIdentifier("finishedCloseButton")
@@ -200,11 +243,112 @@ struct SlideshowView: View {
         .frame(maxWidth: .infinity)
         .background(.black.opacity(0.5), in: RoundedRectangle(cornerRadius: 16))
         .padding(.bottom, 40)
+        .confirmationDialog("選択した\(selectedHistoryIDs.count)件を削除しますか？", isPresented: $showingDeleteConfirmation, titleVisibility: .visible) {
+            Button("削除", role: .destructive) {
+                let assets = controller.displayedAssets.filter { selectedHistoryIDs.contains($0.localIdentifier) }
+                selectedHistoryIDs.removeAll()
+                controller.deleteAssets(assets)
+            }
+            Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text("次に表示されるiPhone標準の確認画面でも削除を確定する必要があります。")
+        }
+    }
+
+    private func toggleHistorySelection(_ id: String) {
+        if selectedHistoryIDs.contains(id) { selectedHistoryIDs.remove(id) }
+        else { selectedHistoryIDs.insert(id) }
     }
 
     private func timeString(_ seconds: Int) -> String {
         let m = seconds / 60
         let s = seconds % 60
         return String(format: "%02d:%02d", m, s)
+    }
+}
+
+private struct HistoryPreviewItem: Identifiable {
+    let asset: PHAsset
+    var id: String { asset.localIdentifier }
+}
+
+private struct HistoryPreviewView: View {
+    let asset: PHAsset
+    let close: () -> Void
+    @State private var image: UIImage?
+    @State private var player: AVPlayer?
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            Color.black.ignoresSafeArea()
+            if let player { VideoPlayer(player: player).ignoresSafeArea() }
+            else if let image { Image(uiImage: image).resizable().scaledToFit() }
+            else { ProgressView().tint(.white) }
+            Button { close() } label: {
+                Image(systemName: "chevron.backward.circle.fill").font(.largeTitle).foregroundStyle(.white, .black.opacity(0.4))
+            }
+            .padding()
+            .accessibilityIdentifier("closeHistoryPreviewButton")
+        }
+        .task {
+            if asset.mediaType == .video {
+                let options = PHVideoRequestOptions(); options.isNetworkAccessAllowed = true
+                player = await withCheckedContinuation { continuation in
+                    PHImageManager.default().requestPlayerItem(forVideo: asset, options: options) { item, _ in
+                        continuation.resume(returning: item.map(AVPlayer.init(playerItem:)))
+                    }
+                }
+                player?.play()
+            } else {
+                let options = PHImageRequestOptions(); options.isNetworkAccessAllowed = true; options.deliveryMode = .highQualityFormat
+                image = await withCheckedContinuation { continuation in
+                    PHImageManager.default().requestImage(for: asset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: options) { image, info in
+                        if (info?[PHImageResultIsDegradedKey] as? Bool) != true { continuation.resume(returning: image) }
+                    }
+                }
+            }
+        }
+        .onDisappear { player?.pause() }
+    }
+}
+
+private struct HistoryThumbnail: View {
+    let asset: PHAsset
+    let selected: Bool
+    @State private var image: UIImage?
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            Group {
+                if let image { Image(uiImage: image).resizable().scaledToFill() }
+                else { Color.gray.opacity(0.35).overlay { ProgressView() } }
+            }
+            .frame(height: 90).clipped()
+            if asset.mediaType == .video {
+                Image(systemName: "video.fill").padding(5).foregroundStyle(.white)
+            }
+            if selected {
+                Image(systemName: "checkmark.circle.fill").padding(5).foregroundStyle(.blue).background(.white, in: Circle())
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 7))
+        .overlay { RoundedRectangle(cornerRadius: 7).stroke(selected ? Color.blue : .clear, lineWidth: 3) }
+        .task(id: asset.localIdentifier) { image = await Self.thumbnail(for: asset) }
+    }
+
+    private static func thumbnail(for asset: PHAsset) async -> UIImage? {
+        let options = PHImageRequestOptions()
+        options.deliveryMode = .opportunistic
+        options.resizeMode = .fast
+        options.isNetworkAccessAllowed = false
+        return await withCheckedContinuation { continuation in
+            var completed = false
+            PHImageManager.default().requestImage(for: asset, targetSize: CGSize(width: 240, height: 240), contentMode: .aspectFill, options: options) { image, info in
+                guard !completed else { return }
+                let degraded = (info?[PHImageResultIsDegradedKey] as? Bool) == true
+                if image != nil, !degraded { completed = true; continuation.resume(returning: image) }
+                else if image == nil, !degraded { completed = true; continuation.resume(returning: nil) }
+            }
+        }
     }
 }

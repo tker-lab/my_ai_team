@@ -92,14 +92,27 @@ actor CandidateEngine {
     }
 
     /// 候補プールを準備する(原則1:選択肢は固定/自動生成済みのものだけを使い、ここでは絞り込みの実行のみ)
-    func prepare() {
+    func prepare() async {
         // シャッフルし直す(=候補の並びが変わる)ので、古い並びを前提に先読みしていた分は捨てる。
         prefetchQueue.advanceGeneration(clear: true)
         prefetchTask?.cancel()
         prefetchTask = nil
         let assets = Self.fetchBaseAssets(settings: settings)
         let filtered = assets.filter { Self.passesMetadataFilters($0, settings: settings) }
-        shuffledAssets = filtered.shuffled()
+        // 既知の強一致→既知の説明可能近似→未判定を優先。各群は毎周shuffleし、
+        // 一巡するまでは同じ写真を再利用しない。
+        if !settings.selectedMoods.isEmpty || !settings.selectedCategories.isEmpty {
+            let indexed = await AnalysisCache.shared.subjectCandidateIDs(settings: settings)
+            let strong = Set(indexed.strong)
+            let approximate = Set(indexed.approximate)
+            func rank(_ id: String) -> Int { strong.contains(id) ? 0 : (approximate.contains(id) ? 1 : 2) }
+            let randomized = filtered.shuffled()
+            shuffledAssets = [0, 1, 2].flatMap { wantedRank in
+                randomized.filter { rank($0.localIdentifier) == wantedRank }
+            }
+        } else {
+            shuffledAssets = filtered.shuffled()
+        }
         cursor = 0
         emittedExactMatch = false
         emittedFallback = false
@@ -241,11 +254,11 @@ actor CandidateEngine {
             }
 
             let score = Self.score(analysis: analysis, settings: settings)
-            if Self.isStrongMatch(analysis: analysis, settings: settings) {
+            if SubjectMatch.isStrong(analysis: analysis, settings: settings) {
                 emittedExactMatch = true
                 return asset
             }
-            if Self.isExplainableApproximation(analysis: analysis, settings: settings),
+            if SubjectMatch.isExplainableApproximation(analysis: analysis, settings: settings),
                bestExplainableApproximation == nil || score > bestExplainableApproximation!.score {
                 bestExplainableApproximation = (asset, score)
             }
@@ -300,7 +313,10 @@ actor CandidateEngine {
         }
     }
 
-    private static func isStrongMatch(analysis: AssetAnalysis, settings: FilterSettings) -> Bool {
+}
+
+enum SubjectMatch {
+    static func isStrong(analysis: AssetAnalysis, settings: FilterSettings) -> Bool {
         if !settings.selectedMoods.isEmpty {
             guard let mood = analysis.mood, settings.selectedMoods.contains(mood) else { return false }
         }
@@ -314,7 +330,7 @@ actor CandidateEngine {
         return true
     }
 
-    private static func isExplainableApproximation(analysis: AssetAnalysis, settings: FilterSettings) -> Bool {
+    static func isExplainableApproximation(analysis: AssetAnalysis, settings: FilterSettings) -> Bool {
         if !settings.selectedMoods.isEmpty {
             guard let mood = analysis.mood,
                   settings.selectedMoods.map({ MoodSimilarity.similarity(mood, $0) }).max() ?? 0 >= 0.4 else { return false }
@@ -327,6 +343,9 @@ actor CandidateEngine {
         return settings.selectedCategories.contains { (analysis.categoryConfidences?[$0] ?? 0) >= 0.15 }
     }
 
+}
+
+extension CandidateEngine {
     /// 1枚の判定結果を取得する(キャッシュ済みならそれを使い、無ければサムネイル取得→Vision解析)。
     /// 判定できなかった場合は nil(呼び出し側が hadUndeterminedCandidatesThisPass に記録する)。
     private func analyzedResult(for asset: PHAsset) async -> AssetAnalysis? {

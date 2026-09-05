@@ -49,6 +49,8 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
     /// 出すかどうかの判断に使う。CEO要望(2026-09-05):止めるまで鳴り続けるパターンを追加したため、
     /// 「今鳴っているか」を画面側が知る手段が必要になった。
     @Published private(set) var isAlarmSounding: Bool = false
+    /// このタイマーで実際に表示できた項目。タイマー画面を閉じるとstop()で破棄する。
+    @Published private(set) var displayedAssets: [PHAsset] = []
 
     /// 写真1枚あたりの表示秒数・動画の再生時間の扱い。CEO要望(2026-09-04)によりユーザー設定可能。
     /// `start(...)` の呼び出し時に渡された値をここに保持する(既定値は元の固定値と同じ)。
@@ -86,6 +88,7 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
         stop()
 
         phase = .running
+        displayedAssets = []
         noCandidatesReason = nil
         totalSeconds = totalDurationSeconds
         self.playbackSettings = playbackSettings
@@ -145,6 +148,7 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
         currentPlayer = nil
         currentImage = nil
         currentAsset = nil
+        displayedAssets = []
         // 【2026-09-04追加】先読み(prefetchNext)は runLoopTask とは別の独立したTaskとして動いているため、
         // runLoopTask をキャンセルしただけではこの先読みタスクは止まらない。指摘Aで直した
         // 「✕で閉じたらすぐ裏の処理も止まる」を、先読み追加によって再び壊さないための後始末。
@@ -215,12 +219,12 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
     /// 【将来の課金機能との切り分け】このボタンを見せるかどうかの判定はSlideshowView側で
     /// `FeatureFlags.isPhotoDeletionEnabled` を見て行っている(このメソッド自体はフラグを見ない)。
     /// 課金者限定にしたくなったら、そのフラグの中身だけを差し替えればよい(詳細はFeatureFlags.swift参照)。
-    func deleteCurrentAsset() {
-        guard phase == .running, let asset = currentAsset else { return }
-        let identifierToDelete = asset.localIdentifier
+    func deleteAssets(_ assets: [PHAsset]) {
+        guard phase == .finished, !assets.isEmpty else { return }
+        let identifiersToDelete = assets.map(\.localIdentifier)
 
         PHPhotoLibrary.shared().performChanges({
-            PHAssetChangeRequest.deleteAssets([asset] as NSArray)
+            PHAssetChangeRequest.deleteAssets(assets as NSArray)
         }, completionHandler: { [weak self] success, error in
             Task { @MainActor in
                 guard let self else { return }
@@ -229,9 +233,10 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
                     // 判定結果を持ち続けても無駄なだけなので。AnalysisCacheは別actorなので
                     // ここではawaitせず投げっぱなしにして良い=削除完了の体感速度に影響させない)。
                     Task.detached(priority: .utility) {
-                        await AnalysisCache.shared.removeAnalyses(for: [identifierToDelete])
+                        await AnalysisCache.shared.removeAnalyses(for: identifiersToDelete)
                     }
-                    self.advanceAfterDeletion()
+                    let deleted = Set(identifiersToDelete)
+                    self.displayedAssets.removeAll { deleted.contains($0.localIdentifier) }
                 } else if error != nil {
                     // success=false かつ error が nil の場合は「ユーザーが確認ダイアログでキャンセルした」
                     // という正常系(Appleの仕様どおり)であり、何もしない(=表示を続ける)のが正しい。
@@ -448,7 +453,12 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
                 // 表示時間内に終わる場合は次に進む時の待ちがゼロになる。
                 await engine.prefetchNext()
                 let displayed = await displayAndWait(asset: asset)
-                if displayed { displayedAnyThisPass = true }
+                if displayed {
+                    displayedAnyThisPass = true
+                    if !displayedAssets.contains(where: { $0.localIdentifier == asset.localIdentifier }) {
+                        displayedAssets.append(asset)
+                    }
+                }
             }
 
             if Task.isCancelled || phase != .running { return }

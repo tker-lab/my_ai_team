@@ -33,6 +33,18 @@ struct FilterSettings: Codable, Equatable {
     }
 
     static let `default` = FilterSettings()
+
+    /// 雰囲気・色・カテゴリは全体で1つだけ選べる「主題」。旧版の複数選択設定も壊さず、
+    /// 決定的に1件へ縮める。日時・場所などの整理条件には触れない。
+    mutating func normalizeSingleSubject() {
+        if let category = selectedCategories.sorted(by: { $0.rawValue < $1.rawValue }).first {
+            selectedCategories = [category]
+            selectedMoods.removeAll()
+        } else if let mood = selectedMoods.sorted(by: { $0.rawValue < $1.rawValue }).first {
+            selectedMoods = [mood]
+            selectedCategories.removeAll()
+        }
+    }
 }
 
 // MARK: - 永続化
@@ -68,14 +80,14 @@ enum FilterSettingsStore {
         #endif
         if let data = try? Data(contentsOf: fileURL),
            let decoded = try? JSONDecoder().decode(FilterSettings.self, from: data) {
-            return migrateAwayFromGreen(decoded)
+            return migrate(decoded)
         }
         // 新しい保存先にまだ何も無い場合、旧保存先(UserDefaults)に残っている可能性がある
         // (アップデート前から使っていた場合)。あれば1回だけ読み込み、新しい保存先に書き直した上で
         // 旧データは削除する(そのままだとバックアップに残り続けてしまうため)。
         if let legacyData = UserDefaults.standard.data(forKey: legacyDefaultsKey),
            let legacyDecoded = try? JSONDecoder().decode(FilterSettings.self, from: legacyData) {
-            let migrated = migrateAwayFromGreen(legacyDecoded)
+            let migrated = migrate(legacyDecoded)
             save(migrated)
             UserDefaults.standard.removeObject(forKey: legacyDefaultsKey)
             // 通常、UserDefaultsへの変更はOS側が適切なタイミングで自動的にディスクへ反映するため
@@ -98,6 +110,12 @@ enum FilterSettingsStore {
         guard settings.selectedMoods.contains(.green) else { return settings }
         var migrated = settings
         migrated.selectedMoods.remove(.green)
+        return migrated
+    }
+
+    private static func migrate(_ settings: FilterSettings) -> FilterSettings {
+        var migrated = migrateAwayFromGreen(settings)
+        migrated.normalizeSingleSubject()
         return migrated
     }
 
