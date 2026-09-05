@@ -100,6 +100,53 @@ enum CategoryTag: String, CaseIterable, Identifiable, Codable {
         case .music: return ["music", "guitar", "piano", "instrument", "concert", "microphone"]
         }
     }
+
+    /// Visionの一般分類ラベル(例: "carpet" "beach_ball")が、このカテゴリのキーワードに
+    /// **単語として**一致するかどうか。
+    ///
+    /// 【2026-09-05修正:部分一致による誤爆】
+    /// 以前は `identifier.contains(keyword)` という文字列の部分一致で判定していたため、
+    /// 短いキーワードが無関係な語の一部にたまたま一致してしまっていた
+    /// (例: "car" が "carpet"/"cartoon"/"carnival" に、"ball" が "balloon" に、
+    /// "art" が "heart" に一致)。これは「見た目(写っているもの)が似ている」という
+    /// カテゴリの緩さ(犬を選んだら羊が出る、等。CEO方針で維持)とは別種の、
+    /// 「文字面がたまたま似ているだけ」の説明のつかない誤りなので、ここだけを直す。
+    /// 信頼度のしきい値(呼び出し側のgeneralConfidenceThreshold/dedicatedConfidenceThreshold)は変更しない。
+    ///
+    /// 【単語単位への直し方】Visionのラベルは "beach_ball" のように単語をアンダースコアで
+    /// つないだ形式で返ってくる。ラベル・キーワードの両方を「文字・数字以外(アンダースコア・
+    /// 空白・ハイフン等)」で単語に分割し、キーワード側の単語の並びが、ラベル側の単語の並びの
+    /// 中に(連続した部分列として)そのまま含まれているかで判定する。
+    /// 1単語のキーワード("car"等)なら「単語一致」そのものになり、"carpet"のような
+    /// 1単語に埋もれた部分一致は起こらなくなる。"dark sky"のような複数語キーワードも、
+    /// 空白区切りで書いていても正しく複数単語として扱われる
+    /// (以前は空白のままだったため、Visionの実際の区切り文字〔アンダースコア〕とは
+    /// 表記が食い違い、そもそも一致しようがなかった。今回あわせて直る)。
+    func matchesGeneralClassifierLabel(_ identifier: String) -> Bool {
+        let labelWords = Self.words(in: identifier)
+        return generalClassifierKeywords.contains { keyword in
+            let keywordWords = Self.words(in: keyword)
+            guard !keywordWords.isEmpty else { return false }
+            return Self.containsSubsequence(keywordWords, in: labelWords)
+        }
+    }
+
+    private static func words(in text: String) -> [String] {
+        text.lowercased().split(whereSeparator: { !$0.isLetter && !$0.isNumber }).map(String.init)
+    }
+
+    /// `needle`(キーワードを単語分割したもの)が `haystack`(ラベルを単語分割したもの)の中に
+    /// 連続した並びとしてそのまま含まれているかどうか。
+    private static func containsSubsequence(_ needle: [String], in haystack: [String]) -> Bool {
+        guard needle.count <= haystack.count else { return false }
+        guard needle.count > 0 else { return false }
+        for start in 0...(haystack.count - needle.count) {
+            if Array(haystack[start..<(start + needle.count)]) == needle {
+                return true
+            }
+        }
+        return false
+    }
 }
 
 /// メディアの種類フィルタ(標準メタ情報。解析不要=即時取得)

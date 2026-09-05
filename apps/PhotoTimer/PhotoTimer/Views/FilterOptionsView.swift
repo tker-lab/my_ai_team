@@ -22,9 +22,8 @@ struct FilterOptionsView: View {
                 screenshotSection
                 aestheticsSection
                 albumSection
-                moodSection
                 placeSection
-                categorySection
+                subjectSection
             }
             .navigationTitle("絞り込み条件")
             .toolbar {
@@ -194,31 +193,6 @@ struct FilterOptionsView: View {
         }
     }
 
-    // MARK: - 雰囲気(色)
-
-    private var moodSection: some View {
-        Section {
-            chipGrid(items: MoodTag.allCases, isSelected: { settings.selectedMoods.contains($0) }, title: { $0.rawValue }) { tag in
-                selectMood(tag)
-            }
-            if moodMigrationNoticeVisible {
-                Button {
-                    moodMigrationNoticeVisible = false
-                    FilterSettingsStore.moodsDroppedByMigrationNoticePending = false
-                } label: {
-                    Text("分かりました")
-                }
-            }
-        } header: {
-            Text("雰囲気・色")
-        } footer: {
-            if moodMigrationNoticeVisible {
-                Text("以前は雰囲気とカテゴリを両方選べましたが、今はどちらか1つだけになりました。カテゴリの選択を優先したため、以前選んでいた雰囲気の指定は解除されています。")
-            } else {
-                Text("雰囲気・色・カテゴリを通して主題は1つだけ選べます。写真全体の色味からおおまかに分類します。表示時間を長くすると、その間に次の候補を探せるため切り替わりが滑らかになりやすくなります。")
-            }
-        }
-    }
 
     // MARK: - 場所
 
@@ -272,10 +246,31 @@ struct FilterOptionsView: View {
         }
     }
 
-    // MARK: - カテゴリ
+    // MARK: - カテゴリ(雰囲気・色とあわせて1つのまとまりに統合。2026-09-05変更)
+    //
+    // 【なぜ1つの枠にまとめたか】以前は「雰囲気・色」と「カテゴリ」を別々のSection(別の枠)に
+    // 分けていたが、選択は全体を通して1つだけ(単一選択)であるにもかかわらず、枠が2つあると
+    // 「両方から1つずつ選べる」ように見えてしまう、というCEOの指摘による。場所の下に
+    // 「カテゴリ」という1つの枠として統合し、その中に雰囲気・色の選択肢とカテゴリの選択肢を
+    // 並べ、そこから1つだけ選ぶ形にする(選択の仕組み自体〔selectMood/selectCategoryが
+    // 互いの選択を解除する〕は変更していない)。
 
-    private var categorySection: some View {
+    private var subjectSection: some View {
         Section {
+            Text("雰囲気・色").font(.caption).foregroundStyle(.secondary)
+            chipGrid(items: MoodTag.allCases, isSelected: { settings.selectedMoods.contains($0) }, title: { $0.rawValue }) { tag in
+                selectMood(tag)
+            }
+            if moodMigrationNoticeVisible {
+                Button {
+                    moodMigrationNoticeVisible = false
+                    FilterSettingsStore.moodsDroppedByMigrationNoticePending = false
+                } label: {
+                    Text("分かりました")
+                }
+            }
+
+            Text("カテゴリ").font(.caption).foregroundStyle(.secondary)
             chipGrid(items: libraryIndex.orderedCategories, isSelected: { settings.selectedCategories.contains($0) }, title: { $0.rawValue }) { tag in
                 selectCategory(tag)
             }
@@ -290,7 +285,11 @@ struct FilterOptionsView: View {
         } header: {
             Text("カテゴリ")
         } footer: {
-            Text("雰囲気・色・カテゴリを通して主題は1つだけ選べます。解析済みの候補を先に使い、まだ判定していない写真は表示中に探します。多少の誤検出があります。")
+            if moodMigrationNoticeVisible {
+                Text("以前は雰囲気とカテゴリを両方選べましたが、今はどちらか1つだけになりました。カテゴリの選択を優先したため、以前選んでいた雰囲気の指定は解除されています。")
+            } else {
+                Text("雰囲気・色・カテゴリを通して1つだけ選べます。カテゴリは解析済みの候補を先に使い、まだ判定していない写真は表示中に探します。多少の誤検出があります。")
+            }
         }
     }
 

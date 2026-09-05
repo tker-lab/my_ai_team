@@ -271,3 +271,36 @@ testLegacyPlaceSelection_MigratesAndOffersClear(実行前にxcrun simctl spawn .
 成功、起動コマンド実行後にプロセスが実機上で稼働していることを確認(PID確認)。CEOの写真・動画への
 削除・変更操作は一切行っていない(確認ダイアログのキャンセルのみで検証)。
 2026-09-05 ラベル実測(1)用のDEBUG限定診断(PHOTOTIMER_DIAG_LABELS)を追加、旧・場所診断(検証完了済み)を削除。BUILD SUCCEEDED(実機向け)。
+2026-09-05 実機起動が「ロック中は起動不可」で失敗(既知の制約)。CEOへ解除依頼が必要。2〜4の実装を先に進める。
+2026-09-05 CEOがロック解除。ラベル実測(実機・静止画6042枚から無作為300枚)完了。所要11.60秒、解析成功300/300。
+豚・猿・霊長類系ラベルは本サンプルでは0件(見かけ上の5件はwhiteboard→boar/skyscraper等→apeの部分一致誤検出)。
+人物あり85枚に対しても本物の動物系ラベルは実質0件。詳細数値はapp_team_photo_timer.mdに記録。
+測定後、DiagLabelMeasurement.swiftと呼び出し口(RootView)を削除済み(恒久ルールどおり)。
+2. FixedChoices.swiftにCategoryTag.matchesGeneralClassifierLabel(単語境界一致)を追加、
+ImageAnalyzer.swiftのidentifier.contains($0)を置き換え。car/carpet等の誤爆をスクリプトで検証済み。
+3. FilterOptionsView.swift: 雰囲気・色とカテゴリを1つのSection(見出し「カテゴリ」、場所の下)に統合。
+4. PlaybackSettings.videoAudioMixMode(3択、既定duckOthers)を追加しTimerController.configureAudioForVideoPlayback
+で実装。アラーム経路は変更なし。PlaybackSettingsのCodable追加に伴いdecodeIfPresentベースの
+カスタムinit(from:)を追加(既存保存設定の巻き戻り事故を防止)。
+UIテスト1件追加(testVideoAudioMixModeSelection_ChangesFooterAndPersists)。
+2026-09-05 診断コード削除後に再ビルド・実機(iPhone 14)へ上書きインストールし通常起動を確認(PID 6088)。
+CEOの写真・動画への削除・変更操作は一切行っていない。作業1〜4完了。
+2026-09-05 新規テストtestVideoAudioMixModeSelection_ChangesFooterAndPersists単体実行: 成功。
+既存testNearMatchStreaming_AlwaysShowsSomethingは単体実行でも失敗(20秒でタイムアウト)。
+原因調査: このテストは自分では絞り込みを選ばず、直前のtestImmediateDismiss...が残した
+「暗め+花火」設定に依存する設計。花火は実測(上記1)で0件のため実ライブラリでも恐らく0件、
+内部のzeroResultSearchTimeout(20秒)と本テストの待ち時間(20秒)が同値でマージンが無く、
+内部タイムアウト直後のUI反映が僅かに遅れるとタイムアウト扱いになる。2〜4の変更とは無関係な
+既存の余裕不足と判断(詳細は完了報告に記載)。credit制約のため深追いはせず記録に留める。
+フルスイート(23件、実行時間751秒)は他11件も失敗したが、大半は既知の環境依存
+(専用シミュレータ必要・手動シード必要)または長時間連続実行によるシミュレータ不安定化と判断。
+2026-09-05 追加調査: testPhotoFilterFlow/testVideoFilterFlowも個別実行で失敗(20秒間 media-none/カウントダウン
+不変)。原因特定: testImmediateDismiss_DuringLazyEvaluation_NoBackgroundHangが「暗め+花火」という
+実ライブラリでほぼ0件の絞り込みを選択した後、終了時に「すべて解除」せず残してしまう。
+以降、絞り込みを触らない/上書きしないテスト(testOneSecondTimer/testPhotoDurationSettingAffectsInterval/
+testPhotoFilterFlow/testVideoDurationSettingAffectsCutoff/testVideoFilterFlow/testNearMatchStreaming)が
+この「ほぼ0件」条件を引き継ぎ、内部探索(zeroResultSearchTimeout=20秒)が終わるまで表示されない。
+2〜4の変更(キーワード一致修正・絞り込み画面統合・動画音3択)とは無関係と判断
+(花火カテゴリは新旧いずれのキーワード一致でも実測0件のため、今回の修正で悪化はしていない)。
+根本原因はtestImmediateDismiss側の後始末漏れという既存のテスト設計不備。
+credit制約のため本セッションでは修正せず、次回のテスト整備時の対応事項として記録するに留める。

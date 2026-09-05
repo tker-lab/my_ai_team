@@ -178,14 +178,15 @@ enum ImageAnalyzer {
             confidences[.person] = 2
         }
 
-        // それ以外は一般分類のキーワード一致で拾う(拾いすぎる側に倒す)
+        // それ以外は一般分類のキーワード一致で拾う(拾いすぎる側に倒す)。
+        // 【2026-09-05修正】単語単位の一致に変更(理由・詳細はCategoryTag.matchesGeneralClassifierLabel参照)。
+        // ここで直したのは「文字面がたまたま似ているだけ」の誤り(car→carpet等)であり、
+        // 「見た目が似ている」カテゴリの緩さ(犬→羊)は従来どおり維持している。
         if let classifications = classifyRequest.results {
             for tag in CategoryTag.allCases where tag != .person {
-                let keywords = tag.generalClassifierKeywords
                 let matchingConfidences = classifications.compactMap { observation -> Float? in
                     guard observation.confidence >= generalConfidenceThreshold else { return nil }
-                    let identifier = observation.identifier.lowercased()
-                    return keywords.contains(where: { identifier.contains($0) }) ? observation.confidence : nil
+                    return tag.matchesGeneralClassifierLabel(observation.identifier) ? observation.confidence : nil
                 }
                 if let confidence = matchingConfidences.max() {
                     confidences[tag] = max(confidences[tag] ?? 0, Double(confidence))

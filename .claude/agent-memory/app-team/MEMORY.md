@@ -16,3 +16,4 @@
 - [devicectlでの実機ログ診断手法](devicectl-console-diagnostic-technique.md) — DEBUG+環境変数ゲートの一度きり診断+`--console`でNSLog取得。ロック中は起動不可、CEOに解除依頼が必要
 - [XCUITestのシステムダイアログ追加・自動復元機能の落とし穴](xcuitest-system-dialog-and-autoresume-pitfalls.md) — 新規ダイアログはaddUIInterruptionMonitor必須、自動復元機能はテスト連続実行と衝突しやすい
 - [UIテスト用シミュレータのeraseは未記録の写真ライブラリを破壊する](xcuitest-simulator-erase-destroys-unseeded-photo-library.md) — レシピ不明なら破壊的操作前に必ず立ち止まる
+- [SwiftのCodable自動生成はデフォルト値を無視して丸ごと失敗する](swift-codable-default-value-decode-trap.md) — 設定structに項目追加時はdecodeIfPresentのカスタムinitが必須

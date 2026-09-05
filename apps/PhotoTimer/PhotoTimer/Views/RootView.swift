@@ -22,32 +22,11 @@ struct RootView: View {
         }
         .onAppear {
             libraryManager.refreshAuthorizationStatus()
-            runLabelDiagnosticIfRequested()
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
                 libraryManager.refreshAuthorizationStatus()
             }
         }
-    }
-
-    /// 【2026-09-05追加・調査専用】Visionの一般分類(VNClassifyImageRequest)が実際に
-    /// どんなラベルをどれだけ返すかを実測するための呼び出し口。実測ロジック本体は
-    /// DiagLabelMeasurement.swift(DEBUGビルド限定・検証後に削除予定)にある。
-    /// これまでの「場所」診断(旧runLocationDiagnosticIfRequested。調査完了につき削除済み)と
-    /// 全く同じ設計:普段の起動では何もしない(環境変数を明示的に渡した時だけ動く)・
-    /// DEBUGビルド限定・読み取り専用・結果は件数集計のみをNSLogへ出す。
-    private func runLabelDiagnosticIfRequested() {
-        #if DEBUG
-        guard ProcessInfo.processInfo.environment["PHOTOTIMER_DIAG_LABELS"] == "1" else { return }
-        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-        guard status == .authorized || status == .limited else {
-            NSLog("[PhotoTimer][DiagLabels] 写真アクセスが許可されていないため計測できません")
-            return
-        }
-        Task.detached(priority: .utility) {
-            await DiagLabelMeasurement.run()
-        }
-        #endif
     }
 }

@@ -15,7 +15,55 @@ struct PlaybackSettings: Codable, Equatable {
     /// 既定値は元の固定値(20秒)を維持。
     var videoCapSeconds: Double = 20.0
 
+    /// 動画の音と、他アプリ(音楽アプリ等)の音との関係。CEO要望(2026-09-05)により追加。
+    /// 「自分の音楽を再生しながらタイマーを使う」という使い方を想定し、既定は
+    /// 「音楽を小さくして動画の音を上に乗せる(ダッキング)」にしている。詳細は
+    /// VideoAudioMixMode のコメント・TimerController.activateAudioSessionIfNeeded参照。
+    var videoAudioMixMode: VideoAudioMixMode = .duckOthers
+
     static let `default` = PlaybackSettings()
+
+    init() {}
+
+    /// 【2026-09-05追加:項目を増やしても既存の保存データを壊さないためのカスタムデコード】
+    /// Swiftの自動生成Decodableは「構造体に無いキーがJSON側にあれば無視する」が、
+    /// 逆に「構造体にあるプロパティのキーがJSON側に無い」場合は、そのプロパティに
+    /// デフォルト値が指定されていてもデコード全体が失敗する(デフォルト値は自動では使われない)。
+    /// そのため、この項目(videoAudioMixMode)を追加する前に保存されていた設定ファイルには
+    /// このキー自体が存在せず、何もしなければ自動生成のデコードに任せた場合、
+    /// 読み込み全体が失敗して「写真1枚あたりの表示秒数」等、他の項目まで一緒に既定値へ
+    /// 巻き戻ってしまう(PlaybackSettingsStore.load()がtry?で失敗を握りつぶし.defaultへ
+    /// フォールバックするため、CEOが設定していた値が黙って消える)。
+    /// `decodeIfPresent` で「無ければデフォルト値」という自前の初期化にすることで、
+    /// 古い保存データでも新しい項目だけが既定値、他の項目はそのまま復元されるようにする。
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        photoSlideDurationSeconds = try container.decodeIfPresent(Double.self, forKey: .photoSlideDurationSeconds) ?? 4.0
+        videoPlaybackMode = try container.decodeIfPresent(VideoPlaybackMode.self, forKey: .videoPlaybackMode) ?? .capped
+        videoCapSeconds = try container.decodeIfPresent(Double.self, forKey: .videoCapSeconds) ?? 20.0
+        videoAudioMixMode = try container.decodeIfPresent(VideoAudioMixMode.self, forKey: .videoAudioMixMode) ?? .duckOthers
+    }
+}
+
+/// 動画の音と他アプリの音楽との関係。CEO要望(2026-09-05)。
+///
+/// 【前提】以前は動画再生時に音声セッションのカテゴリ(`.playback`、オプション無し)を
+/// 素で有効化していたため、他アプリ(音楽アプリ等)の再生が動画のたびに強制的に止まっていた。
+/// CEOは「自分の音楽を流しながらタイマーを使う」想定で、「理想は両方流れること」と考えている。
+///
+/// 【アラームへの影響について】この設定は**動画再生時の音声セッション**
+/// (TimerController.activateAudioSessionIfNeeded)にのみ影響する。アラーム(タイマー終了音)は
+/// これとは別の場所(TimerController.playAlarm)で常に `.duckOthers` を使っており、この3択の
+/// どれを選んでも変えない(マナーモードでも鳴る現在の挙動を壊さないため。CEO実機確認済み)。
+enum VideoAudioMixMode: String, Codable, Hashable, CaseIterable {
+    /// 両方そのまま鳴らす。音量調整はしない(AVAudioSessionの `.mixWithOthers` オプション)。
+    case mixWithOthers
+    /// 音楽を小さくして動画の音を上に乗せる(AVAudioSessionの `.duckOthers` オプション)。既定。
+    case duckOthers
+    /// 他アプリの音楽が鳴っている間は動画の音を出さない(自動判定。動画の再生を始める瞬間に
+    /// `AVAudioSession.isOtherAudioPlaying` を見て、鳴っていれば音声セッションを確保せず
+    /// 動画自体をミュートする。鳴っていなければ通常どおり音を出す)。
+    case muteWhenOtherAudioPlaying
 }
 
 /// 動画の再生時間の扱い。

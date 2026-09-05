@@ -546,8 +546,8 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
             if Task.isCancelled { return false }
             let player = AVPlayer(playerItem: playerItem)
             currentPlayer = player
-            activateAudioSessionIfNeeded() // 指摘D: 再生する瞬間だけ音声セッションを確保する
-            player.play() // 動画は音付きで再生(MVP必須要件)
+            configureAudioForVideoPlayback(player: player) // CEO要望(2026-09-05): 動画の音と他アプリの音楽の関係(3択)
+            player.play() // 動画は音付きで再生(MVP必須要件。ただし設定次第でミュートすることがある)
             // 「指定秒数で切り上げる」設定の時だけ上限を設ける。「最後まで再生する」設定の時は上限なし(nil)。
             let timeout: TimeInterval? = playbackSettings.videoPlaybackMode == .capped ? playbackSettings.videoCapSeconds : nil
             await Self.waitForVideoToFinish(player: player, timeout: timeout)
@@ -577,12 +577,55 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
         }
     }
 
-    // MARK: - 音声セッション(指摘D対応 + 軽微指摘対応)
+    // MARK: - 音声セッション(指摘D対応 + 軽微指摘対応 + CEO要望2026-09-05:動画の音と他アプリの音楽の関係)
 
     /// 今、音声セッション(動画の音を鳴らすための権利のようなもの)を確保している最中かどうか。
     /// これを見て「すでに確保済みなら何もしない/まだ確保していなければ確保する」を判断することで、
     /// 動画が連続する時に毎回 確保→解放 を繰り返さないようにする。
     private var isAudioSessionActive = false
+
+    /// 【2026-09-05追加】設定(playbackSettings.videoAudioMixMode)に応じて、動画を再生する
+    /// 直前に音声セッションをどう扱うか・動画自体をミュートするかを決める。
+    ///
+    /// 【なぜ音声セッションだけでなくAVPlayer自体もミュートするのか】
+    /// 「音楽が鳴っている時は動画を無音にする」を実現するには、動画側の音声セッションを
+    /// 確保しないだけでは不十分。仮にセッションを確保しないままplayer.play()すると、
+    /// AVPlayerはアプリの現在の音声セッション(前の動画で確保したまま、あるいはOS既定)の
+    /// 設定に従って音を出そうとしてしまう場合があるため、`player.isMuted` で動画自体を
+    /// 確実に無音にする(=この動画の音だけを止める。他アプリの音楽には一切触れない)。
+    ///
+    /// 【なぜ「無音にする」時に音声セッションを手放すのか】
+    /// `.playback` カテゴリ(mixWithOthers/duckOthers指定なし)のセッションは、鳴らす音自体を
+    /// ミュートしていても「確保している」だけで他アプリの音声を止める・再開させない力を持つ
+    /// (Appleの排他的カテゴリの仕様)。前の動画が「音楽オフ」の時に再生されてセッションを
+    /// 確保したまま、次の動画で「音楽がオン」に変わっていた場合、セッションを手放さずに
+    /// ミュートするだけでは音楽が鳴らない(邪魔したまま)ままになってしまう。
+    /// 「muteWhenOtherAudioPlaying」で無音にする時は必ずセッションも手放すことで、
+    /// 「本当に何もしていない(音楽を一切邪魔しない)」状態を保証する。
+    ///
+    /// 【アラームへの影響は無い】ここで扱うのは動画再生用のセッションのみで、アラーム
+    /// (TimerController.playAlarm)は別の場所で常に `.duckOthers` を使う。この3択のどれを
+    /// 選んでも、アラームがマナーモードでも鳴る挙動(CEO実機確認済み)は変えない。
+    private func configureAudioForVideoPlayback(player: AVPlayer) {
+        switch playbackSettings.videoAudioMixMode {
+        case .mixWithOthers:
+            activateAudioSessionIfNeeded(options: [.mixWithOthers])
+            player.isMuted = false
+        case .duckOthers:
+            activateAudioSessionIfNeeded(options: [.duckOthers])
+            player.isMuted = false
+        case .muteWhenOtherAudioPlaying:
+            if AVAudioSession.sharedInstance().isOtherAudioPlaying {
+                // 他アプリの音楽を一切邪魔しない: セッションを手放し、この動画だけ無音にする。
+                deactivateAudioSessionIfNeeded()
+                player.isMuted = true
+            } else {
+                // 他に鳴っている音が無いので、通常どおり音を出す(ダッキング等の特別な指定は不要)。
+                activateAudioSessionIfNeeded(options: [])
+                player.isMuted = false
+            }
+        }
+    }
 
     /// 動画を再生する瞬間だけ音声セッションを確保する。すでに確保済みなら何もしない
     /// (動画が連続する時に、動画ごとに確保し直して他アプリの音楽を毎回止めてしまうのを防ぐ)。
@@ -591,9 +634,12 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
     /// あるいはタイマーを設定しているだけでも他アプリ(音楽アプリ等)の再生が強制的に止まってしまう
     /// 不具合があった(指摘D)。動画を再生する瞬間だけ確保することで、写真だけが流れている間や
     /// タイマーを使っていない間は他アプリの音楽を邪魔しない。
-    private func activateAudioSessionIfNeeded() {
+    /// - Parameter options: `.mixWithOthers`(両方そのまま鳴らす)/ `.duckOthers`(他を小さくする)/
+    ///   空(特に何も指定しない。他に鳴っている音が無い時用)。CEO要望(2026-09-05)の3択に対応するため
+    ///   呼び出し側(configureAudioForVideoPlayback)が選ぶ。
+    private func activateAudioSessionIfNeeded(options: AVAudioSession.CategoryOptions) {
         guard !isAudioSessionActive else { return }
-        try? AVAudioSession.sharedInstance().setCategory(.playback)
+        try? AVAudioSession.sharedInstance().setCategory(.playback, options: options)
         try? AVAudioSession.sharedInstance().setActive(true)
         isAudioSessionActive = true
     }

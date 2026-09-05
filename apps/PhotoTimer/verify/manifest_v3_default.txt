@@ -1,26 +1,27 @@
-photos permission dialog found=true
-v3_default_01_launch.png	t=8.6s
-v3_default_02_after_start.png	t=12.6s
-v3_default_03_after_start_wait.png	t=13.7s
-v3_default_04_r2.png	t=18.0s
-v3_default_05_r4.png	t=22.3s
-v3_default_06_r6.png	t=26.6s
-v3_default_07_r8.png	t=30.9s
-v3_default_08_r10.png	t=35.2s
-v3_default_09_final.png	t=35.3s
+前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)
+v3_default_01_stray_running_timer_detected.png	t=5.2s
+v3_default_02_launch.png	t=13.2s
+v3_default_03_after_start.png	t=17.1s
+v3_default_04_after_start_wait.png	t=18.3s
+v3_default_05_r2.png	t=22.6s
+v3_default_06_r4.png	t=26.9s
+v3_default_07_r6.png	t=31.2s
+v3_default_08_r8.png	t=35.5s
+v3_default_09_r10.png	t=39.7s
+v3_default_10_final.png	t=39.8s
 
 media identifiers observed (順番):
-  [0] media-photo-2-E2C0E744-EF73-44AC-9700-A7899D035986/L0/001
-  [1] media-photo-2-E2C0E744-EF73-44AC-9700-A7899D035986/L0/001
-  [2] media-photo-3-616A76D3-85DD-4295-BDCF-A2B92489842A/L0/001
-  [3] media-photo-3-616A76D3-85DD-4295-BDCF-A2B92489842A/L0/001
+  [0] media-photo-2-51813117-4A96-4A6F-A600-7F7D100FD13F/L0/001
+  [1] media-photo-2-51813117-4A96-4A6F-A600-7F7D100FD13F/L0/001
+  [2] media-photo-3-77D79367-251C-4AC1-BBA4-0F0C190C3DD4/L0/001
+  [3] media-photo-3-77D79367-251C-4AC1-BBA4-0F0C190C3DD4/L0/001
   [4] media-photo-4-ED7AC36B-A150-4C38-BB8C-B6D696F4F2ED/L0/001
   [5] media-photo-4-ED7AC36B-A150-4C38-BB8C-B6D696F4F2ED/L0/001
-  [6] media-photo-5-106E99A1-4F6A-45A2-B320-B0AD4A8E8473/L0/001
-  [7] media-photo-6-9F983DBA-EC35-42B8-8773-B597CF782EDD/L0/001
-  [8] media-photo-6-9F983DBA-EC35-42B8-8773-B597CF782EDD/L0/001
-  [9] media-photo-7-99D53A1F-FEEF-40E1-8BB3-7DD55A43C8B7/L0/001
+  [6] media-photo-5-9F9E1828-D574-4A50-92F6-93662F8B0DD9/L0/001
+  [7] (none)
+  [8] media-photo-6-CC95F08C-88C3-4012-9D6D-64A413D254B3/L0/001
+  [9] media-photo-7-CBE8908F-2286-4A59-BC5A-5AB12A4B2D55/L0/001
 
-remaining seconds observed (順番): [295, 293, 291, 288, 285, 283, 281, 279, 277, 275]
+remaining seconds observed (順番): [295, 293, 291, 289, 286, 284, 281, 279, 277, 275]
 distinct media count: 6
 video observed: false

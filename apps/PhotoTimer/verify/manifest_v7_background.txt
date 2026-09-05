@@ -1,4 +1,4 @@
-v7_background_01_before_background.png	t=11.0s
-v7_background_02_after_foreground.png	t=18.7s
+v7_background_01_before_background.png	t=10.9s
+v7_background_02_after_foreground.png	t=18.6s
 remaining label after foreground: 00:31
 elapsed in background: 6.0s

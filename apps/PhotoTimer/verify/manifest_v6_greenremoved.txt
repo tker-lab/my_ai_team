@@ -1,4 +1,4 @@
 前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)
-v6_greenremoved_01_stray_running_timer_detected.png	t=5.2s
-v6_greenremoved_02_mood_section.png	t=17.7s
+v6_greenremoved_01_stray_running_timer_detected.png	t=5.3s
+v6_greenremoved_02_mood_section.png	t=17.8s
 v6_greenremoved_03_cool_selected.png	t=18.6s

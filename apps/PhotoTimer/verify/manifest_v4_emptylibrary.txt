@@ -1,4 +1,4 @@
 前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)
-v4_emptylibrary_01_stray_running_timer_detected.png	t=5.2s
-v4_emptylibrary_02_home_with_few_photos.png	t=11.4s
-v4_emptylibrary_03_after_start.png	t=28.7s
+v4_emptylibrary_01_stray_running_timer_detected.png	t=5.3s
+v4_emptylibrary_02_home_with_few_photos.png	t=11.5s
+v4_emptylibrary_03_after_start.png	t=28.9s

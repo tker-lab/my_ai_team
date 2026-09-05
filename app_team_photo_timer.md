@@ -258,6 +258,88 @@ CEOが自分の音楽を再生しながらタイマーを使う想定。「理�
 アラームの挙動(音楽をダッキングして鳴る)は3択のどれを選んでも変えない。
 既定が実際に心地よいかは実機で聴いて判断する。
 
+→ 2026-09-05 実装完了(3択・既定duckOthers・アラーム挙動は不変)。詳細は下記「4件対応」節参照。
+
+## Visionラベル実測・キーワード誤爆修正・絞り込み画面統合・動画音3択(2026-09-05 実施)
+
+CEO指示によりこの順で対応。診断コードは実測後に削除済み(恒久ルールどおり)。
+
+### 1. Visionラベル実測(実機・DEBUG限定診断・読み取り専用)
+
+実機(iPhone 14, CEOの写真ライブラリ、静止画母数6042枚)から無作為300枚をサンプリングし、
+`VNClassifyImageRequest`(一般分類)と`VNDetectHumanRectanglesRequest`(人物検出)を実行。
+所要時間11.60秒、解析成功300/300(取得失敗・Vision失敗いずれも0件)。
+
+**上位ラベル(信頼度0.15以上、出現数の多い順、抜粋):**
+structure145 / people134 / adult99 / wood_processed79 / material57 / outdoor56 / baby55 /
+textile46 / child44 / sky43 / utensil40 / tableware38 / blue_sky38 / land30 / furniture30 /
+plate30 / cloudy29 / fence28 / conveyance26 / document26 / portal25 / art24 / grass21 /
+table20 / clothing20 / screenshot19 / window19 / bowl17 / food15 / illustrations12 / sign11 /
+interior_room11 / plant11 …(以下count=2まで続く。dog/cat/pig/monkey等の単語は上位100件に一切出現せず)
+
+**豚・猿・霊長類系ラベル(pig/hog/swine/boar/monkey/ape/primate/chimpanzee/gorilla/orangutan/baboon を
+手がかり語として検索):見かけ上5件ヒットしたが、すべて無関係な単語への部分一致による誤検出だった。**
+`whiteboard`/`scoreboard`→「boar」を含む、`skyscraper`/`cityscape`/`computer_keyboard`→「ape」を含む、
+という文字面だけの一致で、実際に豚・猿・類人猿を検出したものではない。**豚・猿・霊長類の
+本物のラベルはこの300枚のサンプルには1件も出現しなかった。**(=課金カテゴリ「豚」「猿」を
+実装しても、Visionが実際にそのラベルを返すかどうかはこのサンプルでは確認できていない。
+サンプル数を増やすか、該当しそうな写真がある時に個別確認するのが望ましい)
+
+**人物あり写真(85/300枚、28.3%)に動物系ラベルが出たか:** 唯一の「ヒット」も上記と同じ
+`whiteboard`(信頼度0.330〜0.399)の部分一致による誤検出であり、**人物あり写真に対して
+本物の動物系ラベルが返ったケースは実質0件だった。**「豚や猿を選んだら人の写真が混ざる」が
+実際にどの程度の頻度で起きるかは、今回のサンプルでは確認できなかった(起きるとしても稀、
+またはこのサンプルにたまたま無かっただけの可能性がある)。
+
+**現行 generalClassifierKeywords のカテゴリ別ヒット数(部分一致のまま。誤爆込みの実測値):**
+犬0 / 猫1 / 食べ物15 / 飲み物6 / 花3 / 空43 / 海5 / 山4 / 雪0 / 夜景1 / 花火0 /
+建物・街並み16 / 乗り物4 / スポーツ7 / 動物(犬猫以外)7 / 自然・植物12 / 書類・テキスト72 /
+アート・イラスト28 / 音楽・楽器0
+(空=43は上位ラベルの sky(43)とほぼ一致=正当な一致。書類・テキスト=72、アート・イラスト=28は
+「document/screenshot/art/illustrations」等の実ラベルの合算で大筋説明が付くが、"art"のような
+短いキーワードには他の単語への部分一致が混ざっている可能性がある=2の修正で今後改善される数値)
+
+**今回はこの実測結果を理由にキーワードやカテゴリ一覧を変更していない(CEO指示どおり測定と記録のみ)。**
+
+### 2. 一般分類キーワードの部分一致誤爆を修正
+
+`FixedChoices.swift`に`CategoryTag.matchesGeneralClassifierLabel(_:)`を追加し、
+`ImageAnalyzer.swift`の`identifier.contains($0)`をこれに置き換えた。ラベル・キーワードの両方を
+単語(アンダースコア・空白等で区切る)に分割し、キーワードの単語列がラベルの単語列の中に
+連続した並びとして含まれるかで判定する。`car`→`carpet`/`cartoon`/`carnival`、`ball`→`balloon`、
+`art`→`heart`のような文字面だけの誤爆は起きなくなることをスクリプトで確認済み。信頼度の
+しきい値(0.15/0.3)、カテゴリの緩さ(犬→羊等)は変更していない。副次的に、`night`カテゴリの
+`"dark sky"`キーワード(スペース区切り)がVisionの実際の区切り文字(アンダースコア)と食い違って
+一度も一致していなかった不具合も、この修正で自然に解消した。
+
+### 3. 絞り込み画面:雰囲気・色とカテゴリを1つの枠に統合
+
+`FilterOptionsView.swift`で、別々だった「雰囲気・色」セクションと「カテゴリ」セクションを
+1つのSection(見出し「カテゴリ」、場所セクションの下)にまとめた。中で「雰囲気・色」
+「カテゴリ」の2グループが並ぶ見た目は保ちつつ、枠(Section)は1つにしたことで
+「両方から1つずつ選べる」ように見える問題を解消した。選択ロジック(片方を選ぶと
+もう片方が自動的に外れる)自体は変更していない。
+
+### 4. 動画の音と他アプリの音楽の3択を実装
+
+`PlaybackSettings`に`videoAudioMixMode`(`mixWithOthers`/`duckOthers`〔既定〕/
+`muteWhenOtherAudioPlaying`)を追加し、設定画面(歯車)に選択肢を追加。
+`TimerController.configureAudioForVideoPlayback(player:)`が動画再生の瞬間に判定する:
+`muteWhenOtherAudioPlaying`選択時は`AVAudioSession.isOtherAudioPlaying`を見て、他の音楽が
+鳴っていればこちらの音声セッションを手放し動画自体もミュート(音楽を一切邪魔しない)、
+鳴っていなければ通常どおり音を出す。アラーム(`TimerController.playAlarm`)は別経路のままで、
+この3択のどれを選んでもアラームの挙動(マナーモードでも鳴る)は変えていない。
+
+**実装上の副次的な発見(他アプリでも起きうる一般的な注意点):** `PlaybackSettings`のように
+Codable構造体へ後からプロパティ(デフォルト値あり)を追加すると、Swiftの自動生成デコードは
+「JSON側にそのキーが無ければデフォルト値を使う」動作をせず、デコード全体が失敗して
+**他の項目も含めて丸ごと既定値に巻き戻ってしまう**(UserDefaults上の旧データはそのまま
+壊れずに残るが、読み込み側が黙って諦めて上書きしてしまう形)。今回`videoAudioMixMode`
+追加にあたり、`decodeIfPresent`を使うカスタム`init(from:)`を書いて回避した。
+**他の設定用Codable構造体(FilterSettings・AlarmSettings等)に今後フィールドを追加する時も
+同じ対策が必要。**(→ app-team部署メモリにも記録。ライフサポート部等、端末内にJSON設定を
+保存する仕組みを作る場合にも当てはまる一般的な注意点)
+
 ### 課金カテゴリの追加指示(2026-09-05 CEO)
 
 課金カテゴリとして入れるのは **豚・猿** の2つ(CEO指示)。
@@ -272,3 +354,19 @@ CEOが自分の音楽を再生しながらタイマーを使う想定。「理�
   「他者を貶める内容」に触れうる。
 
 豚・猿についても処理はA案(人の写真を意図的に混ぜる細工はしない)を維持する。
+
+## 【要修正・次回】既存UIテストの後始末漏れ(2026-09-05発見)
+
+`testImmediateDismiss_DuringLazyEvaluation_NoBackgroundHang`が絞り込みを「暗め+花火」
+(実ライブラリでほぼ0件)に設定した後、「すべて解除」で戻さずに終了する。この状態は
+UserDefaults/端末内ファイルに残るため、以降に実行される・絞り込みを自分で設定し直さないテスト
+(testOneSecondTimer/testPhotoDurationSettingAffectsInterval/testPhotoFilterFlow/
+testVideoDurationSettingAffectsCutoff/testVideoFilterFlow/testNearMatchStreaming)が
+この「ほぼ0件」条件を引き継いでしまい、内部の探索打ち切り(20秒)が終わるまで写真が
+表示されず、観測ウィンドウ内に間に合わず失敗する。2026-09-05のフルスイート実行で
+23件中15件が失敗し、その大半がこれに該当すると判明(個別実行でも再現確認済み)。
+
+**今回の4件の実装(実測・キーワード一致修正・絞り込み画面統合・動画音3択)とは無関係。**
+花火カテゴリは新旧いずれのキーワード一致方式でも実測0件のため、今回の修正で悪化してはいない。
+**次回のテスト整備で `testImmediateDismiss_DuringLazyEvaluation_NoBackgroundHang` の最後に
+「すべて解除」を追加するか、各テストの冒頭で絞り込みをリセットする対応が必要。**

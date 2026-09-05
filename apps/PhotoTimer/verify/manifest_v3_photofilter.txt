@@ -1,24 +1,26 @@
-v3_photofilter_01_after_start.png	t=18.6s
-v3_photofilter_02_after_start_wait.png	t=19.7s
-v3_photofilter_03_r2.png	t=24.0s
-v3_photofilter_04_r4.png	t=28.3s
-v3_photofilter_05_r6.png	t=32.6s
-v3_photofilter_06_r8.png	t=36.9s
-v3_photofilter_07_r10.png	t=41.3s
-v3_photofilter_08_final.png	t=41.4s
+前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)
+v3_photofilter_01_stray_running_timer_detected.png	t=5.2s
+v3_photofilter_02_after_start.png	t=24.0s
+v3_photofilter_03_after_start_wait.png	t=25.2s
+v3_photofilter_04_r2.png	t=29.6s
+v3_photofilter_05_r4.png	t=33.9s
+v3_photofilter_06_r6.png	t=38.2s
+v3_photofilter_07_r8.png	t=42.5s
+v3_photofilter_08_r10.png	t=46.8s
+v3_photofilter_09_final.png	t=46.9s
 
 media identifiers observed (順番):
-  [0] media-photo-6-6A653F27-3CEB-46B9-8C1C-85244DC19E6C/L0/001
-  [1] media-photo-8-8D89972F-6979-49DD-B2E8-1C0F45482C1A/L0/001
-  [2] media-photo-10-CC95F08C-88C3-4012-9D6D-64A413D254B3/L0/001
-  [3] media-photo-12-B3E5CC04-05DA-44F6-B2D5-A8B17DBE6577/L0/001
-  [4] media-photo-14-80CD1D88-662F-4131-A6C2-7B95F976C28C/L0/001
-  [5] media-photo-16-E1020EAD-5ED5-4D0B-8BFF-EE6EF4204A8C/L0/001
-  [6] media-photo-18-AC5455A6-337A-4D15-BCA0-2A1D621D0E3A/L0/001
-  [7] media-photo-20-8D89972F-6979-49DD-B2E8-1C0F45482C1A/L0/001
-  [8] media-photo-22-CC95F08C-88C3-4012-9D6D-64A413D254B3/L0/001
-  [9] media-photo-24-99D53A1F-FEEF-40E1-8BB3-7DD55A43C8B7/L0/001
+  [0] (none)
+  [1] (none)
+  [2] (none)
+  [3] (none)
+  [4] (none)
+  [5] (none)
+  [6] (none)
+  [7] (none)
+  [8] (none)
+  [9] (none)
 
-remaining seconds observed (順番): [295, 293, 291, 289, 286, 283, 281, 279, 277, 275]
-distinct media count: 10
+remaining seconds observed (順番): [300, 300, 300, 300, 300, 300, 300, 300, 300, 300]
+distinct media count: 0
 video observed: false

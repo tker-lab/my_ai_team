@@ -46,6 +46,12 @@ import XCTest
 ///  17. testAlarmSettings_UntilStoppedShowsStopButton … アラーム設定画面で「止めるまで鳴り続ける」を
 ///      選んでからタイマーを実行し、タイマー終了後に「アラームを止める」ボタンが表示され、
 ///      押すと「閉じる」に切り替わることを確認する(CEO要望の鳴らし方切り替え機能の回帰テスト)。
+///
+/// v8シナリオ(2026-09-05 実測・誤爆修正・絞り込み画面統合・動画の音3択対応の検証):
+///  18. testVideoAudioMixModeSelection_ChangesFooterAndPersists … 設定画面の「動画の音と他アプリの音楽」
+///      3択(両方そのまま鳴らす/音楽を小さくして重ねる〔既定〕/音楽が鳴っていたら動画は無音)を選び直すと
+///      説明文が切り替わり、設定を閉じて開き直しても選択が保存されていること、動画フィルタで実際に
+///      スタートしてもクラッシュしないことを確認する。
 final class PhotoTimerUITests: XCTestCase {
 
     /// utility除外・解析失敗も同じbeginCandidateを通るため、種類に関係なく18件で停止する。
@@ -1085,6 +1091,63 @@ final class PhotoTimerUITests: XCTestCase {
         recorder.shoot(app, label: "aesthetics_enabled")
         recorder.writeManifest()
         app.buttons["完了"].tap()
+    }
+
+    /// v8シナリオ(2026-09-05 CEO要望「動画の音と他アプリの音楽の関係」):
+    /// 設定画面に3択(両方そのまま鳴らす/音楽を小さくして重ねる〔既定〕/音楽が鳴っていたら動画は無音)が
+    /// 表示され、選び直すたびに説明文(footer)が切り替わり、選んだ内容が保存される
+    /// (設定画面を閉じて開き直しても前回選んだものが残る)ことを確認する。
+    /// あわせて、動画フィルタでスタートしても(=実際に動画の音声パスを通っても)クラッシュしないことを
+    /// 確認する(音声セッションまわりの変更が実際の再生を壊していないかの回帰確認)。
+    func testVideoAudioMixModeSelection_ChangesFooterAndPersists() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v8_audiomix")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+
+        let settingsButton = app.buttons["playbackSettingsButton"]
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 10), "設定(歯車)ボタンが見つからない")
+        settingsButton.tap()
+
+        let mixWithOthersOption = app.buttons["両方そのまま鳴らす"]
+        let duckOthersOption = app.buttons["音楽を小さくして重ねる"]
+        let muteOption = app.buttons["音楽が鳴っていたら動画は無音"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: mixWithOthersOption), "「両方そのまま鳴らす」の選択肢が見つからない")
+        XCTAssertTrue(duckOthersOption.exists, "「音楽を小さくして重ねる」の選択肢が見つからない")
+        XCTAssertTrue(muteOption.exists, "「音楽が鳴っていたら動画は無音」の選択肢が見つからない")
+
+        // 既定は「音楽を小さくして重ねる」(duckOthers)のはず。
+        XCTAssertTrue(app.staticTexts["音楽アプリなどを流しながらタイマーを使うと、その音楽を少し小さくして、上に動画の音を重ねて鳴らします。"].waitForExistence(timeout: 5), "既定の説明文(ダッキング)が表示されていない")
+        recorder.shoot(app, label: "default_duck")
+
+        mixWithOthersOption.tap()
+        XCTAssertTrue(app.staticTexts["音楽アプリなどを流しながらタイマーを使うと、動画の音と両方がそのまま鳴ります。音量の調整はされません。"].waitForExistence(timeout: 5), "「両方そのまま鳴らす」選択後の説明文に切り替わっていない")
+        recorder.shoot(app, label: "mix_with_others")
+
+        muteOption.tap()
+        XCTAssertTrue(app.staticTexts["音楽アプリなどが鳴っている間は、動画の音を出しません(音楽はそのままの音量で流れ続けます)。何も鳴っていない時は動画の音を通常どおり出します。"].waitForExistence(timeout: 5), "「音楽が鳴っていたら動画は無音」選択後の説明文に切り替わっていない")
+        recorder.shoot(app, label: "mute_when_other_audio")
+
+        app.buttons["完了"].tap()
+
+        // 設定画面を開き直しても、直前に選んだ「音楽が鳴っていたら動画は無音」が保存されたままであること。
+        settingsButton.tap()
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: app.buttons["音楽が鳴っていたら動画は無音"]))
+        XCTAssertTrue(app.staticTexts["音楽アプリなどが鳴っている間は、動画の音を出しません(音楽はそのままの音量で流れ続けます)。何も鳴っていない時は動画の音を通常どおり出します。"].exists, "設定を閉じて開き直すと選択が保存されていない")
+
+        // 次回以降のテストに影響しないよう、既定(ダッキング)に戻してから閉じる。
+        app.buttons["音楽を小さくして重ねる"].tap()
+        app.buttons["完了"].tap()
+
+        // 動画フィルタで実際にスタートしても、音声セッションまわりの変更でクラッシュしないことを確認。
+        try Self.selectMediaTypeFilter(app: app, label: "動画")
+        let startButton = app.buttons["startButton"]
+        XCTAssertTrue(startButton.waitForExistence(timeout: 15))
+        startButton.tap()
+        Thread.sleep(forTimeInterval: 2.0)
+        recorder.shoot(app, label: "after_start_with_video")
+        XCTAssertEqual(app.state, .runningForeground, "動画の音の設定変更後、動画フィルタでスタートするとアプリが落ちた")
+        recorder.writeManifest()
     }
 
     // MARK: - 共通処理: スクロールしないと現れない要素を探す

@@ -52,6 +52,20 @@ struct PlaybackSettingsView: View {
                          ? "動画は最後まで再生されます。ただしタイマーの残り時間より動画が長い場合は、タイマー終了と同時にそこで打ち切られます。"
                          : "指定した秒数に達したら、動画の途中でも次の写真・動画に切り替えます。")
                 }
+
+                Section {
+                    Picker("動画の音", selection: $settings.videoAudioMixMode) {
+                        Text("両方そのまま鳴らす").tag(VideoAudioMixMode.mixWithOthers)
+                        Text("音楽を小さくして重ねる").tag(VideoAudioMixMode.duckOthers)
+                        Text("音楽が鳴っていたら動画は無音").tag(VideoAudioMixMode.muteWhenOtherAudioPlaying)
+                    }
+                    .pickerStyle(.inline)
+                    .accessibilityIdentifier("videoAudioMixModePicker")
+                } header: {
+                    Text("動画の音と他アプリの音楽")
+                } footer: {
+                    Text(videoAudioMixModeFooter)
+                }
             }
             .navigationTitle("表示設定")
             .toolbar {
@@ -68,5 +82,17 @@ struct PlaybackSettingsView: View {
             return "\(Int(value))秒"
         }
         return String(format: "%.1f秒", value)
+    }
+
+    /// 選んでいる項目に応じた説明文。判定の内部事情には触れず、実際に起きることだけを書く。
+    private var videoAudioMixModeFooter: String {
+        switch settings.videoAudioMixMode {
+        case .mixWithOthers:
+            return "音楽アプリなどを流しながらタイマーを使うと、動画の音と両方がそのまま鳴ります。音量の調整はされません。"
+        case .duckOthers:
+            return "音楽アプリなどを流しながらタイマーを使うと、その音楽を少し小さくして、上に動画の音を重ねて鳴らします。"
+        case .muteWhenOtherAudioPlaying:
+            return "音楽アプリなどが鳴っている間は、動画の音を出しません(音楽はそのままの音量で流れ続けます)。何も鳴っていない時は動画の音を通常どおり出します。"
+        }
     }
 }

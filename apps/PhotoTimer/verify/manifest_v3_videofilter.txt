@@ -1,10 +1,11 @@
-photos permission dialog found=true
-v3_videofilter_01_after_start.png	t=19.4s
-v3_videofilter_02_r1_media-video-1-1EBB9C8F-E8E9-4C14-997B-318D5946BDA8-L0-001.png	t=21.5s
-v3_videofilter_03_r2_media-video-1-1EBB9C8F-E8E9-4C14-997B-318D5946BDA8-L0-001.png	t=23.6s
-v3_videofilter_04_r3_media-video-1-1EBB9C8F-E8E9-4C14-997B-318D5946BDA8-L0-001.png	t=25.8s
-v3_videofilter_05_r4_media-video-1-1EBB9C8F-E8E9-4C14-997B-318D5946BDA8-L0-001.png	t=27.9s
-v3_videofilter_06_r5_media-video-1-1EBB9C8F-E8E9-4C14-997B-318D5946BDA8-L0-001.png	t=30.0s
-v3_videofilter_07_r6_media-video-1-1EBB9C8F-E8E9-4C14-997B-318D5946BDA8-L0-001.png	t=32.1s
-v3_videofilter_08_r7_media-video-1-1EBB9C8F-E8E9-4C14-997B-318D5946BDA8-L0-001.png	t=34.3s
-v3_videofilter_09_r8_media-video-1-1EBB9C8F-E8E9-4C14-997B-318D5946BDA8-L0-001.png	t=36.4s
+前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)
+v3_videofilter_01_stray_running_timer_detected.png	t=5.2s
+v3_videofilter_02_after_start.png	t=23.2s
+v3_videofilter_03_r1_none.png	t=25.4s
+v3_videofilter_04_r2_none.png	t=27.5s
+v3_videofilter_05_r3_none.png	t=29.7s
+v3_videofilter_06_r4_none.png	t=31.8s
+v3_videofilter_07_r5_none.png	t=34.0s
+v3_videofilter_08_r6_none.png	t=36.1s
+v3_videofilter_09_r7_none.png	t=38.3s
+v3_videofilter_10_r8_none.png	t=40.5s
