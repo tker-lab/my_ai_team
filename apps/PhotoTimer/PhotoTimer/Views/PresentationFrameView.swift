@@ -23,6 +23,15 @@ struct PresentationFrameView: View {
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
         )
+        // 斜めの動きは「写真を斜めに切るマスク」ではなく、画面の上を通る細い光として描く。
+        // これなら縦横どちらの写真でも、主画像が途中で欠けて見えることはない。
+        .overlay {
+            if frame.transition == .diagonalWipe {
+                DiagonalLightSweep()
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+            }
+        }
         .onAppear {
             startFullScreenAnimationIfNeeded()
             triggerFlashIfNeeded()
@@ -129,7 +138,10 @@ struct PresentationFrameView: View {
             // リズムで作る。ここでは拡大を伴わないフェードだけを使う。
             return .opacity
         case .diagonalWipe:
-            return .diagonalWipe
+            // 以前はここで画面全体(=写真本体を含む)を斜めの形にマスクしていたため、
+            // スタジアムビジョン風で写真が斜めに欠けて見えることがあった。写真の切り抜きは
+            // しない方針なので、切り替え自体はフェード、斜め要素は上の光の帯だけにする。
+            return .opacity
         }
     }
 
@@ -172,42 +184,95 @@ struct PresentationFrameView: View {
     }
 }
 
-// MARK: - 斜めのワイプ(スタジアムビジョン風)
+// MARK: - 写真を切らない斜めの光
 
-private struct DiagonalWipeModifier: ViewModifier, Animatable {
-    /// 0 = 完全に隠れている、1 = 完全に見えている。
-    var progress: CGFloat
+private struct DiagonalLightSweep: View {
+    @State private var offset: CGFloat = -1.4
 
-    func body(content: Content) -> some View {
-        content.mask(
-            GeometryReader { geo in
-                let w = geo.size.width
-                let h = geo.size.height
-                let shift = w * (1 - progress) * 1.4
-                Path { path in
-                    path.move(to: CGPoint(x: -shift - h * 0.6, y: 0))
-                    path.addLine(to: CGPoint(x: w - shift, y: 0))
-                    path.addLine(to: CGPoint(x: w - shift - h * 0.6, y: h))
-                    path.addLine(to: CGPoint(x: -shift, y: h))
-                    path.closeSubpath()
-                }
-                .fill(Color.white)
-            }
-        )
-    }
-
-    var animatableData: CGFloat {
-        get { progress }
-        set { progress = newValue }
+    var body: some View {
+        GeometryReader { geo in
+            Rectangle()
+                .fill(.white.opacity(0.42))
+                .frame(width: max(90, geo.size.width * 0.18), height: geo.size.height * 1.8)
+                .blur(radius: 16)
+                .rotationEffect(.degrees(24))
+                .offset(x: offset * geo.size.width)
+        }
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.65)) { offset = 1.4 }
+        }
     }
 }
 
-extension AnyTransition {
-    /// 斜めの帯が画面を横切りながら切り替わる「ワイプ」演出。
-    fileprivate static var diagonalWipe: AnyTransition {
-        .modifier(
-            active: DiagonalWipeModifier(progress: 0),
-            identity: DiagonalWipeModifier(progress: 1)
-        )
+/// 主写真・動画には一切マスクを掛けず、周囲だけで世界観を作る装飾。
+/// 表示順から決まる3段階のため、ランダムではなく固定順で変化する。
+struct PresentationDecorationOverlay: View {
+    let pattern: PresentationPattern
+    let variation: Int
+    private var phase: Int { variation % 3 }
+
+    var body: some View {
+        if pattern != .classic {
+            GeometryReader { geo in
+                ZStack {
+                    switch pattern {
+                    case .weddingFilm: wedding(geo.size)
+                    case .stadiumVision: stadium(geo.size)
+                    case .retirementCeremony: retirement(geo.size)
+                    case .blooperCredits: bloopers(geo.size)
+                    case .classic: EmptyView()
+                    }
+                }.frame(width: geo.size.width, height: geo.size.height)
+            }
+            .allowsHitTesting(false).accessibilityHidden(true)
+        }
     }
+
+    private func wedding(_ size: CGSize) -> some View {
+        ZStack {
+            LinearGradient(colors: [.clear, Color(red: 0.93, green: 0.77, blue: 0.47).opacity(0.24), .clear], startPoint: .topLeading, endPoint: .bottomTrailing)
+            RoundedRectangle(cornerRadius: 26).stroke(LinearGradient(colors: [.white.opacity(0.95), Color(red: 0.88, green: 0.66, blue: 0.27), .white.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: phase == 1 ? 7 : 4).padding(phase == 2 ? 18 : 28)
+            Image(systemName: "sparkle").font(.system(size: 20)).foregroundStyle(.white.opacity(0.85)).position(x: 30, y: 55)
+            Image(systemName: "sparkle").font(.system(size: 13)).foregroundStyle(.white.opacity(0.85)).position(x: size.width - 28, y: 70)
+            if phase != 1 { HStack(spacing: 8) { capsule; capsule; capsule }.frame(width: 120).position(x: size.width / 2, y: 25) }
+        }
+    }
+
+    private func stadium(_ size: CGSize) -> some View {
+        ZStack {
+            LinearGradient(colors: [Color.black.opacity(0.15), Color(red: 0.02, green: 0.14, blue: 0.28).opacity(0.55), .black.opacity(0.15)], startPoint: .top, endPoint: .bottom)
+            ledStrip.frame(height: phase == 1 ? 12 : 8).position(x: size.width / 2, y: 15)
+            ledStrip.frame(height: phase == 1 ? 12 : 8).position(x: size.width / 2, y: size.height - 15)
+            RoundedRectangle(cornerRadius: 10).stroke(Color.cyan.opacity(0.9), lineWidth: phase == 2 ? 5 : 3).shadow(color: .cyan.opacity(0.8), radius: 8).padding(phase == 0 ? 20 : 30)
+            HStack { score("LIVE"); Spacer(); score(phase == 2 ? "REPLAY" : "MOMENT") }.padding(.horizontal, 28).frame(width: size.width).position(x: size.width / 2, y: 31)
+        }
+    }
+
+    private func retirement(_ size: CGSize) -> some View {
+        ZStack {
+            LinearGradient(colors: [Color(red: 0.01, green: 0.04, blue: 0.12).opacity(0.5), .clear, Color(red: 0.01, green: 0.04, blue: 0.12).opacity(0.5)], startPoint: .top, endPoint: .bottom)
+            spotlight(-28).position(x: size.width * 0.18, y: size.height * 0.08)
+            spotlight(28).position(x: size.width * 0.82, y: size.height * 0.08)
+            RoundedRectangle(cornerRadius: 8).stroke(LinearGradient(colors: [.gray, Color(red: 0.8, green: 0.63, blue: 0.28), .gray], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: phase == 0 ? 4 : 7).padding(phase == 1 ? 26 : 18)
+            Text(phase == 2 ? "A MOMENT TO REMEMBER" : "THANK YOU").font(.system(size: 11, weight: .heavy, design: .rounded)).foregroundStyle(.white.opacity(0.9)).position(x: size.width / 2, y: 24)
+        }
+    }
+
+    private func bloopers(_ size: CGSize) -> some View {
+        ZStack {
+            Color(red: 0.98, green: 0.68, blue: 0.21).opacity(0.12)
+            RoundedRectangle(cornerRadius: 6).stroke(Color.black.opacity(0.88), lineWidth: phase == 1 ? 15 : 11).padding(phase == 2 ? 14 : 22)
+            filmHoles.position(x: size.width / 2, y: 15)
+            filmHoles.position(x: size.width / 2, y: size.height - 15)
+            Text(phase == 0 ? "TAKE TWO" : "OUTTAKE").font(.system(size: 11, weight: .black, design: .rounded)).foregroundStyle(.white).padding(.horizontal, 14).padding(.vertical, 7).background(.black.opacity(0.65), in: Capsule()).position(x: size.width / 2, y: 25)
+            confetti(.pink, x: 20, y: 95); confetti(.cyan, x: size.width - 25, y: size.height - 100)
+        }
+    }
+
+    private var capsule: some View { Capsule().fill(.white.opacity(0.8)).frame(height: 3) }
+    private var ledStrip: some View { HStack(spacing: 4) { ForEach(0..<38, id: \.self) { _ in Circle().fill(.cyan.opacity(0.9)).frame(width: 3, height: 3) } } }
+    private var filmHoles: some View { HStack(spacing: 8) { ForEach(0..<14, id: \.self) { _ in RoundedRectangle(cornerRadius: 1).fill(.black).frame(width: 11, height: 5) } } }
+    private func score(_ text: String) -> some View { Text(text).font(.system(size: 9, weight: .black, design: .monospaced)).foregroundStyle(.cyan).padding(.horizontal, 8).padding(.vertical, 5).background(.black.opacity(0.72), in: RoundedRectangle(cornerRadius: 3)).overlay(RoundedRectangle(cornerRadius: 3).stroke(.cyan.opacity(0.7), lineWidth: 1)) }
+    private func spotlight(_ angle: Double) -> some View { Rectangle().fill(LinearGradient(colors: [.white.opacity(0.22), .clear], startPoint: .top, endPoint: .bottom)).frame(width: 80, height: 380).rotationEffect(.degrees(angle)).blur(radius: 5) }
+    private func confetti(_ color: Color, x: CGFloat, y: CGFloat) -> some View { RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 10, height: 18).rotationEffect(.degrees(phase == 1 ? 32 : -24)).position(x: x, y: y) }
 }

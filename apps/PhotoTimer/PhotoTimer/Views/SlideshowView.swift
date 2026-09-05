@@ -61,6 +61,16 @@ struct SlideshowView: View {
                     .foregroundStyle(.white)
             }
 
+            // 演出の装飾は常に写真・動画の「外側」に重ねるだけ。主素材を切り抜いたり、
+            // 顔などを避けるための推測を行ったりしないため、縦横どちらの素材でも全体が分かる。
+            if playbackSettings.presentationPattern != .classic {
+                PresentationDecorationOverlay(
+                    pattern: playbackSettings.presentationPattern,
+                    variation: controller.displayToken
+                )
+                .ignoresSafeArea()
+            }
+
             VStack {
                 topBar
                 Spacer()
