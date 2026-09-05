@@ -22,7 +22,7 @@ struct RootView: View {
         }
         .onAppear {
             libraryManager.refreshAuthorizationStatus()
-            runLocationDiagnosticIfRequested()
+            runLabelDiagnosticIfRequested()
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
@@ -31,42 +31,22 @@ struct RootView: View {
         }
     }
 
-    /// 【2026-09-04追加・調査専用】「場所」の絞り込みが「位置情報付きの写真が見つかりませんでした」に
-    /// なる件の事実確認のためだけの診断コード。
-    ///
-    /// CEOの実機で「本当に位置情報付きの写真が無いのか」「実装側が読み取れていないだけなのか」を
-    /// 切り分けるために追加した。普段の起動では何もしない(下記の環境変数を明示的に渡した時だけ動く)。
-    /// - CEOが普段アプリを使う時に動くことは無い(環境変数は開発者がXcode/devicectl経由で明示的に
-    ///   渡さない限りセットされない)。
-    /// - DEBUGビルドのみに存在するコードで、リリース版には含まれない。
-    /// - 何をするか:写真ライブラリ全体を1回だけ数え、「位置情報付きの枚数/全体の枚数」と
-    ///   写真アクセス許可の状態をコンソールログ(NSLog)に出すだけ。結果は端末内のログに残るのみで、
-    ///   外部へは一切送信しない。CEOの写真そのもの(画像データ)は見ない・保存しない。
-    /// - 通常のスキャン(原則4)には影響しない。ここでの全件列挙は診断専用の一度きりの処理で、
-    ///   LibraryIndex側の「場所」データ(place_clusters.json 等)には一切書き込まない。
-    private func runLocationDiagnosticIfRequested() {
+    /// 【2026-09-05追加・調査専用】Visionの一般分類(VNClassifyImageRequest)が実際に
+    /// どんなラベルをどれだけ返すかを実測するための呼び出し口。実測ロジック本体は
+    /// DiagLabelMeasurement.swift(DEBUGビルド限定・検証後に削除予定)にある。
+    /// これまでの「場所」診断(旧runLocationDiagnosticIfRequested。調査完了につき削除済み)と
+    /// 全く同じ設計:普段の起動では何もしない(環境変数を明示的に渡した時だけ動く)・
+    /// DEBUGビルド限定・読み取り専用・結果は件数集計のみをNSLogへ出す。
+    private func runLabelDiagnosticIfRequested() {
         #if DEBUG
-        guard ProcessInfo.processInfo.environment["PHOTOTIMER_DIAG_LOCATION"] == "1" else { return }
+        guard ProcessInfo.processInfo.environment["PHOTOTIMER_DIAG_LABELS"] == "1" else { return }
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-        NSLog("[PhotoTimer][Diag] authorizationStatus=\(status.rawValue) (0=notDetermined,1=restricted,2=denied,3=authorized,4=limited)")
         guard status == .authorized || status == .limited else {
-            NSLog("[PhotoTimer][Diag] 写真アクセスが許可されていないため件数を数えられません")
+            NSLog("[PhotoTimer][DiagLabels] 写真アクセスが許可されていないため計測できません")
             return
         }
         Task.detached(priority: .utility) {
-            let fetchResult = PHAsset.fetchAssets(with: nil)
-            var total = 0
-            var withLocation = 0
-            var photoWithLocation = 0
-            var videoWithLocation = 0
-            fetchResult.enumerateObjects { asset, _, _ in
-                total += 1
-                if asset.location != nil {
-                    withLocation += 1
-                    if asset.mediaType == .video { videoWithLocation += 1 } else { photoWithLocation += 1 }
-                }
-            }
-            NSLog("[PhotoTimer][Diag] total=\(total) withLocation=\(withLocation) (photo=\(photoWithLocation) video=\(videoWithLocation))")
+            await DiagLabelMeasurement.run()
         }
         #endif
     }

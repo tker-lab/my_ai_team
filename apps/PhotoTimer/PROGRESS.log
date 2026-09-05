@@ -270,3 +270,4 @@ testLegacyPlaceSelection_MigratesAndOffersClear(実行前にxcrun simctl spawn .
 2026-09-05 実機(iPhone 14, takayukiのiPhone (2))向けビルド: BUILD SUCCEEDED。devicectlで上書きインストール
 成功、起動コマンド実行後にプロセスが実機上で稼働していることを確認(PID確認)。CEOの写真・動画への
 削除・変更操作は一切行っていない(確認ダイアログのキャンセルのみで検証)。
+2026-09-05 ラベル実測(1)用のDEBUG限定診断(PHOTOTIMER_DIAG_LABELS)を追加、旧・場所診断(検証完了済み)を削除。BUILD SUCCEEDED(実機向け)。
