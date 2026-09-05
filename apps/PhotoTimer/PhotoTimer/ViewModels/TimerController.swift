@@ -429,7 +429,15 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
             var displayedAnyThisPass = false // 実際に1枚でも表示できたか(読み込み失敗を除く)
 
             while phase == .running, !Task.isCancelled {
-                guard let asset = await engine.next() else { break } // このシャッフル分は全部試し終えた
+                guard let asset = await engine.next() else {
+                    // 18件/0.8秒の探索予算で一旦区切っただけなら、UIへ制御を返して次の呼び出しで続行。
+                    // nilを「全件0」と誤解してタイマーを終了しない。
+                    if await engine.hasPendingSearchWork {
+                        await Task.yield()
+                        continue
+                    }
+                    break
+                }
                 sawAnyCandidateThisPass = true
                 if Task.isCancelled { break }
                 currentAsset = asset

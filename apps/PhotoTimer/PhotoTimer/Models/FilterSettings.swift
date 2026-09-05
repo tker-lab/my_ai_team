@@ -57,6 +57,15 @@ enum FilterSettingsStore {
     }()
 
     static func load() -> FilterSettings {
+        #if DEBUG
+        // 回帰テスト専用。保存済み設定に左右されず、画像解析が必要な厳しい条件で探索中断を試す。
+        if ProcessInfo.processInfo.environment["PHOTOTIMER_UI_TEST_SEARCH_BUDGET"] == "1" {
+            var testSettings = FilterSettings.default
+            testSettings.selectedMoods = [.dark]
+            testSettings.selectedCategories = [.fireworks]
+            return testSettings
+        }
+        #endif
         if let data = try? Data(contentsOf: fileURL),
            let decoded = try? JSONDecoder().decode(FilterSettings.self, from: data) {
             return migrateAwayFromGreen(decoded)

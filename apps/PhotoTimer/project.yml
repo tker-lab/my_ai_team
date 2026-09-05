@@ -41,6 +41,8 @@ targets:
     deploymentTarget: "17.0"
     sources:
       - path: PhotoTimerUITests
+      # 探索予算・世代付きキューは本体と同じソースを直接テストする。
+      - path: PhotoTimer/Models/CandidateSearchCoordination.swift
     settings:
       base:
         SWIFT_VERSION: "5.0"

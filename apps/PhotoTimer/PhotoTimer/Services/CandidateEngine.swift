@@ -2,48 +2,48 @@ import Foundation
 import Photos
 import CoreLocation
 
+/// 解析完了と時間切れのうち、先に来た結果だけをcontinuationへ返すための小さな同期箱。
+private final class FirstResultBox<Value>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<Value, Never>?
+    private var finished = false
+
+    init(_ continuation: CheckedContinuation<Value, Never>) { self.continuation = continuation }
+
+    func finish(_ value: Value) {
+        lock.lock()
+        guard !finished else { lock.unlock(); return }
+        finished = true
+        let continuation = continuation
+        self.continuation = nil
+        lock.unlock()
+        continuation?.resume(returning: value)
+    }
+}
+
 /// スライドショーの「次の1枚」を選ぶ本体。
 ///
 /// 【原則2:判定は選ばれた時に、流しながら行う(遅延評価)】
 /// あらかじめ全件を解析してから絞り込むのではなく、
 ///  1. まず「日時・種類・アルバム」というメタ情報だけで候補を絞り(解析不要・一瞬)
 ///  2. 候補をシャッフルする
-///  3. シャッフル順に一定件数だけ取り出し、必要なら(雰囲気・カテゴリ指定がある時だけ)その場で解析し、
-///     「条件にどれだけ近いか」を点数化してその中で近い順に流す
+///  3. シャッフル順に必要な分だけ解析し、条件を満たしたものを見つけ次第流す
 /// という順番で処理する。表示は1枚ずつなので、全件を先に判定し終える必要はない。
 ///
-/// 【2026-09-05変更(CEO判断):「満たす/満たさない」の足切りから「近い順」へ】
-/// 以前は雰囲気・カテゴリの条件を1つでも満たさない写真は不採用にしていたが、
-/// 「鮮やか×犬」のように該当が少ない組み合わせだと候補を使い切っても1枚も見つからず
-/// 「見つかりませんでした」になってしまうことがあった(CEO実機報告)。
-/// 今は不採用にする代わりに「条件にどれだけ近いか」を0〜複数の点数で表し、高い順に流す。
-/// これにより「合う写真が1枚も無い」状態は原理上ほぼ起こらなくなる(何かしらは必ず流れる)。
-///
-/// 【遅延評価を崩さない工夫:窓(バッチ)単位での並べ替え】
-/// 「近い順」を実現する素朴な方法は、全候補を先に採点してから並べ替えることだが、それでは
-/// 「起動時に全走査しない」という設計4原則を破ってしまう(CEOの懸念どおり)。
-/// そこでシャッフル済みの候補を`scoringBatchSize`件ずつの「窓」に区切り、窓の中だけを採点・
-/// 並べ替えて流し、窓を使い切ったら次の窓を採点する、という単位で遅延評価を維持する。
-/// こうすると、一度に解析する枚数は「窓のサイズ」で頭打ちになり(ライブラリの総枚数には依存しない)、
-/// かつ窓の中では「近い順」が成立する。窓を小さくするほど並べ替えの効果は弱まるが1枚目までの
-/// 待ちは短くなり、大きくするほど並べ替えの精度は上がるが待ちは長くなる、というトレードオフがある
-/// (現在の値は報告書に記載のうえCEOに判断を仰いだ値。調整したい場合はここの定数を変えるだけでよい)。
+/// 【2026-09-05変更:合格優先のストリーミング探索】
+/// 6枚窓ごとに最高点を必ず返す方式では、窓に犬がいなくても「犬に一番近い非犬」が流れていた。
+/// 窓を大きくしても欠陥は消えず、最初の表示待ちだけが増えるため、窓そのものを廃止した。
+/// 選んだカテゴリ・雰囲気に実際に該当する候補を見つけ次第返し、該当しない写真は飛ばす。
+/// 全候補を一巡して専用検出が0件でも、一般分類に対象ラベルの根拠がある候補だけを返す。
+/// 解析済みキャッシュと2枚先読みはそのまま使うので、初回は必要な所までだけ調べ、使うほど速くなる。
 actor CandidateEngine {
-
-    /// 一度に採点する候補の件数(=遅延評価を保ったまま近い順に並べ替える「窓」のサイズ)。
-    /// 【2026-09-05 シミュレータ検証で判明】当初20で試したところ、雰囲気・カテゴリ未指定時と違い
-    /// この窓の分だけVision解析(端末内AI処理。1枚ごとに複数の判定を行う)を待ってから最初の1枚を
-    /// 出す設計のため、初回(まだ何も解析していない状態)は窓のサイズがそのまま「最初の1枚が出るまでの
-    /// 待ち時間」に直結すると判明(実測で20枚だと数十秒かかるケースを確認)。近い順に並べ替える効果と
-    /// 最初の待ち時間の短さを両立するため6に縮小した。窓が小さいと近い順の精度(何枚の中から選ぶか)は
-    /// 下がるが、窓を使い切れば自動的に次の窓の採点に進む(遅延評価は変わらず維持)ため、
-    /// 「体感の待ち時間」を優先してこの値にした。
-    private static let scoringBatchSize = 6
 
     private var shuffledAssets: [PHAsset] = []
     private var cursor = 0
-    /// 現在の「窓」の中で、採点済みだがまだ表示していない候補(スコアの高い順に並んでいる)。
-    private var scoredWindow: [(asset: PHAsset, score: Double)] = []
+    private var emittedExactMatch = false
+    private var emittedFallback = false
+    /// 犬・猫の専用検出を探す間に見つけた「一般分類にも犬/猫の根拠がある」候補。
+    private var bestExplainableApproximation: (asset: PHAsset, score: Double)?
     private let settings: FilterSettings
     /// 【2026-09-04追加 → 2026-09-05拡張:先読み(プリフェッチ)を1枚→2枚先まで】
     /// 「該当が少ないカテゴリ×短い表示秒数だと、判定が表示時間に追いつかれる」という実機での
@@ -63,15 +63,16 @@ actor CandidateEngine {
     /// 判定順序(近い順・原則2の遅延評価)は`findNextMatch()`が一元管理しており、キューは
     /// その結果を「表示するまでの間、順番を保ったまま一時的に保管しておく場所」に過ぎない
     /// (キューを導入したことで判定ロジック自体〔窓単位の近い順並べ替え〕は変わっていない)。
-    private var prefetchedQueue: [PHAsset] = []
+    private var prefetchQueue = GenerationBoundedQueue<PHAsset>(limit: 2)
     /// キューを maxPrefetchDepth 件まで満たすための裏Task。存在する間は「補充中」を意味する
     /// (二重に補充が走らないようにするためのガード)。
     private var prefetchTask: Task<Void, Never>?
+    /// cancel済みの旧Taskが、後から開始した新Taskの参照をnilにしないための世代番号。
+    /// 1回の探索予算で区切っただけで、まだライブラリ末尾まで見ていないことを呼び出し側へ伝える。
+    private var pausedWithRemainingCandidates = false
     /// 先読みしておく件数(現在表示中の1枚とは別に、裏で判定を済ませておく件数)。
     /// 【2026-09-05 CEO指示:1枚先読み→2〜3枚先読みへ拡張】
-    /// 窓のサイズ(scoringBatchSize=6)の半分程度に留め、先読みだけで窓の判定枠を使い切って
-    /// しまわないようにする値として2を選んだ(3にするとより手厚くなるが、窓の残りが1枚しか
-    /// 無い状態が増え、次の窓への切り替わり頻度が上がる)。値を増減したい場合はここの定数のみでよい。
+    /// 解析が表示時間より遅い場合にも待ちを隠せる範囲として2を選んだ。
     private static let maxPrefetchDepth = 2
     /// 【指摘H対応】雰囲気・カテゴリの判定用サムネイルが取得できず、「合うかどうか判定できなかった」
     /// 候補が今回のひと巡り(prepare()〜候補を使い切るまで)で1件でもあったか。
@@ -93,15 +94,18 @@ actor CandidateEngine {
     /// 候補プールを準備する(原則1:選択肢は固定/自動生成済みのものだけを使い、ここでは絞り込みの実行のみ)
     func prepare() {
         // シャッフルし直す(=候補の並びが変わる)ので、古い並びを前提に先読みしていた分は捨てる。
+        prefetchQueue.advanceGeneration(clear: true)
         prefetchTask?.cancel()
         prefetchTask = nil
-        prefetchedQueue = []
         let assets = Self.fetchBaseAssets(settings: settings)
         let filtered = assets.filter { Self.passesMetadataFilters($0, settings: settings) }
         shuffledAssets = filtered.shuffled()
         cursor = 0
-        scoredWindow = []
+        emittedExactMatch = false
+        emittedFallback = false
+        bestExplainableApproximation = nil
         hadUndeterminedCandidatesThisPass = false
+        pausedWithRemainingCandidates = false
     }
 
     /// ✕で閉じた・タイマーが終わった時に呼ぶ。先読み中の判定を打ち切る。
@@ -110,6 +114,7 @@ actor CandidateEngine {
     /// 止まらない。指摘Aで直した「閉じたらすぐ裏の処理も止まる」を、先読み追加によって
     /// 再び壊さないための後始末。
     func cancelPrefetch() {
+        prefetchQueue.advanceGeneration(clear: false)
         prefetchTask?.cancel()
         prefetchTask = nil
     }
@@ -118,6 +123,7 @@ actor CandidateEngine {
 
     /// 指摘H対応: 今回のひと巡りで「判定できなかった」候補が1件でもあったか。
     var hadUndeterminedCandidates: Bool { hadUndeterminedCandidatesThisPass }
+    var hasPendingSearchWork: Bool { pausedWithRemainingCandidates }
 
     /// 次に表示する1枚を返す。無ければ nil(=「条件に合う写真が見つかりませんでした」)。
     ///
@@ -134,8 +140,14 @@ actor CandidateEngine {
             return shuffledAssets[cursor]
         }
 
-        if !prefetchedQueue.isEmpty {
-            return prefetchedQueue.removeFirst()
+        if let prefetched = prefetchQueue.popFirst() {
+            return prefetched
+        }
+        // 補充が既に走っている時は同じcursorを別経路から探索せず、その結果を短時間だけ待つ。
+        // actorはawait中に他処理を進められるため、補充Taskがキューへ追加することを妨げない。
+        if let runningPrefetch = prefetchTask {
+            await runningPrefetch.value
+            if let prefetched = prefetchQueue.popFirst() { return prefetched }
         }
         // キューが空(先読みがまだ間に合っていない最初の1枚、または候補プールを使い切った直後)。
         // その場で判定する(これまで通りの「待つしかない」経路)。
@@ -149,9 +161,13 @@ actor CandidateEngine {
     /// (次に表示を始めるたびに呼ばれるので、補充が終わっていれば毎回また呼ばれてキューが満杯を保つ)。
     func prefetchNext() {
         guard settings.needsImageAnalysis, prefetchTask == nil else { return }
+        let generation = prefetchQueue.advanceGeneration(clear: false)
         prefetchTask = Task {
-            await self.refillPrefetchQueue()
-            self.prefetchTask = nil
+            await self.refillPrefetchQueue(generation: generation)
+            // prepare/cancel/new taskで世代が変わっていたら、現行Taskの参照には触らない。
+            if self.prefetchQueue.isCurrent(generation) {
+                self.prefetchTask = nil
+            }
         }
     }
 
@@ -161,69 +177,154 @@ actor CandidateEngine {
     /// 同時実行すると同じ写真を重複して払い出す・cursorが競合するおそれがある。このメソッド自体は
     /// prefetchTaskという単一のTaskの中だけで呼ばれる(prefetchNext()のガードで二重起動を防止)ため、
     /// actor全体が単一実行(直列)であることと合わせて、逐次呼び出しで安全に順番を保てる。
-    private func refillPrefetchQueue() async {
-        while prefetchedQueue.count < Self.maxPrefetchDepth {
-            if Task.isCancelled { return }
-            guard let asset = await findNextMatch() else { return } // 候補プールを使い切った(この巡はここまで)
-            prefetchedQueue.append(asset)
+    private func refillPrefetchQueue(generation: UInt64) async {
+        while prefetchQueue.elements.count < Self.maxPrefetchDepth {
+            guard !Task.isCancelled, prefetchQueue.isCurrent(generation) else { return }
+            guard let asset = await findNextMatch(expectedGeneration: generation) else { return }
+            guard !Task.isCancelled, prefetchQueue.isCurrent(generation) else { return }
+            _ = prefetchQueue.append(asset, generation: generation)
         }
     }
 
     /// 雰囲気・カテゴリの判定をしながら次の1枚を探す本体(遅延評価。原則2)。
     /// `next()`(即座に呼ばれる経路)と `prefetchNext()`(裏で先読みする経路)の両方から使う。
     ///
-    /// 【2026-09-05変更】「合う/合わない」で足切りするのをやめ、窓(scoringBatchSize件)単位で
-    /// 採点→並べ替え→近い順に払い出す、という動きに変えた。窓の中に候補が残っていればそこから返し、
-    /// 無くなったら次の窓を採点する。候補プール全体を使い切ったら nil を返す(この時だけ「見つからない」)。
-    private func findNextMatch() async -> PHAsset? {
-        while true {
+    /// 合格候補を見つけ次第返す。専用検出が0件でも根拠のある近似候補だけを返す。
+    private func findNextMatch(expectedGeneration: UInt64? = nil) async -> PHAsset? {
+        guard !Task.isCancelled, generationIsCurrent(expectedGeneration) else { return nil }
+        pausedWithRemainingCandidates = false
+        var budget = CandidateSearchBudget(maximumCount: 18, maximumSeconds: 0.8)
+        let searchStartedAt = ContinuousClock.now
+        while cursor < shuffledAssets.count {
             // 【指摘A対応】1枚判定するたびにキャンセルされていないか確認する。
             // 以前はここに確認が無かったため、✕ボタンで閉じてもタイマーが0になっても、
             // このループは「候補を最後の1枚まで判定し終える」まで裏で走り続けてしまっていた
             // (写真が多いほど、CPUを使い切ったまま数分〜十数分止まらない状態になりうる不具合)。
             // 呼び出し元がタイマー停止・画面を閉じた時にこのTaskをcancel()するので
             // (先読み分は cancelPrefetch() 経由)、ここでその状態を毎回確認してすぐ打ち切れるようにする。
-            if Task.isCancelled { return nil }
+            guard !Task.isCancelled, generationIsCurrent(expectedGeneration) else { return nil }
 
-            // 窓の中に採点済みの候補が残っていれば、その中で最もスコアが高いものを返す(近い順)。
-            if !scoredWindow.isEmpty {
-                return scoredWindow.removeFirst().asset
+            let elapsedBefore = durationSeconds(searchStartedAt.duration(to: .now))
+            guard budget.beginCandidate(elapsedSeconds: elapsedBefore) else {
+                pausedWithRemainingCandidates = true
+                return nil
             }
 
-            // 窓が空。候補プール全体を使い切っていれば、これ以上は無い。
-            guard cursor < shuffledAssets.count else { return nil }
+            let asset = shuffledAssets[cursor]
+            cursor += 1
 
-            // 次の窓ぶん(最大 scoringBatchSize 件)をまとめて採点する。
-            // ここで解析するのはこの窓の分だけで、ライブラリ全体を解析するわけではない
-            // (=原則2「起動時に全走査しない」を崩さない)。
-            let batchEnd = min(cursor + Self.scoringBatchSize, shuffledAssets.count)
-            var newlyScored: [(asset: PHAsset, score: Double)] = []
-            for i in cursor..<batchEnd {
-                if Task.isCancelled { return nil }
-                let asset = shuffledAssets[i]
-
-                guard let analysis = await analyzedResult(for: asset) else {
-                    // 判定できなかった(サムネイル取得失敗・Vision解析失敗)。この1枚は今回は諦めて次へ。
-                    // 【指摘H対応】この「読み飛ばし」があったことを記録しておく。窓を最後まで使い切っても
-                    // 候補が1枚も残らなかった場合、呼び出し側は「該当0件」ではなく「判定できなかった」を表示する。
-                    hadUndeterminedCandidatesThisPass = true
-                    continue
-                }
-                // 【2026-09-05追加:AIでのスクショ・書類らしい写真の除外(iOS 18以降)】
-                // excludeScreenshots(メタ情報だけの判定)と同じ「除外」の考え方なので、近い順の
-                // スコアには乗せず、この窓からはそもそも外す(mood/categoryのような「近さ」の軸ではなく、
-                // excludeScreenshotsの精度を底上げする追加条件という位置づけのため)。
-                if settings.strictScreenshotDetection, analysis.isUtilityImage == true {
-                    continue
-                }
-                let score = Self.score(analysis: analysis, settings: settings)
-                newlyScored.append((asset, score))
+            // 1枚のVision処理自体が長引く場合も、この呼び出しの残り予算で打ち切る。
+            let elapsed = searchStartedAt.duration(to: .now)
+            let remaining = max(.zero, .milliseconds(800) - elapsed)
+            guard remaining > .zero else {
+                pausedWithRemainingCandidates = true
+                return nil
             }
-            cursor = batchEnd
-            // この窓の中だけを「近い順」に並べ替える(全候補ではなく窓の中だけなので計算量は小さい)。
-            scoredWindow = newlyScored.sorted { $0.score > $1.score }
-            // 窓の中が空(この窓は全部判定不能だった)なら、ループの先頭に戻って次の窓を試す。
+            guard let analysis = await analyzedResult(for: asset, timeout: remaining) else {
+                guard !Task.isCancelled, generationIsCurrent(expectedGeneration) else { return nil }
+                // 判定できなかった(サムネイル取得失敗・Vision解析失敗)。この1枚は今回は諦めて次へ。
+                hadUndeterminedCandidatesThisPass = true
+                if budget.isExhausted(elapsedSeconds: durationSeconds(searchStartedAt.duration(to: .now))) {
+                    pausedWithRemainingCandidates = cursor < shuffledAssets.count
+                    return nil
+                }
+                continue
+            }
+            guard !Task.isCancelled, generationIsCurrent(expectedGeneration) else { return nil }
+            // AIでのスクショ・書類らしい写真の除外(iOS 18以降)。
+            if settings.strictScreenshotDetection, analysis.isUtilityImage == true {
+                if budget.isExhausted(elapsedSeconds: durationSeconds(searchStartedAt.duration(to: .now))) {
+                    pausedWithRemainingCandidates = cursor < shuffledAssets.count
+                    return nil
+                }
+                continue
+            }
+
+            let score = Self.score(analysis: analysis, settings: settings)
+            if Self.isStrongMatch(analysis: analysis, settings: settings) {
+                emittedExactMatch = true
+                return asset
+            }
+            if Self.isExplainableApproximation(analysis: analysis, settings: settings),
+               bestExplainableApproximation == nil || score > bestExplainableApproximation!.score {
+                bestExplainableApproximation = (asset, score)
+            }
+
+            // 専用検出を優先するため少しだけ先を見る。ただし短いスライド間隔で待たせないよう、
+            // 18枚または0.8秒の早い方で、根拠のある近似候補へ切り替える。
+            if budget.isExhausted(elapsedSeconds: durationSeconds(searchStartedAt.duration(to: .now))) {
+                if let approximation = bestExplainableApproximation {
+                    bestExplainableApproximation = nil
+                    emittedExactMatch = true
+                    return approximation.asset
+                }
+                pausedWithRemainingCandidates = cursor < shuffledAssets.count
+                return nil
+            }
         }
+
+        guard !Task.isCancelled, generationIsCurrent(expectedGeneration) else { return nil }
+        // 一巡中に該当を1枚でも返していれば、非該当候補は混ぜない。
+        // 専用検出が本当に0件だった場合も、対象ラベルの根拠がある近似を一度だけ返す。
+        guard !emittedExactMatch, !emittedFallback,
+              let fallback = bestExplainableApproximation?.asset else { return nil }
+        emittedFallback = true
+        return fallback
+    }
+
+    private func generationIsCurrent(_ generation: UInt64?) -> Bool {
+        guard let generation else { return true }
+        return prefetchQueue.isCurrent(generation)
+    }
+
+    private func durationSeconds(_ duration: Duration) -> TimeInterval {
+        let components = duration.components
+        return TimeInterval(components.seconds) + TimeInterval(components.attoseconds) / 1e18
+    }
+
+    /// 解析Taskをキャンセル可能な別Taskとして走らせ、残り時間を超えたら待機だけを終了する。
+    /// 遅れて完了したTaskはキャンセル状態のためanalyzedResult内でキャッシュ保存せず終了する。
+    private func analyzedResult(for asset: PHAsset, timeout: Duration) async -> AssetAnalysis? {
+        await withCheckedContinuation { continuation in
+            let box = FirstResultBox<AssetAnalysis?>(continuation)
+            let analysisTask = Task { [weak self] in
+                guard let self else { box.finish(nil); return }
+                box.finish(await self.analyzedResult(for: asset))
+            }
+            Task {
+                try? await Task.sleep(for: timeout)
+                guard !Task.isCancelled else { return }
+                analysisTask.cancel()
+                box.finish(nil)
+            }
+        }
+    }
+
+    private static func isStrongMatch(analysis: AssetAnalysis, settings: FilterSettings) -> Bool {
+        if !settings.selectedMoods.isEmpty {
+            guard let mood = analysis.mood, settings.selectedMoods.contains(mood) else { return false }
+        }
+        if !settings.selectedCategories.isEmpty {
+            let matched = settings.selectedCategories.intersection(analysis.categories)
+            guard !matched.isEmpty else { return false }
+            // 複数選択はOR。犬・猫以外の一致、または犬・猫の専用検出が1つでもあれば即採用する。
+            if !matched.subtracting([.dog, .cat]).isEmpty { return true }
+            guard matched.contains(where: { (analysis.categoryConfidences?[$0] ?? 0) > 1 }) else { return false }
+        }
+        return true
+    }
+
+    private static func isExplainableApproximation(analysis: AssetAnalysis, settings: FilterSettings) -> Bool {
+        if !settings.selectedMoods.isEmpty {
+            guard let mood = analysis.mood,
+                  settings.selectedMoods.map({ MoodSimilarity.similarity(mood, $0) }).max() ?? 0 >= 0.4 else { return false }
+        }
+        if settings.selectedCategories.isEmpty {
+            return !settings.selectedMoods.isEmpty
+        }
+        // 一般分類で15%以上の犬/猫等ラベルが実際に返った候補だけを許可する。
+        // 単に窓内最高点だった無関係写真(score=0)はここを通らない。
+        return settings.selectedCategories.contains { (analysis.categoryConfidences?[$0] ?? 0) >= 0.15 }
     }
 
     /// 1枚の判定結果を取得する(キャッシュ済みならそれを使い、無ければサムネイル取得→Vision解析)。
@@ -252,6 +353,7 @@ actor CandidateEngine {
             // 結果をキャッシュしない(次に選ばれた時にもう一度判定し直す機会を残す)ことで修正した。
             return nil
         }
+        if Task.isCancelled { return nil }
         await AnalysisCache.shared.store(analysis, for: asset.localIdentifier)
         return analysis
     }

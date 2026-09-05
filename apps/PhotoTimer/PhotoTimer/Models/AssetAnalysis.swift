@@ -5,6 +5,9 @@ import Foundation
 struct AssetAnalysis: Codable {
     var mood: MoodTag?
     var categories: [CategoryTag]
+    /// カテゴリごとの根拠の強さ。犬・猫の専用検出は 1.0+信頼度、一般分類は0〜1の信頼度。
+    /// nilは旧キャッシュとの互換用で、analyzerVersion更新により順次再解析される。
+    var categoryConfidences: [CategoryTag: Double]?
     /// 「よく撮れてる度」(2026-09-05追加。CEO指示によりMVPから復活)。
     /// Visionの CalculateImageAestheticsScoresRequest(iOS 18以降専用)による-1〜1のスコア
     /// (高いほど「よく撮れている」)。iOS 17以下の端末では判定できないため常にnil。
@@ -26,7 +29,9 @@ struct AssetAnalysis: Codable {
     /// 振り分け直したため、古いバージョンで "緑" と判定されキャッシュされた結果を再解析させる。
     /// 【2026-09-05: 3→4に更新】「よく撮れてる度」(aestheticsScore・isUtilityImage)を追加したため、
     /// 既存のキャッシュ済み結果(この2つが常にnilのまま)を再解析させ、値を埋める。
-    static let currentVersion = 4
+    /// 【2026-09-05: 4→5に更新】犬・猫で専用検出を優先しつつ、説明可能な一般分類候補も
+    /// 短い待ち上限後に使えるよう、カテゴリごとの検出根拠を保存するようにした。
+    static let currentVersion = 5
 }
 
 /// AssetAnalysis を localIdentifier ごとに端末内(Application Support配下のJSONファイル。

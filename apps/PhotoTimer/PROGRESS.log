@@ -156,3 +156,26 @@ deliveryMode(fastFormat/highQualityFormat)を変えても再現し、シミュ�
 UIテスト(XCUITest)を実機で動かすには別途署名設定が必要と判明したため今回は見送り、
 実機での残りの確認(バックグラウンド・削除確認ダイアログ・マナースイッチ)はCEOへの依頼事項として
 完了報告にまとめる。
+2026-09-05 (犬指定で無関係写真が大量表示される問題を修正) CandidateEngineの6枚窓方式を廃止。
+窓拡大は無関係写真を必ず1枚出す構造を残し、初回待ちだけ増えるため不採用。カテゴリ・雰囲気の
+合格候補を見つけ次第返すストリーミング探索へ変更した。犬・猫はVNRecognizeAnimalsRequestの専用検出を
+最大18枚または0.8秒だけ優先し、そこまでに見つからない場合もVNClassifyImageRequestが選択カテゴリの
+ラベルを信頼度15%以上で実際に返した「説明可能な近似候補」だけを採用。無関係なbest-of-windowは出さない。
+カテゴリ信頼度をAssetAnalysisへ保存し、解析版をv5へ更新。2枚先読みは維持し、先読みTaskと通常next()の
+二重探索もTask完了待ちで防止。表示設定には「長くすると表示中に次候補を探せる時間も増える」と追記。
+実機iPhone 14の静止画6045枚をDEBUG限定診断で読み取り専用走査し、185.78秒、取得失敗0、犬専用検出25、
+一般分類のみの犬候補3を確認。VNRecognizeAnimalsRequestが実機経路で機能している。診断コードは測定後削除。
+2026-09-05 (別チェック指摘2件対応) A:CandidateEngineの探索は、説明可能な近似候補がまだ無い場合も
+18件または0.8秒で必ずnilを返し、hasPendingSearchWorkで「全件終了」ではなく「一時中断」を表すよう変更。
+TimerControllerは一時中断時にTask.yieldしてUIへ制御を返し、次回next()からcursor位置を保って探索を続行する。
+解析失敗/utility除外も件数予算へ含め、単一解析には呼び出しの残り時間を上限として適用。時間切れTaskは
+キャンセルし、遅れて完了してもキャッシュへ保存しない。無関係写真は表示しない。B:先読みTaskへ世代番号を
+追加し、prepare/cancel後に旧Taskが完了しても新TaskのprefetchTask参照をnilへ戻せないよう修正。
+回帰XCUITest testSearchBudgetKeepsCloseButtonResponsiveを追加。テスト専用環境変数で厳しい解析条件を固定し、
+探索中も2秒以内に閉じるボタンを操作でき、5秒以内にホームへ戻れることを確認(22.652秒、成功)。
+2026-09-05 (再チェック指摘を直接修正) 探索予算をCandidateSearchBudgetへ切り出し、候補を消費する前に
+全経路共通でbeginCandidateを通す構造へ変更。utility除外・解析失敗が連続しても18件を超えず、処理後も
+共通isExhaustedで0.8秒を判定する。先読みキューはGenerationBoundedQueueへ切り出し、旧世代のappendを
+部品自体が拒否、現世代も最大2件を強制。findNextMatchは開始時・await復帰直後・共有状態変更前・返却前、
+refillはawait前後とappend前に世代一致/cancelを確認する。実際に本体が使う2部品をUIテストtargetにも共有し、
+utility/解析失敗18件、単一解析0.8秒、旧世代拒否+2件上限の直接テスト3件を追加。3件0.125秒で全成功。

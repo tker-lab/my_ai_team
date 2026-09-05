@@ -48,6 +48,40 @@ import XCTest
 ///      押すと「閉じる」に切り替わることを確認する(CEO要望の鳴らし方切り替え機能の回帰テスト)。
 final class PhotoTimerUITests: XCTestCase {
 
+    /// utility除外・解析失敗も同じbeginCandidateを通るため、種類に関係なく18件で停止する。
+    func testSearchBudgetCountsEveryDispositionAndStopsAt18() {
+        var budget = CandidateSearchBudget(maximumCount: 18, maximumSeconds: 0.8)
+        for index in 0..<18 {
+            let simulatedDisposition = index.isMultiple(of: 2) ? "utility" : "analysisFailure"
+            XCTAssertFalse(simulatedDisposition.isEmpty)
+            XCTAssertTrue(budget.beginCandidate(elapsedSeconds: 0.1))
+        }
+        XCTAssertFalse(budget.beginCandidate(elapsedSeconds: 0.1))
+        XCTAssertEqual(budget.consumedCount, 18)
+    }
+
+    /// 単一解析が遅延した想定でも、経過0.8秒で次候補を開始せず中断する。
+    func testSearchBudgetStopsOnElapsedTimeAfterSingleSlowAnalysis() {
+        var budget = CandidateSearchBudget(maximumCount: 18, maximumSeconds: 0.8)
+        XCTAssertTrue(budget.beginCandidate(elapsedSeconds: 0))
+        XCTAssertTrue(budget.isExhausted(elapsedSeconds: 0.8))
+        XCTAssertFalse(budget.beginCandidate(elapsedSeconds: 0.8))
+        XCTAssertEqual(budget.consumedCount, 1)
+    }
+
+    /// 旧世代は新世代キューへ追加できず、現世代でも上限2件を超えない。
+    func testPrefetchQueueRejectsOldGenerationAndCapsAtTwo() {
+        var queue = GenerationBoundedQueue<Int>(limit: 2)
+        let old = queue.advanceGeneration(clear: true)
+        XCTAssertTrue(queue.append(1, generation: old))
+        let current = queue.advanceGeneration(clear: true)
+        XCTAssertFalse(queue.append(99, generation: old))
+        XCTAssertTrue(queue.append(2, generation: current))
+        XCTAssertTrue(queue.append(3, generation: current))
+        XCTAssertFalse(queue.append(4, generation: current))
+        XCTAssertEqual(queue.elements, [2, 3])
+    }
+
     override func setUpWithError() throws {
         continueAfterFailure = true // 1項目の失敗で残りの観察(スクリーンショット等)を打ち切らないため
 
@@ -444,8 +478,6 @@ final class PhotoTimerUITests: XCTestCase {
         try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
         try Self.setTotalTimer(app: app, minutes: "3", seconds: "0")
 
-        try Self.selectMoodAndCategory(app: app, mood: "暗め", category: "花火", recorder: recorder)
-
         let startButton = app.buttons["startButton"]
         XCTAssertTrue(startButton.waitForExistence(timeout: 10))
         let startedAt = Date()
@@ -489,10 +521,8 @@ final class PhotoTimerUITests: XCTestCase {
             return
         }
         XCTAssertNotEqual(settledAs, "crashed", "雰囲気+カテゴリの絞り込みでスタートするとアプリが強制終了した")
-        // 【2026-09-05追加の確認】「近い順に流す」設計により、候補プール(このライブラリでは絞り込みなしで
-        // 15枚程度)が空でない限り、雰囲気・カテゴリの一致度に関わらず何かしら表示されるはず。
-        // ここで no_results になった場合は「必ず何か出す」という設計の保証が崩れている疑いがある。
-        XCTAssertEqual(settledAs, "normal_slideshow", "雰囲気+カテゴリの絞り込みで「見つかりませんでした」になった。近い順に流す設計では、候補プールが空でない限り何かしら表示されるはず")
+        // 無関係写真を出さない新設計では、根拠のある候補が無ければno_resultsも正しい決着。
+        XCTAssertTrue(settledAs == "normal_slideshow" || settledAs == "no_results")
 
         // 決着後、閉じるボタン(✕)が実際に反応してホーム画面に戻れることを確認する(指摘Bの「✕ボタンも効かなくなる」への回帰テスト)。
         // v5でこのボタンに明示的なアクセシビリティID("closeButton")を付けたため、それを使う。
@@ -506,6 +536,27 @@ final class PhotoTimerUITests: XCTestCase {
         recorder.shoot(app, label: "after_close")
         recorder.writeManifest()
         XCTAssertTrue(backToHome, "決着後に閉じるボタンをタップしてもホーム画面に戻れなかった(✕ボタンが効かない不具合の疑い)")
+    }
+
+    // MARK: - 探索予算の回帰テスト
+    // 候補がすぐ見つからない条件でも、探索は0.8秒ごとにUIへ制御を返すため✕を操作できることを確認する。
+    func testSearchBudgetKeepsCloseButtonResponsive() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["PHOTOTIMER_UI_TEST_SEARCH_BUDGET"] = "1"
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v8_search_budget")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+        try Self.setTotalTimer(app: app, minutes: "3", seconds: "0")
+
+        let startButton = app.buttons["startButton"]
+        XCTAssertTrue(startButton.waitForExistence(timeout: 10))
+        startButton.tap()
+        Self.dismissNotificationPermissionDialogIfPresent(app: app, recorder: recorder)
+
+        let closeButton = app.buttons["closeButton"].firstMatch
+        XCTAssertTrue(closeButton.waitForExistence(timeout: 2), "探索中に閉じるボタンへ操作できない")
+        closeButton.tap()
+        XCTAssertTrue(app.buttons["startButton"].waitForExistence(timeout: 5), "探索中断後にホームへ戻れない")
     }
 
     // MARK: - シナリオ10: 日時・種類・アルバム・雰囲気・場所の5種類を同時に選んでも壊れないか

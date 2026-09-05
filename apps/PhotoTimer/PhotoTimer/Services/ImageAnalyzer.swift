@@ -26,11 +26,12 @@ enum ImageAnalyzer {
     /// 雰囲気・カテゴリの判定自体は元々同期処理のままで、待つのは「よく撮れてる度」の部分だけ。
     static func analyze(cgImage: CGImage) async -> AssetAnalysis? {
         let mood = analyzeMood(cgImage: cgImage)
-        guard let categories = analyzeCategories(cgImage: cgImage) else { return nil }
+        guard let categoryConfidences = analyzeCategories(cgImage: cgImage) else { return nil }
         let (aestheticsScore, isUtilityImage) = await analyzeAesthetics(cgImage: cgImage)
         return AssetAnalysis(
             mood: mood,
-            categories: categories,
+            categories: Array(categoryConfidences.keys),
+            categoryConfidences: categoryConfidences,
             aestheticsScore: aestheticsScore,
             isUtilityImage: isUtilityImage,
             analyzerVersion: AssetAnalysis.currentVersion
@@ -139,7 +140,7 @@ enum ImageAnalyzer {
 
     // MARK: - カテゴリ(犬・猫・人は専用検出、それ以外は一般分類)
 
-    private static func analyzeCategories(cgImage: CGImage) -> [CategoryTag]? {
+    private static func analyzeCategories(cgImage: CGImage) -> [CategoryTag: Double]? {
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
 
         let classifyRequest = VNClassifyImageRequest()
@@ -160,37 +161,39 @@ enum ImageAnalyzer {
             return nil
         }
 
-        var found: Set<CategoryTag> = []
+        var confidences: [CategoryTag: Double] = [:]
 
         // 犬・猫(専用検出。VNRecognizeAnimalsRequest)
         if let animalResults = animalRequest.results {
             for observation in animalResults {
                 for label in observation.labels where label.confidence >= dedicatedConfidenceThreshold {
-                    if label.identifier == "Dog" { found.insert(.dog) }
-                    if label.identifier == "Cat" { found.insert(.cat) }
+                    // 1を足して一般分類(0〜1)と区別し、候補選択側が専用検出を確実に優先できるようにする。
+                    if label.identifier == "Dog" { confidences[.dog] = max(confidences[.dog] ?? 0, 1 + Double(label.confidence)) }
+                    if label.identifier == "Cat" { confidences[.cat] = max(confidences[.cat] ?? 0, 1 + Double(label.confidence)) }
                 }
             }
         }
 
         // 人(専用検出。VNDetectHumanRectanglesRequest = 体の存在検出。誰かの特定は行わない)
         if let humanResults = humanRequest.results, !humanResults.isEmpty {
-            found.insert(.person)
+            confidences[.person] = 2
         }
 
         // それ以外は一般分類のキーワード一致で拾う(拾いすぎる側に倒す)
         if let classifications = classifyRequest.results {
-            let hits = classifications
-                .filter { $0.confidence >= generalConfidenceThreshold }
-                .map { $0.identifier.lowercased() }
-
-            for tag in CategoryTag.allCases where !tag.hasDedicatedDetector {
+            for tag in CategoryTag.allCases where tag != .person {
                 let keywords = tag.generalClassifierKeywords
-                if hits.contains(where: { identifier in keywords.contains(where: { identifier.contains($0) }) }) {
-                    found.insert(tag)
+                let matchingConfidences = classifications.compactMap { observation -> Float? in
+                    guard observation.confidence >= generalConfidenceThreshold else { return nil }
+                    let identifier = observation.identifier.lowercased()
+                    return keywords.contains(where: { identifier.contains($0) }) ? observation.confidence : nil
+                }
+                if let confidence = matchingConfidences.max() {
+                    confidences[tag] = max(confidences[tag] ?? 0, Double(confidence))
                 }
             }
         }
 
-        return Array(found)
+        return confidences
     }
 }
