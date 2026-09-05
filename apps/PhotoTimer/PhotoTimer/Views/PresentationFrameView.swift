@@ -38,12 +38,24 @@ struct PresentationFrameView: View {
     private var content: some View {
         switch frame.layout {
         case .fullScreen(let image, let assetID, let style):
-            Image(uiImage: image)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .scaleEffect(scale(for: style))
-                .ignoresSafeArea()
-                .clipped()
+            ZStack {
+                // 写真の内容を推測して切り抜くことはしない。縦横を問わず主画像の全体を表示し、
+                // 余白は暗い背景で受ける。背景だけはぼかして画面の一体感を作る。
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .blur(radius: 24)
+                    .opacity(0.28)
+                    .scaleEffect(1.12)
+                    .clipped()
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .padding(10)
+                    .scaleEffect(scale(for: style))
+            }
+            .background(Color.black)
+            .ignoresSafeArea()
                 .accessibilityIdentifier("media-photo-presentation-\(assetID)")
         case .collage(let main, let secondaries, let arrangement):
             collageBody(main: main, secondaries: secondaries, arrangement: arrangement)
@@ -97,10 +109,10 @@ struct PresentationFrameView: View {
     private func tile(_ image: UIImage, width: CGFloat?, height: CGFloat?) -> some View {
         Image(uiImage: image)
             .resizable()
-            .aspectRatio(contentMode: .fill)
+            .aspectRatio(contentMode: .fit)
             .frame(width: width, height: height)
             .frame(maxWidth: width == nil ? .infinity : nil, maxHeight: height == nil ? .infinity : nil)
-            .clipped()
+            .background(Color.black.opacity(0.82))
     }
 
     // MARK: - 切り替わりの見せ方(transition)
@@ -112,10 +124,10 @@ struct PresentationFrameView: View {
             // 中身の切り替わり自体はクロスフェードのままにしておく(白い光と自然に重なる)。
             return .opacity
         case .zoomPunch:
-            return .asymmetric(
-                insertion: .scale(scale: 1.3).combined(with: .opacity),
-                removal: .opacity
-            )
+            // 主画像を一瞬でも拡大すると、aspect fitでも周縁が見切れる可能性がある。
+            // 写真は常に全体を収めるという方針を守り、勢いはフラッシュ等の隣接遷移との
+            // リズムで作る。ここでは拡大を伴わないフェードだけを使う。
+            return .opacity
         case .diagonalWipe:
             return .diagonalWipe
         }
@@ -125,8 +137,8 @@ struct PresentationFrameView: View {
 
     private func scale(for style: PresentationFrame.FullScreenStyle) -> CGFloat {
         switch style {
-        case .kenBurns: return fullScreenScaleSettled ? 1.12 : 1.0
-        case .zoomPunch: return fullScreenScaleSettled ? 1.0 : 1.3
+        // 拡大で主画像を切らない。動きは切り替え側のtransitionと透明度で付ける。
+        case .kenBurns, .zoomPunch: return 1.0
         }
     }
 
@@ -134,10 +146,8 @@ struct PresentationFrameView: View {
         guard case .fullScreen(_, _, let style) = frame.layout else { return }
         switch style {
         case .kenBurns:
-            withAnimation(.linear(duration: 0.1)) { fullScreenScaleSettled = false }
-            withAnimation(.linear(duration: 6.0)) { fullScreenScaleSettled = true }
+            withAnimation(.linear(duration: 0.1)) { fullScreenScaleSettled = true }
         case .zoomPunch:
-            fullScreenScaleSettled = false
             withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) { fullScreenScaleSettled = true }
         }
     }

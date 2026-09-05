@@ -103,7 +103,10 @@ actor CandidateEngine {
         prefetchTask?.cancel()
         prefetchTask = nil
         let assets = Self.fetchBaseAssets(settings: settings)
-        let filtered = assets.filter { Self.passesMetadataFilters($0, settings: settings) }
+        // リスト選択時はfetchBaseAssetsが既にリスト内容だけを返す。他の条件を残さず通す。
+        let filtered = settings.isCustomListSelected
+            ? assets
+            : assets.filter { Self.passesMetadataFilters($0, settings: settings) }
         // 既知の強一致→既知の説明可能近似→未判定を優先。各群は毎周shuffleし、
         // 一巡するまでは同じ写真を再利用しない。
         if !settings.selectedMoods.isEmpty || !settings.selectedCategories.isEmpty {
@@ -419,6 +422,20 @@ extension CandidateEngine {
     // MARK: - メタ情報での絞り込み(解析不要・原則2の「事前にできる分」)
 
     private static func fetchBaseAssets(settings: FilterSettings) -> [PHAsset] {
+        // 保存したリストは「この内容だけを流す」という最優先の選抜。日時・場所・アルバム・
+        // メディア種別・スクリーンショット除外・画像解析を含む、他の条件は一切掛けない。
+        // 写真本体は複製せずlocalIdentifierから読み取り取得するだけ。
+        if let listID = settings.selectedCustomListID {
+            let assetIDs = CustomPhotoListStore.load()
+                .first(where: { $0.id == listID })?
+                .assetLocalIdentifiers ?? []
+            guard !assetIDs.isEmpty else { return [] }
+            let fetched = PHAsset.fetchAssets(withLocalIdentifiers: assetIDs, options: nil)
+            var assets: [PHAsset] = []
+            fetched.enumerateObjects { asset, _, _ in assets.append(asset) }
+            return assets
+        }
+
         let options = PHFetchOptions()
         // 条件が何も無い時は predicate を設定しない(nilのまま=絞り込みなしを意味する)。
         // PHFetchOptions.predicate は「真偽値だけの定数predicate」(例: NSPredicate(value: true))を
@@ -439,9 +456,8 @@ extension CandidateEngine {
         }
 
         let hasAlbumRestriction = !settings.selectedAlbumIDs.isEmpty
-        let hasListRestriction = !settings.selectedCustomListIDs.isEmpty
 
-        if !hasAlbumRestriction && !hasListRestriction {
+        if !hasAlbumRestriction {
             appendAssets(from: PHAsset.fetchAssets(with: options))
         } else {
             // 【指摘F関連】選んだアルバムが写真アプリ側で削除されていた場合、ここでは
@@ -452,20 +468,6 @@ extension CandidateEngine {
                 let collections = PHAssetCollection.fetchAssetCollections(withLocalIdentifiers: Array(settings.selectedAlbumIDs), options: nil)
                 collections.enumerateObjects { collection, _, _ in
                     appendAssets(from: PHAsset.fetchAssets(in: collection, options: options))
-                }
-            }
-            // 【2026-09-05追加:自作リスト】アルバムと同じ「メタ情報だけで絞れる」条件として扱う。
-            // 両方選んでいる場合は足し算(アルバムの中の写真 ∪ リストの中の写真)。
-            // リストが指す写真が後で削除されていた場合、fetchAssets(withLocalIdentifiers:)は
-            // 単にその分を返さないだけで、落ちたり例外になったりしない(絶対制約どおり)。
-            if hasListRestriction {
-                let listAssetIDs = Set(
-                    CustomPhotoListStore.load()
-                        .filter { settings.selectedCustomListIDs.contains($0.id) }
-                        .flatMap(\.assetLocalIdentifiers)
-                )
-                if !listAssetIDs.isEmpty {
-                    appendAssets(from: PHAsset.fetchAssets(withLocalIdentifiers: Array(listAssetIDs), options: options))
                 }
             }
         }

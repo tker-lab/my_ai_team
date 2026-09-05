@@ -20,16 +20,24 @@ struct FilterOptionsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                dateSection
-                mediaTypeSection
-                screenshotSection
-                aestheticsSection
-                albumSection
+                Group {
+                    dateSection
+                    mediaTypeSection
+                    screenshotSection
+                    aestheticsSection
+                    albumSection
+                }
+                .disabled(settings.isCustomListSelected)
+                .opacity(settings.isCustomListSelected ? 0.45 : 1)
                 if FeatureFlags.isCustomListsEnabled {
                     customListSection
                 }
-                placeSection
-                subjectSection
+                Group {
+                    placeSection
+                    subjectSection
+                }
+                .disabled(settings.isCustomListSelected)
+                .opacity(settings.isCustomListSelected ? 0.45 : 1)
             }
             .onAppear {
                 customLists = CustomPhotoListStore.load()
@@ -206,8 +214,10 @@ struct FilterOptionsView: View {
     // MARK: - 保存したリスト(自作リスト。2026-09-05追加)
 
     /// 選択済みだが、もう自作リスト一覧に存在しないID(削除された等)。アルバム・場所と同じ考え方。
-    private var missingSelectedCustomListIDs: Set<String> {
-        settings.selectedCustomListIDs.subtracting(customLists.map(\.id))
+    private var missingSelectedCustomListID: String? {
+        guard let selected = settings.selectedCustomListID,
+              !customLists.contains(where: { $0.id == selected }) else { return nil }
+        return selected
     }
 
     private var customListSection: some View {
@@ -220,15 +230,19 @@ struct FilterOptionsView: View {
                         title: "\(list.name)(\(list.assetLocalIdentifiers.count)枚)",
                         isSelected: settings.selectedCustomListIDs.contains(list.id)
                     ) {
-                        toggle(list.id, in: &settings.selectedCustomListIDs)
+                        if settings.selectedCustomListID == list.id {
+                            settings.selectedCustomListIDs.removeAll()
+                        } else {
+                            settings.selectedCustomListIDs = [list.id]
+                        }
                     }
                 }
             }
-            if !missingSelectedCustomListIDs.isEmpty {
+            if missingSelectedCustomListID != nil {
                 Button(role: .destructive) {
-                    settings.selectedCustomListIDs.subtract(missingSelectedCustomListIDs)
+                    settings.selectedCustomListIDs.removeAll()
                 } label: {
-                    Text("見つからないリストの選択を解除(\(missingSelectedCustomListIDs.count)件)")
+                    Text("見つからないリストの選択を解除")
                 }
             }
             NavigationLink("リストを管理") {
@@ -238,8 +252,10 @@ struct FilterOptionsView: View {
         } header: {
             Text("保存したリスト")
         } footer: {
-            if missingSelectedCustomListIDs.isEmpty {
-                Text("写真ライブラリから自分で選んで作ったリストです。選ぶと、そのリストの写真・動画だけを対象にします(何も選ばない場合は絞り込みなし)。")
+            if missingSelectedCustomListID == nil {
+                Text(settings.isCustomListSelected
+                     ? "このリストだけを表示します。他の絞り込みは一時的に使われません。もう一度タップすると解除できます。"
+                     : "写真ライブラリから自分で選んで作ったリストです。1つ選ぶと、そのリストの写真・動画だけを対象にします。")
             } else {
                 Text("選択していたリストが削除されたため見つかりません。上のボタンで選択を解除できます。")
             }

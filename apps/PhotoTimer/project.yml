@@ -43,6 +43,10 @@ targets:
       - path: PhotoTimerUITests
       # 探索予算・世代付きキューは本体と同じソースを直接テストする。
       - path: PhotoTimer/Models/CandidateSearchCoordination.swift
+      # 保存リストの単一選択・最優先化は、画面テストだけに頼らずモデル単位でも確認する。
+      - path: PhotoTimer/Models/FilterSettings.swift
+      - path: PhotoTimer/Models/FixedChoices.swift
+      - path: PhotoTimer/Services/BackupExclusion.swift
     settings:
       base:
         SWIFT_VERSION: "5.0"

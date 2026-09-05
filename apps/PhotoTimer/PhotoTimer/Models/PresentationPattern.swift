@@ -10,6 +10,8 @@ enum PresentationPattern: String, Codable, CaseIterable, Identifiable, Hashable 
     case classic
     case weddingFilm
     case stadiumVision
+    case retirementCeremony
+    case blooperCredits
 
     var id: String { rawValue }
 
@@ -18,6 +20,8 @@ enum PresentationPattern: String, Codable, CaseIterable, Identifiable, Hashable 
         case .classic: return "シンプル"
         case .weddingFilm: return "結婚式ムービー風"
         case .stadiumVision: return "スタジアムビジョン風"
+        case .retirementCeremony: return "引退セレモニー風"
+        case .blooperCredits: return "NG集エンドロール風"
         }
     }
 
@@ -29,7 +33,11 @@ enum PresentationPattern: String, Codable, CaseIterable, Identifiable, Hashable 
         case .weddingFilm:
             return "上品でやわらかい雰囲気。フルスクリーンの1枚と、複数枚を組み合わせた見せ方を、ゆっくりとした動きで交互に切り替えます。"
         case .stadiumVision:
-            return "力強くダイナミックな雰囲気。勢いよく迫る登場や、複数枚を同時に見せる演出を取り入れます。"
+            return "力強くダイナミックな雰囲気。写真全体を見せながら、複数枚の構成と切り替わりに変化をつけます。"
+        case .retirementCeremony:
+            return "記録をたどって、感謝とフィナーレへ進むセレモニー風の構成です。"
+        case .blooperCredits:
+            return "楽しい思い出を、クレジット風の余白と写真・動画の切り替えで見せます。"
         }
     }
 
@@ -65,6 +73,24 @@ enum PresentationPattern: String, Codable, CaseIterable, Identifiable, Hashable 
                 PresentationBeat(duration: 5.0, content: .video, transition: .zoomPunch),
                 PresentationBeat(duration: 3.0, content: .photoCollage(secondaryCount: 2, arrangement: .mosaicThree), transition: .diagonalWipe),
                 PresentationBeat(duration: 2.0, content: .photoFullScreen(.zoomPunch), transition: .flash),
+            ]
+        case .retirementCeremony:
+            return [
+                PresentationBeat(duration: 4.0, content: .photoFullScreen(.kenBurns), transition: .whiteout),
+                PresentationBeat(duration: 4.5, content: .photoCollage(secondaryCount: 2, arrangement: .bigWithTwoSmall), transition: .crossfade),
+                PresentationBeat(duration: 3.5, content: .photoFullScreen(.zoomPunch), transition: .diagonalWipe),
+                PresentationBeat(duration: 5.5, content: .video, transition: .flash),
+                PresentationBeat(duration: 4.5, content: .photoCollage(secondaryCount: 2, arrangement: .mosaicThree), transition: .whiteout),
+                PresentationBeat(duration: 4.0, content: .photoFullScreen(.kenBurns), transition: .crossfade),
+            ]
+        case .blooperCredits:
+            return [
+                PresentationBeat(duration: 3.5, content: .photoCollage(secondaryCount: 2, arrangement: .mosaicThree), transition: .crossfade),
+                PresentationBeat(duration: 3.0, content: .photoFullScreen(.zoomPunch), transition: .flash),
+                PresentationBeat(duration: 5.0, content: .video, transition: .diagonalWipe),
+                PresentationBeat(duration: 4.0, content: .photoCollage(secondaryCount: 2, arrangement: .bigWithTwoSmall), transition: .whiteout),
+                PresentationBeat(duration: 3.5, content: .photoFullScreen(.kenBurns), transition: .zoomPunch),
+                PresentationBeat(duration: 4.5, content: .photoCollage(secondaryCount: 2, arrangement: .mosaicThree), transition: .crossfade),
             ]
         }
     }

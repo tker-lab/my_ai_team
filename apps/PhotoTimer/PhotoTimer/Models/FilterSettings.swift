@@ -26,15 +26,22 @@ struct FilterSettings: Codable, Equatable {
     /// `excludeScreenshots` がオンの時だけこの項目を出す。
     var strictScreenshotDetection: Bool = false
 
-    /// 選んだ「保存したリスト」(CustomPhotoList.id)の集合。空 = 絞り込みなし(2026-09-05追加)。
-    /// アルバムと同じ「メタ情報だけで絞れる」条件(画像解析は不要)。アルバムと両方選んだ場合は
-    /// 「アルバムの中の写真」∪「リストの中の写真」(足し算)として扱う(CandidateEngine参照)。
+    /// 選んだ「保存したリスト」(CustomPhotoList.id)。保存形式の互換性のためSetのまま持つが、
+    /// 常に高々1件へ正規化する。リスト選択中は他の絞り込みを一切使わない最優先条件。
     var selectedCustomListIDs: Set<String> = []
+
+    /// 現在選んでいるリスト。旧版で複数選択されたデータが残っていても、決定的な1件だけを使う。
+    var selectedCustomListID: String? {
+        selectedCustomListIDs.sorted().first
+    }
+
+    var isCustomListSelected: Bool { selectedCustomListID != nil }
 
     /// 画像解析(雰囲気・カテゴリ・よく撮れてる度優先・AIでのスクショ除外強化)が必要かどうか。
     /// 原則2の「遅延評価」に載せるべき条件がひとつでもあるかの判定に使う。
     var needsImageAnalysis: Bool {
-        !selectedMoods.isEmpty || !selectedCategories.isEmpty || preferHighAesthetics || strictScreenshotDetection
+        if isCustomListSelected { return false }
+        return !selectedMoods.isEmpty || !selectedCategories.isEmpty || preferHighAesthetics || strictScreenshotDetection
     }
 
     static let `default` = FilterSettings()
@@ -72,6 +79,14 @@ struct FilterSettings: Codable, Equatable {
         } else if let mood = selectedMoods.sorted(by: { $0.rawValue < $1.rawValue }).first {
             selectedMoods = [mood]
             selectedCategories.removeAll()
+        }
+    }
+
+    /// v10: 自作リストは複数の条件を掛け合わせる入口ではなく、表示内容を丸ごと決める
+    /// 「保存済みの選抜」として扱う。旧版の複数選択値は文字列順の先頭へ安全に縮める。
+    mutating func normalizeSingleCustomList() {
+        if let selectedCustomListID {
+            selectedCustomListIDs = [selectedCustomListID]
         }
     }
 }
@@ -171,6 +186,7 @@ enum FilterSettingsStore {
             moodsDroppedByMigrationNoticePending = true
         }
         migrated.normalizeSingleSubject()
+        migrated.normalizeSingleCustomList()
         return migrated
     }
 

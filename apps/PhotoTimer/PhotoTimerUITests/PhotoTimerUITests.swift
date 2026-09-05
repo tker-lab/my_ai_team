@@ -71,6 +71,23 @@ import XCTest
 /// 無関係な理由で失敗することがあった。
 final class PhotoTimerUITests: XCTestCase {
 
+    /// 保存リストは旧版の複数選択値が残っていても、毎回同じ1件だけを正として扱う。
+    /// また、リスト選択中は他条件の画像解析を開始しない(リスト最優先)ことをモデルで直接確認する。
+    func testCustomListSelectionMigratesToOneAndOverridesOtherFilters() {
+        var settings = FilterSettings.default
+        settings.selectedCustomListIDs = ["z-list", "a-list"]
+        settings.selectedCategories = [.dog]
+        settings.selectedMoods = [.dark]
+        settings.strictScreenshotDetection = true
+
+        settings.normalizeSingleCustomList()
+
+        XCTAssertEqual(settings.selectedCustomListIDs, ["a-list"])
+        XCTAssertEqual(settings.selectedCustomListID, "a-list")
+        XCTAssertTrue(settings.isCustomListSelected)
+        XCTAssertFalse(settings.needsImageAnalysis, "保存リスト中は他の条件を解析に掛けない")
+    }
+
     /// utility除外・解析失敗も同じbeginCandidateを通るため、種類に関係なく18件で停止する。
     func testSearchBudgetCountsEveryDispositionAndStopsAt18() {
         var budget = CandidateSearchBudget(maximumCount: 18, maximumSeconds: 0.8)
