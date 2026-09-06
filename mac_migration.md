@@ -94,7 +94,7 @@ cd ~/my_ai_team && git remote -v
 cd ~/my_ai_team && git log --oneline -1
 ```
 
-`git remote -v` で `origin` の参照先が `https://github.com/takataka0307/my_ai_team.git` になっていること、`git log --oneline -1` で何らかのコミットが表示されることを確認できれば十分です。**秘書メモリ(`secretary_memory`フォルダ)もリポジトリの中にあるため、このclone で一緒にMacへ来ています**(機微な2ファイルだけは`.gitignore`で除外されているため来ません。手順3で扱います)。
+`git remote -v` で `origin` の参照先が `https://github.com/tker-lab/my_ai_team.git` になっていること、`git log --oneline -1` で何らかのコミットが表示されることを確認できれば十分です。**秘書メモリ(`secretary_memory`フォルダ)もリポジトリの中にあるため、このclone で一緒にMacへ来ています**(機微な2ファイルだけは`.gitignore`で除外されているため来ません。手順3で扱います)。
 
 ---
 
