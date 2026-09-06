@@ -1374,6 +1374,9 @@ final class PhotoTimerUITests: XCTestCase {
         let recorder = ScreenshotRecorder(scenario: "v9_presentationpattern")
         try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
 
+        // 購入済みの場合は、初期画面の購入入口を表示せずホームをすっきり保つ。
+        XCTAssertFalse(app.buttons["homePremiumPurchaseButton"].exists, "購入済みなのに初期画面の購入入口が残っている")
+
         let settingsButton = app.buttons["playbackSettingsButton"]
         XCTAssertTrue(settingsButton.waitForExistence(timeout: 15), "設定(歯車)ボタンが見つからない")
         settingsButton.tap()
@@ -1584,6 +1587,12 @@ final class PhotoTimerUITests: XCTestCase {
         app.launch() // 【重要】ここではPHOTOTIMER_UI_TEST_FORCE_PREMIUMを付けない(未購入のまま検証する)
         let recorder = ScreenshotRecorder(scenario: "v11_premiumlock")
         try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+
+        // 初期画面にも未購入時の控えめな購入入口があることを確認する。
+        // StoreKitテストの購入シートを開く前に存在を確認し、既存の設定画面・ロック経路とは
+        // 独立した入口が失われていないことを検証する。
+        let homePremiumButton = app.buttons["homePremiumPurchaseButton"]
+        XCTAssertTrue(homePremiumButton.waitForExistence(timeout: 5), "未購入時の初期画面にプレミアム購入入口がない")
 
         // 1. 絞り込み画面:「保存したリスト」「場所」がロック状態で見えることを確認する。
         let filterButton = app.buttons["filterButton"]

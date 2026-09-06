@@ -15,7 +15,10 @@ struct ContentView: View {
     @State private var showingPlaybackSettingsSheet = false
     @State private var showingAlarmSettingsSheet = false
     @State private var showingHelpSheet = false
+    @State private var showingPurchaseSheet = false
     @State private var showingSlideshow = false
+    /// 購入直後にホームの入口を消し、購入状態の反映を画面へ届ける。
+    @ObservedObject private var purchaseManager = PurchaseManager.shared
     /// 前回のタイマーを再開する時だけ値が入る(CEO要望C. 2026-09-05:バックグラウンド動作)。
     /// 通常の「スタート」ボタンからの開始では nil のまま(=今から新規に始める)。
     @State private var resumingUntil: Date?
@@ -165,6 +168,21 @@ struct ContentView: View {
                     // 自動テスト(XCUITest)がこのボタンを確実に見つけられるようにするための目印。
                     .accessibilityIdentifier("playbackSettingsButton")
                 }
+                // 未購入時だけ表示する控えめな入口。購入済みならホームをすっきり保つため、
+                // ボタン自体を出さない(購入後の復元は表示設定内から行える)。
+                if !purchaseManager.isPremiumUnlocked {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            showingPurchaseSheet = true
+                        } label: {
+                            Label("300円", systemImage: "sparkles")
+                                .font(.subheadline)
+                                .fontDesign(theme.fontDesign)
+                        }
+                        .accessibilityLabel("プレミアム機能、300円")
+                        .accessibilityIdentifier("homePremiumPurchaseButton")
+                    }
+                }
             }
             .sheet(isPresented: $showingFilterSheet, onDismiss: {
                 FilterSettingsStore.save(filterSettings)
@@ -183,6 +201,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingHelpSheet) {
                 HelpView()
+            }
+            .sheet(isPresented: $showingPurchaseSheet) {
+                PurchaseView()
             }
             .fullScreenCover(isPresented: $showingSlideshow) {
                 SlideshowView(totalSeconds: selectedSeconds, settings: filterSettings, playbackSettings: playbackSettings, alarmSettings: alarmSettings, placeClusters: libraryIndex.placeClusters, resumingUntil: resumingUntil)
