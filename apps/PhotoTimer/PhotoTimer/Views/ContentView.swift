@@ -137,7 +137,7 @@ struct ContentView: View {
                 // 画面表示や動作には影響しない。
                 .accessibilityIdentifier("startButton")
             }
-            .navigationTitle("写真タイマー")
+            .navigationTitle("メモリータイマー")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {

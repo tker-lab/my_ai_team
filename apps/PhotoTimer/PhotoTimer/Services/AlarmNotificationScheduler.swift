@@ -67,7 +67,7 @@ enum AlarmNotificationScheduler {
         guard interval > 0 else { return } // すでに過ぎている時刻には予約できない(=フォアグラウンドで即終了する場合はそもそも不要)
 
         let content = UNMutableNotificationContent()
-        content.title = "写真タイマー"
+        content.title = "メモリータイマー"
         content.body = "設定した時間が終了しました。"
         // 音色(ピピピ/ベル/サイレン)にできるだけ寄せた通知音を鳴らす。
         // NotificationSoundFiles.swiftで端末内(Library/Sounds)に書き出したファイルを指す。

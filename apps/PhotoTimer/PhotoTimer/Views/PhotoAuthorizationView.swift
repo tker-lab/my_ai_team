@@ -15,7 +15,7 @@ struct PhotoAuthorizationView: View {
                 .font(.system(size: 56))
                 .foregroundStyle(.secondary)
 
-            Text("写真タイマー")
+            Text("メモリータイマー")
                 .font(.title2).bold()
                 .fontDesign(theme.fontDesign)
 

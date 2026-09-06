@@ -13,7 +13,7 @@ targets:
     info:
       path: PhotoTimer/Info.plist
       properties:
-        CFBundleDisplayName: 写真タイマー
+        CFBundleDisplayName: メモリータイマー
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
