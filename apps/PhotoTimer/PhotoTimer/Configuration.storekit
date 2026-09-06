@@ -3,18 +3,18 @@
   "nonRenewingSubscriptions" : [],
   "products" : [
     {
-      "displayPrice" : "600",
+      "displayPrice" : "300",
       "familyShareable" : false,
       "internalID" : "6F1B2C3D4E5F60718293A4B5C6D7E8F9",
       "localizations" : [
         {
-          "description" : "演出パターン・自作リスト(リスト作成)・場所での絞り込みをまとめて使えるようになります。",
-          "displayName" : "プレミアム機能アンロック",
+          "description" : "複数選択削除・場所での絞り込み・演出パターンをまとめて使えるようになります。",
+          "displayName" : "メモリータイマー プレミアム",
           "locale" : "ja_JP"
         }
       ],
       "productID" : "com.aiteam.PhotoTimer.premiumUnlock",
-      "referenceName" : "プレミアム機能アンロック",
+      "referenceName" : "メモリータイマー プレミアム",
       "type" : "NonConsumable"
     }
   ],

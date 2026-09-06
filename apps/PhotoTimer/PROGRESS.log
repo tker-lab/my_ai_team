@@ -418,3 +418,4 @@ UI文言修正の範囲外と判断し今回は手を付けていない。秘書
   実機(iPhone 14)へインストール・起動確認済み(devicectlでプロセス起動継続を確認)。
 2026-09-06 17:40 — ホーム画面の分・秒ホイール数字にもfontDesignを明示追加(UIKit裏打ちのwheel Pickerのため反映されない可能性あり、次節参照)。実機(iPhone 14)に最終ビルドを再インストール・起動確認(PID確認)。5項目完了。
 2026-09-06 17:47 — StoreKitテストの商品情報取得を実機ログで診断。storekitdが本物のMedia API(Sandbox)へ問い合わせておりローカルConfiguration.storekitが使われていないことを確認(xcodebuild単体実行の既知の制約。Apple公式説明の通り、ローカルStoreKit設定はXcodeから直接Runした場合のみ有効)。コード側(PurchaseManager/scheme参照)は正しく実装済み。CEOへはXcodeから直接Runして確認する手順を報告に記載。
+2026-09-06 17:58 — 課金仕様変更に着手。Q&A文言統一、Configuration.storekit(価格300円・商品名変更)、FeatureFlags再構成(自作リスト無料化・isBulkDeleteEnabled新設)、FilterOptionsView/CandidateEngineの自作リスト課金ゲート撤去、PurchaseView/PlaybackSettingsViewの機能説明文更新まで完了。次にSlideshowView(単体削除新設・複数選択削除の課金化)に着手。

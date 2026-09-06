@@ -27,6 +27,9 @@ struct SlideshowView: View {
     /// (CEO要望・2026-09-06のカラーテーマ機能。スライドショー本体は常に黒背景のまま=写真本体の見え方は変えない)。
     @AppStorage(AppThemeStore.key) private var themeRawValue: String = AppTheme.default.rawValue
     private var theme: AppTheme { AppTheme(rawValue: themeRawValue) ?? .default }
+    /// 【2026-09-06追加】複数選択削除は有料機能になったため、未購入で「削除する項目を選ぶ」
+    /// (enterHistoryDeleteModeButton)を押した時、選択モードに入る代わりにここを開く。
+    @State private var showingBulkDeletePurchaseSheet = false
 
     var body: some View {
         ZStack {
@@ -98,12 +101,15 @@ struct SlideshowView: View {
             .padding()
 
             if let previewItem {
-                HistoryPreviewView(asset: previewItem.asset) { self.previewItem = nil }
+                HistoryPreviewView(asset: previewItem.asset, controller: controller) { self.previewItem = nil }
                     .zIndex(10)
             }
         }
         .statusBarHidden()
         .themedFontDesign()
+        .sheet(isPresented: $showingBulkDeletePurchaseSheet) {
+            PurchaseView()
+        }
         .onAppear {
             controller.start(totalDurationSeconds: totalSeconds, settings: settings, playbackSettings: playbackSettings, alarmSettings: alarmSettings, placeClusters: placeClusters, resumingUntil: resumingUntil)
             // 指摘C: スライドショー中は画面の自動ロックを止める(この画面にいる間だけ)。
@@ -274,39 +280,54 @@ struct SlideshowView: View {
                     // 暗い背景(theme.panelTint)に埋もれて見えにくかった。太字+背景付きの
                     // 「見えるボタン」にして、ブルー/クリームどちらのテーマでも読みやすくする
                     // (HistoryActionButtonStyle参照。判定ロジックには一切関わらない見た目だけの変更)。
-                    if FeatureFlags.isHistoryDeletionEnabled {
-                        if isHistoryDeleteMode {
-                            HStack {
-                                Button("削除モード終了") {
-                                    isHistoryDeleteMode = false
-                                    selectedHistoryIDs.removeAll()
-                                }
-                                .buttonStyle(.historyAction())
-                                Spacer()
-                                Button("全選択") {
-                                    selectedHistoryIDs = Set(controller.displayedAssets.map(\.localIdentifier))
-                                }
-                                .buttonStyle(.historyAction())
-                                .disabled(selectedHistoryIDs.count == controller.displayedAssets.count)
-                                Button("全解除") { selectedHistoryIDs.removeAll() }
-                                    .buttonStyle(.historyAction())
-                                    .disabled(selectedHistoryIDs.isEmpty)
-                            }
-                            if !selectedHistoryIDs.isEmpty {
-                                Button("選択した項目を削除(\(selectedHistoryIDs.count))", role: .destructive) {
-                                    showingDeleteConfirmation = true
-                                }
-                                .buttonStyle(.historyAction(emphasis: .destructive))
-                                .accessibilityIdentifier("deleteSelectedHistoryButton")
-                            }
-                        } else {
-                            Button("削除する項目を選ぶ") {
-                                isHistoryDeleteMode = true
+                    // 【2026-09-06変更】複数選択削除(このブロック全体)は有料機能
+                    // (FeatureFlags.isBulkDeleteEnabled)。振り返り一覧からの単体削除
+                    // (HistoryPreviewView。全画面プレビューのゴミ箱ボタン)は無料のまま独立して
+                    // 動くので、ここを未購入で塞いでも1枚ずつの削除は引き続き使える。
+                    if isHistoryDeleteMode {
+                        HStack {
+                            Button("削除モード終了") {
+                                isHistoryDeleteMode = false
                                 selectedHistoryIDs.removeAll()
                             }
-                            .buttonStyle(.historyAction(emphasis: .prominent))
-                            .accessibilityIdentifier("enterHistoryDeleteModeButton")
+                            .buttonStyle(.historyAction())
+                            Spacer()
+                            Button("全選択") {
+                                selectedHistoryIDs = Set(controller.displayedAssets.map(\.localIdentifier))
+                            }
+                            .buttonStyle(.historyAction())
+                            .disabled(selectedHistoryIDs.count == controller.displayedAssets.count)
+                            Button("全解除") { selectedHistoryIDs.removeAll() }
+                                .buttonStyle(.historyAction())
+                                .disabled(selectedHistoryIDs.isEmpty)
                         }
+                        if !selectedHistoryIDs.isEmpty {
+                            Button("選択した項目を削除(\(selectedHistoryIDs.count))", role: .destructive) {
+                                // 【二重防御】入室(下のenterHistoryDeleteModeButton)時に購入状態を
+                                // 確認済みだが、CandidateEngine/TimerControllerの他の有料機能と同じ
+                                // 考え方で、実行の直前にももう一度確認する。
+                                if FeatureFlags.isBulkDeleteEnabled {
+                                    showingDeleteConfirmation = true
+                                } else {
+                                    isHistoryDeleteMode = false
+                                    selectedHistoryIDs.removeAll()
+                                    showingBulkDeletePurchaseSheet = true
+                                }
+                            }
+                            .buttonStyle(.historyAction(emphasis: .destructive))
+                            .accessibilityIdentifier("deleteSelectedHistoryButton")
+                        }
+                    } else {
+                        Button("削除する項目を選ぶ") {
+                            if FeatureFlags.isBulkDeleteEnabled {
+                                isHistoryDeleteMode = true
+                                selectedHistoryIDs.removeAll()
+                            } else {
+                                showingBulkDeletePurchaseSheet = true
+                            }
+                        }
+                        .buttonStyle(.historyAction(emphasis: .prominent))
+                        .accessibilityIdentifier("enterHistoryDeleteModeButton")
                     }
                 }
                 Button { dismiss() } label: { Text("閉じる").fontDesign(theme.fontDesign) }
@@ -392,6 +413,10 @@ private struct HistoryPreviewItem: Identifiable {
 
 private struct HistoryPreviewView: View {
     let asset: PHAsset
+    /// 【2026-09-06追加】1枚だけを削除する機能(無料)のために、タイマーの実行結果
+    /// (displayedAssets)を持つTimerControllerを参照する。削除の実行はcontroller.deleteAssets(_:)
+    /// に任せ、この画面自身はOSの確認ダイアログを呼ぶ前のアプリ側の確認だけを持つ。
+    @ObservedObject var controller: TimerController
     let close: () -> Void
     @State private var image: UIImage?
     @State private var player: AVPlayer?
@@ -399,6 +424,10 @@ private struct HistoryPreviewView: View {
     /// これが無いと、image・playerがどちらもnilのまま「読み込み中」と見分けが付かず、
     /// ProgressViewが無言で回り続けてしまっていた。
     @State private var loadFailed = false
+    /// 単体削除(無料機能)の確認ダイアログ表示中かどうか。既存の複数選択削除と同じ
+    /// 「アプリ側の確認→OS標準の確認」の2段階を踏襲する(CEO要望・2026-09-06。
+    /// 確認せずに削除が実行されることは絶対に無いようにする)。
+    @State private var showingDeleteConfirmation = false
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -413,11 +442,42 @@ private struct HistoryPreviewView: View {
                     .padding()
             }
             else { ProgressView().tint(.white) }
-            Button { close() } label: {
-                Image(systemName: "chevron.backward.circle.fill").font(.largeTitle).foregroundStyle(.white, .black.opacity(0.4))
+            VStack {
+                HStack {
+                    Button { close() } label: {
+                        Image(systemName: "chevron.backward.circle.fill").font(.largeTitle).foregroundStyle(.white, .black.opacity(0.4))
+                    }
+                    .accessibilityIdentifier("closeHistoryPreviewButton")
+                    Spacer()
+                    // 【2026-09-06追加】今見ている1枚だけを削除するボタン(無料機能。
+                    // FeatureFlags.isHistoryDeletionEnabled)。複数選択削除(有料)とは別の導線。
+                    if FeatureFlags.isHistoryDeletionEnabled {
+                        Button {
+                            showingDeleteConfirmation = true
+                        } label: {
+                            Image(systemName: "trash.circle.fill").font(.largeTitle).foregroundStyle(.white, .black.opacity(0.4))
+                        }
+                        .accessibilityIdentifier("deleteHistoryPreviewButton")
+                    }
+                }
+                Spacer()
             }
             .padding()
-            .accessibilityIdentifier("closeHistoryPreviewButton")
+        }
+        .alert("この写真・動画を削除しますか？", isPresented: $showingDeleteConfirmation) {
+            Button("削除", role: .destructive) {
+                controller.deleteAssets([asset])
+            }
+            Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text("次に表示されるiPhone標準の確認画面でも削除を確定する必要があります。")
+        }
+        // 削除に成功する(=controller.displayedAssetsからこの1枚が消える)と、自動でプレビューを
+        // 閉じて一覧に戻る。OS標準の確認でキャンセルした場合・削除に失敗した場合はdisplayedAssetsが
+        // 変わらないため、この画面は開いたままになる(失敗時はSlideshowView側の共通アラートが
+        // 別途表示される)。
+        .onChange(of: controller.displayedAssets.contains(where: { $0.localIdentifier == asset.localIdentifier })) { _, stillPresent in
+            if !stillPresent { close() }
         }
         .task {
             if asset.mediaType == .video {
