@@ -143,6 +143,23 @@ final class PhotoTimerUITests: XCTestCase {
             }
             return false
         }
+
+        // StoreKitの「購入を復元」をシミュレータで押した時、StoreKitテストの状態や
+        // XcodeのバージョンによってはApple Accountへのサインインを促すOSダイアログが
+        // 表示されることがある。本体の購入画面ではなくOSが表示する別プロセスのダイアログ
+        // なので、UIテスト側でキャンセルしてテスト対象の画面へ戻す。購入・復元処理そのものは
+        // 実機/Xcodeで別途確認するため、ここでダイアログを無理に自動ログインはしない。
+        addUIInterruptionMonitor(withDescription: "StoreKitのApple Accountダイアログをキャンセルする") { alert in
+            let cancelLabels = ["キャンセル", "今はしない", "Cancel", "Not Now"]
+            for label in cancelLabels {
+                let button = alert.buttons[label]
+                if button.exists {
+                    button.tap()
+                    return true
+                }
+            }
+            return false
+        }
     }
 
     // MARK: - シナリオ1: 何も絞り込まない基本フロー
