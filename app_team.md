@@ -25,6 +25,9 @@
 ## 優先順位
 - 未定(今後のヒアリングで決定)
 
+## 定型作業依頼書
+新規実装は初回依頼書、実機確認後は修正依頼書を使う(2往復完成を狙う運用)。テンプレートは [app_team_request_templates.md](app_team_request_templates.md)、ジャンル別チェックの蓄積は [app_team_genre_checklists.md](app_team_genre_checklists.md) 参照。
+
 ## チェック工程:チェック担当に渡すチェックリスト
 
 作成担当とは別セッションを立ち上げ、下記リストと成果物を照合させる(修正はさせず指摘のみ)。ルールの全体像はCLAUDE.md参照。
