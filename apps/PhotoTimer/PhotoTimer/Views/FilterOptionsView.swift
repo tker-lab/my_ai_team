@@ -16,6 +16,9 @@ struct FilterOptionsView: View {
     /// 自作リスト一覧(2026-09-05追加)。CustomListsView(リストの管理画面)から戻ってきた時に
     /// 増減が反映されるよう、この画面が再度表示されるたびに読み込み直す(.onAppear参照)。
     @State private var customLists: [CustomPhotoList] = CustomPhotoListStore.load()
+    /// チップの選択色をテーマに合わせるために参照する(CEO要望・2026-09-06のカラーテーマ機能)。
+    @AppStorage(AppThemeStore.key) private var themeRawValue: String = AppTheme.default.rawValue
+    private var theme: AppTheme { AppTheme(rawValue: themeRawValue) ?? .default }
 
     var body: some View {
         NavigationStack {
@@ -42,6 +45,7 @@ struct FilterOptionsView: View {
             .onAppear {
                 customLists = CustomPhotoListStore.load()
             }
+            .themedFormBackground()
             .navigationTitle("絞り込み条件")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -411,7 +415,7 @@ struct FilterOptionsView: View {
                         .font(.footnote)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
-                        .background(isSelected(item) ? Color.accentColor : Color.secondary.opacity(0.15))
+                        .background(isSelected(item) ? theme.accentColor : Color.secondary.opacity(0.15))
                         .foregroundStyle(isSelected(item) ? Color.white : Color.primary)
                         .clipShape(Capsule())
                 }

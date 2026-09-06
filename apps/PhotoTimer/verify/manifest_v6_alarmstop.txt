@@ -1,3 +1,4 @@
-v6_alarmstop_01_alarm_settings_until_stopped.png	t=14.9s
-v6_alarmstop_02_stop_alarm_button_shown.png	t=21.8s
-v6_alarmstop_03_switched_to_close.png	t=23.3s
+絞り込み条件をリセットした(前のテストの選択を引き継がないため)
+v6_alarmstop_01_alarm_settings_until_stopped.png	t=21.4s
+v6_alarmstop_02_stop_alarm_button_shown.png	t=28.3s
+v6_alarmstop_03_switched_to_close.png	t=29.9s

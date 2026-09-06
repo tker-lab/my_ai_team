@@ -663,7 +663,8 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
             currentImage = image
             currentPresentationFrame = PresentationFrame(
                 layout: .fullScreen(image: image, assetID: primary.localIdentifier, style: style),
-                transition: beat.transition
+                transition: beat.transition,
+                duration: beat.duration
             )
             try? await Task.sleep(nanoseconds: UInt64(max(0.1, beat.duration) * 1_000_000_000))
             return true
@@ -686,12 +687,14 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
                 // 空白表示にはしない)。
                 currentPresentationFrame = PresentationFrame(
                     layout: .fullScreen(image: mainImage, assetID: primary.localIdentifier, style: .kenBurns),
-                    transition: beat.transition
+                    transition: beat.transition,
+                    duration: beat.duration
                 )
             } else {
                 currentPresentationFrame = PresentationFrame(
                     layout: .collage(main: (mainImage, primary.localIdentifier), secondaries: secondaries, arrangement: arrangement),
-                    transition: beat.transition
+                    transition: beat.transition,
+                    duration: beat.duration
                 )
             }
             try? await Task.sleep(nanoseconds: UInt64(max(0.1, beat.duration) * 1_000_000_000))

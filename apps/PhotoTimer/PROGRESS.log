@@ -340,3 +340,34 @@ CEOの写真・動画への削除・変更操作は一切行っていない(イ�
 テスト環境起因の1件〔testDefaultFlow_NoFilter〕を除く)、実機インストール・起動確認まで完了。
 2026-09-05 (保存リスト最優先・安全表示演出4種) 保存リストを単一選択へ移行し、選択中は他フィルタをUIで操作不能・再生時も完全に無視する最優先仕様へ変更(旧複数選択値は決定的な1件へ安全移行)。全演出で主画像/コラージュをaspect fitにし、縦横写真の内容を切らず背景/余白で表示。既存の結婚式ムービー風・スタジアムビジョン風を修正し、引退セレモニー風・NG集エンドロール風を固定順/多様遷移/動画枠スキップ/既存音設定維持で追加。iPhoneOS BUILD SUCCEEDEDおよびTEST BUILD SUCCEEDED。CoreSimulatorService/CoreDeviceServiceが停止しUIテスト実行・実機導入は保留、写真動画への削除変更なし。
 2026-09-06 (演出の視認性・装飾) スタジアムビジョン風の斜めワイプが主写真までマスクする方式を廃止し、写真を切らないフェード+斜めの光帯へ変更。4演出すべてで、写真・動画の主素材を覆わない周辺フレーム/光/LED/フィルム穴/紙吹雪等のSwiftUI装飾を表示順に3段階で固定巡回するよう追加。iPhoneOS BUILD SUCCEEDED、CoreSimulatorService不調のためUIテスト・実機確認は保留。写真動画の削除変更なし。
+2026-09-06 09:35 バグA(フルスクリーンがGeometryReader欠如で画面いっぱいに広がらない)・バグB(crossfadeとzoomPunchの見た目が同一)を修正。演出パターンの装飾(PresentationDecorationOverlay)を4パターンとも骨格から作り分け(結婚式=四隅の弧+呼吸する光、スタジアム=四辺LED+ビューファインダー角+高速光、引退=1本のスポットライト+降り注ぐ光の粒、NG集=四辺フィルム穴+斜めスタンプ+紙吹雪)、常時ループする動きを追加。アプリ全体のカラーテーマ2種(ブルー/クリーム)をAppTheme.swiftで新設、設定画面から切替・端末内保存。シミュレータ向けbuild成功。回帰テスト・実機確認は続けて実施。
+2026-09-06 (演出パターン バグA・B修正+作り込み+カラーテーマ 完了)
+バグA(フルスクリーンが画面いっぱいに広がらない):PresentationFrameView.fullScreenケースにGeometryReaderと
+明示frameを追加。バグB(crossfadeとzoomPunchが同じ見た目):zoomPunch遷移だけscale(0.72→1.0)を追加、
+kenBurns/zoomPunchのFullScreenStyleにも実際のスケール変化を実装。
+【調査で判明した根本原因・重要】上記2件を直しても実機/シミュレータで演出パターン(特にコラージュ)が
+「画面の一部にしか表示されない」「前後の間が重なって見える」症状が残った。原因はSlideshowView側で
+ZStack全体に掛けていた.animation(value: currentAsset...)が、GeometryReaderを含むView(フルスクリーン/
+コラージュ)の.transition()+.id()による差し替えにも及んでいたこと。SwiftUIはこの組み合わせで
+差し替わりの瞬間にレイアウトを一時的に不正確なサイズで計算することがある(GeometryReaderの既知の癖)。
+対応:PresentationFrameViewを「新旧の間を両方とも完成サイズでマウントし、消えていく側の不透明度と
+zoomPunch用のscaleだけをwithAnimationで動かす」手動クロスフェード方式に書き換え、
+GeometryReaderのレイアウト計算をアニメーションの外に切り離した。SlideshowView側の.animation(value:)は
+シンプル表示(演出パターン未選択時のフェード)専用に絞り込んだ。
+副次的な発見:コラージュのタイル(tile())は写真の縦横比がマスと合わない時、真っ黒(実質見えない)の
+余白が残り「小さく浮いて見える」原因になっていた。フルスクリーンと同じ「ぼかした同じ写真を敷く」
+処理をタイルにも追加し解消(bigWithTwoSmall/mosaicThreeとも幅・高さを常に具体値で渡すよう統一)。
+演出の作り込み:PresentationDecorationOverlayを骨格から作り分け直した(結婚式=枠を廃止し四隅の弧+
+ゆっくり明滅する光+漂う光の粒、スタジアム=四辺を囲む太いLED+ビューファインダー角ブラケット+
+高速に流れる光、引退セレモニー=枠を使わず中央から1本のスポットライト+降り注ぐ光の粒、
+NG集=四辺すべてのフィルム穴+斜めのゴム印スタンプ+舞い散る紙吹雪)。常時ループするアニメーションを
+各パターンに追加(pulse @State)。
+カラーテーマ:AppTheme.swift新設(ブルー/クリームの2種、accentColor・screenBackground・panelTint)。
+PlaybackSettingsViewに「見た目のテーマ」セクションを追加(@AppStorage即時反映・端末内保存)。
+ContentView/FilterOptionsView/PlaybackSettingsView/AlarmSettingsView/HelpView/CustomListsView/
+PhotoAuthorizationViewに背景反映、SlideshowViewの終了・振り返りパネルにpanelTint反映。
+RootViewに.preferredColorScheme(.light)を追加(テーマの明るい配色と端末のダークモードが衝突し
+文字が読めなくなるのを防ぐため。CEO確認事項として報告に明記)。
+検証:新規UIテスト2件追加(4演出パターンの起動・スクリーンショット確認/カラーテーマ切替・再起動後
+保持確認)、既存回帰5件と合わせて全て成功。シミュレータ(iPhone 17)でスクリーンショット多数確認。
+実機(iPhone 14)へのインストール・起動確認も実施(devicectl、写真・動画の削除変更なし)。

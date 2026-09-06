@@ -23,6 +23,10 @@ struct SlideshowView: View {
     @State private var showingDeleteConfirmation = false
     @State private var isHistoryDeleteMode = false
     @State private var previewItem: HistoryPreviewItem?
+    /// 振り返り一覧・終了画面のパネル色をテーマに合わせるために参照する
+    /// (CEO要望・2026-09-06のカラーテーマ機能。スライドショー本体は常に黒背景のまま=写真本体の見え方は変えない)。
+    @AppStorage(AppThemeStore.key) private var themeRawValue: String = AppTheme.default.rawValue
+    private var theme: AppTheme { AppTheme(rawValue: themeRawValue) ?? .default }
 
     var body: some View {
         ZStack {
@@ -45,6 +49,14 @@ struct SlideshowView: View {
                     .ignoresSafeArea()
                     .transition(.opacity)
                     .id(controller.currentAsset?.localIdentifier)
+                    // 【2026-09-06 バグA追加調査で発見】以前はこのアニメーション指定がZStack全体に
+                    // 掛かっており(下部にあった.animation(value:)参照)、演出パターン(GeometryReaderで
+                    // レイアウトするフルスクリーン/コラージュ)の切り替わり時にも及んでいた。SwiftUIは
+                    // アニメーション適用中の子のレイアウトを一時的に不正確な大きさで計算することがあり、
+                    // これが「コラージュ・フルスクリーンが一瞬、画面の一部にしか表示されない/2つの間が
+                    // 重なって見える」不具合の原因だった。ここ(このシンプル表示のフェードだけ)に
+                    // 絞ることで、演出パターン側のレイアウト計算からこのアニメーションを外した。
+                    .animation(.easeInOut(duration: 0.4), value: controller.currentAsset?.localIdentifier)
                     // 自動テストが「表示中の写真が実際に切り替わったか」を判定するための目印。
                     // 値は写真ごとの内部ID(localIdentifier)と表示通し番号(displayToken)を含む文字列で、
                     // 画面表示には影響しない。通し番号は「候補が少なく同じ写真・動画が連続で選ばれた場合」でも
@@ -112,7 +124,11 @@ struct SlideshowView: View {
                 break
             }
         }
-        .animation(.easeInOut(duration: 0.4), value: controller.currentAsset?.localIdentifier)
+        // 【2026-09-06移動】以前はここ(ZStack全体)に.animation(value: currentAsset...)を掛けていたが、
+        // 演出パターン(GeometryReaderでレイアウトするフルスクリーン/コラージュ)の切り替わりにも
+        // このアニメーションが及んでしまい、SwiftUIがレイアウトを一時的に不正確なサイズで計算する
+        // 不具合の原因になっていた。シンプル表示(currentImageのフェード)専用に絞り込み、
+        // 上のImage(uiImage:)側に付け替えた。
         // CEO要望D(2026-09-05): 削除に失敗した場合だけユーザーに知らせる
         // (キャンセルは正常系なので何も表示しない。TimerController.deleteCurrentAsset()参照)。
         .alert("削除できませんでした", isPresented: deletionFailureAlertBinding) {
@@ -196,7 +212,7 @@ struct SlideshowView: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(.black.opacity(0.5), in: RoundedRectangle(cornerRadius: 16))
+        .background(theme.panelTint.opacity(0.72), in: RoundedRectangle(cornerRadius: 16))
         .padding(.bottom, 40)
     }
 
@@ -283,7 +299,7 @@ struct SlideshowView: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(.black.opacity(0.5), in: RoundedRectangle(cornerRadius: 16))
+        .background(theme.panelTint.opacity(0.72), in: RoundedRectangle(cornerRadius: 16))
         .padding(.bottom, 40)
     }
 

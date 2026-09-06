@@ -18,3 +18,4 @@
 - [UIテスト用シミュレータのeraseは未記録の写真ライブラリを破壊する](xcuitest-simulator-erase-destroys-unseeded-photo-library.md) — レシピ不明なら破壊的操作前に必ず立ち止まる
 - [SwiftのCodable自動生成はデフォルト値を無視して丸ごと失敗する](swift-codable-default-value-decode-trap.md) — 設定structに項目追加時はdecodeIfPresentのカスタムinitが必須
 - [PHPickerのassetIdentifier取得条件とenumのHashable自動導出の境界線](phpicker-assetidentifier-and-enum-hashable.md) — 写真複数選択機能を作る時に必ず確認
+- [GeometryReader+.animation(value:)の組み合わせはレイアウト崩れの原因になる](geometryreader-animation-transition-glitch.md) — .transition()+.id()の差し替えをアニメーションさせると一時的に不正確なサイズを返す。手動クロスフェードで回避

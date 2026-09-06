@@ -36,6 +36,7 @@ struct CustomListsView: View {
                 .onDelete(perform: deleteLists)
             }
         }
+        .themedFormBackground()
         .navigationTitle("保存したリスト")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -145,6 +146,7 @@ private struct CustomListEditView: View {
                     .accessibilityIdentifier("deleteCustomListButton")
                 }
             }
+            .themedFormBackground()
             .navigationTitle("リストを編集")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

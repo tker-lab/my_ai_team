@@ -129,6 +129,9 @@ struct PresentationFrame: Identifiable {
     let id = UUID()
     let layout: Layout
     let transition: PresentationTransition
+    /// この「間」の表示秒数。フルスクリーンの連続アニメーション(Ken Burns等)の尺を
+    /// 表示時間ぴったりに合わせるために使う(2026-09-06追加。バグB対応の一環)。
+    let duration: Double
 
     enum Layout {
         case fullScreen(image: UIImage, assetID: String, style: FullScreenStyle)

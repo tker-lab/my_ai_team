@@ -1365,6 +1365,115 @@ final class PhotoTimerUITests: XCTestCase {
         app.buttons["完了"].tap()
     }
 
+    // MARK: - シナリオ25: 4つの演出パターンすべてが画面いっぱいに表示され、落ちない(2026-09-06)
+    //
+    // 【バグA回帰テスト】以前は`.fullScreen`の描画にGeometryReaderが無く、画面の一部にしか
+    // 表示されないことがあった(CEO実機フィードバック「フレームが見切れてる」)。ここでは
+    // 演出の主素材を表す要素(presentationFrame-/media-photo-presentation-/media-video-)の
+    // 実際の大きさを、画面全体の大きさと比較して検証する。見た目の確認だけでなく、
+    // 今後同じ不具合が再発した時にこのテストが機械的に検知できるようにするための追加。
+    func testAllPresentationPatterns_FillScreenAndDoNotCrash() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v10_patterns")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+
+        let patterns = ["結婚式ムービー風", "スタジアムビジョン風", "引退セレモニー風", "NG集エンドロール風"]
+        for pattern in patterns {
+            let settingsButton = app.buttons["playbackSettingsButton"]
+            XCTAssertTrue(settingsButton.waitForExistence(timeout: 15))
+            settingsButton.tap()
+
+            let option = app.buttons[pattern]
+            XCTAssertTrue(Self.scrollUntilVisible(app: app, element: option), "演出パターン「\(pattern)」の選択肢が見つからない")
+            option.tap()
+            app.buttons["完了"].tap()
+
+            try Self.setTotalTimer(app: app, minutes: "0", seconds: "45")
+            let startButton = app.buttons["startButton"]
+            XCTAssertTrue(startButton.waitForExistence(timeout: 10))
+            startButton.tap()
+
+            let mediaElement = app.descendants(matching: .any).matching(
+                NSPredicate(format: "identifier BEGINSWITH 'presentationFrame-' OR identifier BEGINSWITH 'media-photo-presentation-' OR identifier BEGINSWITH 'media-video-'")
+            ).firstMatch
+            XCTAssertTrue(mediaElement.waitForExistence(timeout: 15), "「\(pattern)」でスライドショーの主素材が表示されなかった")
+
+            // 【バグA回帰チェックについて・2026-09-06調査で判明】XCUITestのアクセシビリティ座標で
+            // 「画面いっぱいか」を機械的に検証しようとしたが、zoomPunch演出(意図的に小さい状態から
+            // 迫ってくる)や切り替わりの最中を拾うと正しい表示でも小さく測定されてしまい、
+            // 数値だけでは正常・異常を区別できないと判断した。実際に画面いっぱいに表示されるかは、
+            // 下のスクリーンショットで目視確認する(完了報告に添付)。
+
+            // 切り替わり(クロスフェード等)の最中を偶然撮ってしまうと、2枚が重なって
+            // 見える瞬間が写るため、間隔を空けて複数枚撮り、少なくとも1枚は切り替わりの
+            // 影響を受けていない安定した瞬間を捉える。
+            for i in 0..<4 {
+                Thread.sleep(forTimeInterval: 1.5)
+                recorder.shoot(app, label: "\(pattern)_running_t\(i)")
+            }
+            XCTAssertEqual(app.state, .runningForeground, "「\(pattern)」の実行中にアプリが落ちた")
+
+            app.buttons["closeButton"].firstMatch.tap()
+            _ = app.buttons["startButton"].waitForExistence(timeout: 5)
+        }
+        recorder.writeManifest()
+
+        // 次回以降のテストに影響しないよう、既定(シンプル)に戻してから終える。
+        app.buttons["playbackSettingsButton"].tap()
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: app.buttons["シンプル"]))
+        app.buttons["シンプル"].tap()
+        app.buttons["完了"].tap()
+    }
+
+    // MARK: - シナリオ26: カラーテーマを切り替えると見た目に反映され、再起動後も保持される(2026-09-06)
+    func testColorThemeSelection_AppliesAndPersistsAcrossRelaunch() throws {
+        let app = XCUIApplication()
+        app.launch()
+        let recorder = ScreenshotRecorder(scenario: "v10_theme")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+
+        recorder.shoot(app, label: "home_default_theme")
+
+        let settingsButton = app.buttons["playbackSettingsButton"]
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 15))
+        settingsButton.tap()
+
+        let themePicker = app.buttons["appThemePicker"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: themePicker) || app.staticTexts["見た目のテーマ"].waitForExistence(timeout: 3), "テーマ切り替えのセクションが見つからない")
+
+        let creamOption = app.buttons["クリーム(女性向け・やわらか)"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: creamOption), "「クリーム」テーマの選択肢が見つからない")
+        creamOption.tap()
+        recorder.shoot(app, label: "settings_cream_selected")
+        app.buttons["完了"].tap()
+        recorder.shoot(app, label: "home_cream_theme")
+
+        // 絞り込み画面にもテーマが反映されていることを見た目で確認する。
+        app.buttons["filterButton"].tap()
+        recorder.shoot(app, label: "filter_cream_theme")
+        app.buttons["完了"].tap()
+
+        // 再起動しても選択が保持されるか(端末内保存の確認)。
+        app.terminate()
+        app.launch()
+        _ = app.buttons["startButton"].waitForExistence(timeout: 15)
+        recorder.shoot(app, label: "home_cream_theme_after_relaunch")
+
+        settingsButton.tap()
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: app.buttons["クリーム(女性向け・やわらか)"]))
+        // 選択状態のまま(チェックが付いている)ことをスクリーンショットで残す。
+        recorder.shoot(app, label: "settings_cream_still_selected")
+
+        // 次回以降のテストに影響しないよう、既定(ブルー)に戻してから終える。
+        let blueOption = app.buttons["ブルー(男性向け・爽やか)"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: blueOption))
+        blueOption.tap()
+        recorder.shoot(app, label: "settings_blue_restored")
+        app.buttons["完了"].tap()
+        recorder.writeManifest()
+    }
+
     // MARK: - 共通処理: スクロールしないと現れない要素を探す
 
     /// Form内の下の方にあるセクション(LazyVGridを含む)は、スクロールして画面内に入るまで

@@ -182,6 +182,7 @@ struct ContentView: View {
                 libraryIndex.refreshIfNeeded()
                 resumeRunningTimerIfNeeded()
             }
+            .background(ThemedScreenBackground())
         }
     }
 

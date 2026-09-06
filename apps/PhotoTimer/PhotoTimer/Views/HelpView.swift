@@ -47,6 +47,7 @@ struct HelpView: View {
                     Text("写真の判定処理はすべてこの端末(iPhone)の中だけで行われます。写真そのものも判定結果も、外部(インターネット)へ送信されることは一切ありません。")
                 }
             }
+            .themedFormBackground()
             .navigationTitle("使い方・仕組み")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

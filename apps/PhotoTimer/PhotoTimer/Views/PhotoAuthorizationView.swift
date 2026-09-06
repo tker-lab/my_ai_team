@@ -40,5 +40,7 @@ struct PhotoAuthorizationView: View {
             }
         }
         .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(ThemedScreenBackground())
     }
 }

@@ -28,5 +28,11 @@ struct RootView: View {
                 libraryManager.refreshAuthorizationStatus()
             }
         }
+        .themedTint()
+        // 【テーマ機能追加(2026-09-06)にあたっての判断】このアプリは背景色までテーマで
+        // 塗り替える方式のため、端末側のダークモードに任せると文字色(.primary等)だけが
+        // 白反転してテーマの明るい背景に埋もれてしまう。テーマ自体が「配色を選ぶ」機能なので、
+        // アプリ内は常に明るい配色で統一し、ダークモードの影響を受けないようにする。
+        .preferredColorScheme(.light)
     }
 }

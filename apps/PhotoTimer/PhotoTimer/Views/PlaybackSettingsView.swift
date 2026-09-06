@@ -5,10 +5,27 @@ import SwiftUI
 struct PlaybackSettingsView: View {
     @Binding var settings: PlaybackSettings
     @Environment(\.dismiss) private var dismiss
+    /// アプリ全体のカラーテーマ(CEO要望・2026-09-06)。ここが選択場所。
+    @AppStorage(AppThemeStore.key) private var themeRawValue: String = AppTheme.default.rawValue
+    private var theme: AppTheme { AppTheme(rawValue: themeRawValue) ?? .default }
 
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Picker("テーマ", selection: $themeRawValue) {
+                        ForEach(AppTheme.allCases) { theme in
+                            Text(theme.displayName).tag(theme.rawValue)
+                        }
+                    }
+                    .pickerStyle(.inline)
+                    .accessibilityIdentifier("appThemePicker")
+                } header: {
+                    Text("見た目のテーマ")
+                } footer: {
+                    Text("アプリ全体の配色を切り替えます。文言や機能は変わりません。")
+                }
+
                 Section {
                     Picker("演出パターン", selection: $settings.presentationPattern) {
                         ForEach(PresentationPattern.allCases) { pattern in
@@ -92,6 +109,7 @@ struct PlaybackSettingsView: View {
                     Text(videoAudioMixModeFooter)
                 }
             }
+            .themedFormBackground()
             .navigationTitle("表示設定")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -99,6 +117,7 @@ struct PlaybackSettingsView: View {
                 }
             }
         }
+        .themedTint()
     }
 
     /// "0.5秒" / "4秒" のような表記(整数はそのまま、それ以外は小数第1位まで)。

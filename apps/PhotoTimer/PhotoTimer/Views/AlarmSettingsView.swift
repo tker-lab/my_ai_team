@@ -68,6 +68,7 @@ struct AlarmSettingsView: View {
                     Text("バイブレーションは消音スイッチの影響を受けません。ただし本体の「設定→サウンドと触覚→消音時のバイブレーション」がオフの場合は、アプリ側からは振動させられません。")
                 }
             }
+            .themedFormBackground()
             .navigationTitle("アラーム設定")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
