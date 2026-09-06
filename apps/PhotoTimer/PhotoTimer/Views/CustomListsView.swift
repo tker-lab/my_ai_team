@@ -37,6 +37,7 @@ struct CustomListsView: View {
             }
         }
         .themedFormBackground()
+        .themedFontDesign()
         .navigationTitle("保存したリスト")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -147,6 +148,7 @@ private struct CustomListEditView: View {
                 }
             }
             .themedFormBackground()
+            .themedFontDesign()
             .navigationTitle("リストを編集")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

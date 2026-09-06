@@ -937,7 +937,7 @@ final class PhotoTimerUITests: XCTestCase {
         app.buttons["完了"].tap()
     }
 
-    // MARK: - シナリオ16: 使い方説明画面(v6)
+    // MARK: - シナリオ16: Q&A画面(v6→2026-09-06 Q&A形式に全面差し替え)
 
     func testHelpScreen_OpensAndShowsGuidance() throws {
         let app = XCUIApplication()
@@ -949,12 +949,14 @@ final class PhotoTimerUITests: XCTestCase {
         XCTAssertTrue(helpButton.waitForExistence(timeout: 15), "「?」の使い方ボタンが見つからない")
         helpButton.tap()
 
-        let title = app.navigationBars["使い方・仕組み"]
-        XCTAssertTrue(title.waitForExistence(timeout: 5), "使い方説明画面が開かなかった")
+        let title = app.navigationBars["Q&A"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5), "Q&A画面が開かなかった")
 
-        // カメラの位置情報設定についての案内文(CEO追加要望)が含まれているか。
-        let locationGuidance = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'カメラ'")).firstMatch
-        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: locationGuidance), "カメラの位置情報設定についての案内文が見つからない")
+        // CEO提供のQ&A文面(2026-09-06全面差し替え)が実際に表示されているか。
+        let firstQuestion = app.staticTexts["写真が外に漏れちゃったりしない？"]
+        XCTAssertTrue(firstQuestion.waitForExistence(timeout: 5), "Q&Aの1問目が見つからない")
+        let billingQuestion = app.staticTexts.matching(NSPredicate(format: "label CONTAINS '間違って削除'")).firstMatch
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: billingQuestion), "課金コンテンツについてのQ&Aが見つからない")
         recorder.shoot(app, label: "help_location_section")
 
         app.buttons["閉じる"].tap()
@@ -1105,6 +1107,8 @@ final class PhotoTimerUITests: XCTestCase {
         let stopAlarm = app.buttons["stopAlarmButton"]
         if stopAlarm.waitForExistence(timeout: 12) { stopAlarm.tap() }
         XCTAssertTrue(app.scrollViews["sessionHistoryGrid"].waitForExistence(timeout: 5), "終了後の振り返り一覧が出ない")
+        // 【2026-09-06追加】「削除する項目を選ぶ」ボタンの見た目(視認性改善)を確認するための1枚。
+        recorder.shoot(app, label: "before_enter_delete_mode")
         app.buttons["enterHistoryDeleteModeButton"].tap()
         let deleteButton = app.buttons["deleteSelectedHistoryButton"]
         XCTAssertFalse(deleteButton.exists, "0件選択なのに削除ボタンが有効")
@@ -1137,8 +1141,8 @@ final class PhotoTimerUITests: XCTestCase {
         recorder.shoot(app, label: "aesthetics_section")
 
         // 「スクリーンショットを除く」がデフォルトでオンのはずなので、AI強化オプションも出ているはず。
-        let strictToggle = app.switches["AIで書類・レシートらしい写真も除く"]
-        XCTAssertTrue(strictToggle.exists, "「スクリーンショットを除く」がオンなのに「AIで書類・レシートらしい写真も除く」が出ていない")
+        let strictToggle = app.switches["書類・レシートらしい写真を除く"]
+        XCTAssertTrue(strictToggle.exists, "「スクリーンショットを除く」がオンなのに「書類・レシートらしい写真を除く」が出ていない")
 
         preferHighAestheticsToggle.tap()
         recorder.shoot(app, label: "aesthetics_enabled")
@@ -1293,8 +1297,8 @@ final class PhotoTimerUITests: XCTestCase {
         XCTAssertTrue(app.buttons["photoDurationPicker"].waitForExistence(timeout: 5), "既定(シンプル)なのに表示秒数のピッカーが無い")
         recorder.shoot(app, label: "classic_shows_duration_pickers")
 
-        let weddingOption = app.buttons["結婚式ムービー風"]
-        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: weddingOption), "「結婚式ムービー風」の選択肢が見つからない")
+        let weddingOption = app.buttons["エレガント風"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: weddingOption), "「エレガント風」の選択肢が見つからない")
         weddingOption.tap()
         recorder.shoot(app, label: "wedding_selected")
 
@@ -1378,7 +1382,7 @@ final class PhotoTimerUITests: XCTestCase {
         let recorder = ScreenshotRecorder(scenario: "v10_patterns")
         try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
 
-        let patterns = ["結婚式ムービー風", "スタジアムビジョン風", "引退セレモニー風", "NG集エンドロール風"]
+        let patterns = ["エレガント風", "ダイナミック風", "ノーブル風", "ポップ風"]
         for pattern in patterns {
             let settingsButton = app.buttons["playbackSettingsButton"]
             XCTAssertTrue(settingsButton.waitForExistence(timeout: 15))
@@ -1442,7 +1446,7 @@ final class PhotoTimerUITests: XCTestCase {
         let themePicker = app.buttons["appThemePicker"]
         XCTAssertTrue(Self.scrollUntilVisible(app: app, element: themePicker) || app.staticTexts["見た目のテーマ"].waitForExistence(timeout: 3), "テーマ切り替えのセクションが見つからない")
 
-        let creamOption = app.buttons["クリーム(女性向け・やわらか)"]
+        let creamOption = app.buttons["クリーム"]
         XCTAssertTrue(Self.scrollUntilVisible(app: app, element: creamOption), "「クリーム」テーマの選択肢が見つからない")
         creamOption.tap()
         recorder.shoot(app, label: "settings_cream_selected")
@@ -1461,12 +1465,12 @@ final class PhotoTimerUITests: XCTestCase {
         recorder.shoot(app, label: "home_cream_theme_after_relaunch")
 
         settingsButton.tap()
-        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: app.buttons["クリーム(女性向け・やわらか)"]))
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: app.buttons["クリーム"]))
         // 選択状態のまま(チェックが付いている)ことをスクリーンショットで残す。
         recorder.shoot(app, label: "settings_cream_still_selected")
 
         // 次回以降のテストに影響しないよう、既定(ブルー)に戻してから終える。
-        let blueOption = app.buttons["ブルー(男性向け・爽やか)"]
+        let blueOption = app.buttons["ブルー"]
         XCTAssertTrue(Self.scrollUntilVisible(app: app, element: blueOption))
         blueOption.tap()
         recorder.shoot(app, label: "settings_blue_restored")

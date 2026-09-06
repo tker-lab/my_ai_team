@@ -1,6 +1,7 @@
 前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)
-v4_fivefilters_01_stray_running_timer_detected.png	t=5.2s
+v4_fivefilters_01_stray_running_timer_detected.png	t=5.3s
+絞り込み条件をリセットした(前のテストの選択を引き継がないため)
 picked: album=true mood=true / placeSectionRendered(空表示)=false
-v4_fivefilters_02_filters_set.png	t=55.6s
-v4_fivefilters_03_settled_normal_slideshow.png	t=59.9s
-settledAs=normal_slideshow
+v4_fivefilters_02_filters_set.png	t=62.8s
+v4_fivefilters_03_settled_timeout.png	t=102.4s
+settledAs=timeout

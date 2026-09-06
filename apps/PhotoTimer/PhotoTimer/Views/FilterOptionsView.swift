@@ -28,7 +28,6 @@ struct FilterOptionsView: View {
                     mediaTypeSection
                     screenshotSection
                     aestheticsSection
-                    albumSection
                 }
                 .disabled(settings.isCustomListSelected)
                 .opacity(settings.isCustomListSelected ? 0.45 : 1)
@@ -38,6 +37,8 @@ struct FilterOptionsView: View {
                 Group {
                     placeSection
                     subjectSection
+                    // 【2026-09-06 CEO要望】アルバムのセクションを一番下に移動。
+                    albumSection
                 }
                 .disabled(settings.isCustomListSelected)
                 .opacity(settings.isCustomListSelected ? 0.45 : 1)
@@ -46,6 +47,7 @@ struct FilterOptionsView: View {
                 customLists = CustomPhotoListStore.load()
             }
             .themedFormBackground()
+            .themedFontDesign()
             .navigationTitle("絞り込み条件")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -145,8 +147,6 @@ struct FilterOptionsView: View {
     private var screenshotSection: some View {
         Section {
             Toggle("スクリーンショットを除く", isOn: $settings.excludeScreenshots)
-        } footer: {
-            Text("メモ代わりに撮ったスクリーンショットなどをスライドショーから外します。")
         }
     }
 
@@ -163,12 +163,10 @@ struct FilterOptionsView: View {
             Section {
                 Toggle("よく撮れてる写真を優先する", isOn: $settings.preferHighAesthetics)
                 if settings.excludeScreenshots {
-                    Toggle("AIで書類・レシートらしい写真も除く", isOn: $settings.strictScreenshotDetection)
+                    Toggle("書類・レシートらしい写真を除く", isOn: $settings.strictScreenshotDetection)
                 }
             } header: {
                 Text("よく撮れてる度")
-            } footer: {
-                Text("構図・色・ブレ・露出などからAIが「よく撮れているか」を判定します。優先しても除外はされないため、他に該当する写真が無い時は撮れの良し悪しに関わらず表示されます。「書類・レシートらしい写真も除く」は、スクリーンショットではないけれど書類やレシートを撮っただけの写真を追加で見分けます(「スクリーンショットを除く」がオンの時のみ表示)。")
             }
         }
     }
@@ -206,9 +204,7 @@ struct FilterOptionsView: View {
         } header: {
             Text("アルバム")
         } footer: {
-            if missingSelectedAlbumIDs.isEmpty {
-                Text("何も選ばない場合はすべてのアルバムが対象になります。")
-            } else {
+            if !missingSelectedAlbumIDs.isEmpty {
                 Text("選択していたアルバムが写真アプリ側で削除されたため見つかりません。上のボタンで選択を解除できます。")
             }
         }
@@ -386,7 +382,7 @@ struct FilterOptionsView: View {
             if moodMigrationNoticeVisible {
                 Text("以前は雰囲気とカテゴリを両方選べましたが、今はどちらか1つだけになりました。カテゴリの選択を優先したため、以前選んでいた雰囲気の指定は解除されています。")
             } else {
-                Text("雰囲気・色・カテゴリを通して1つだけ選べます。カテゴリは解析済みの候補を先に使い、まだ判定していない写真は表示中に探します。多少の誤検出があります。")
+                Text("雰囲気・色・カテゴリを通して1つだけ選べます。")
             }
         }
     }

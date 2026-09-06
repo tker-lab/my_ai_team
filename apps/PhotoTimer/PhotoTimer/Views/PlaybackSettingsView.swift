@@ -13,12 +13,17 @@ struct PlaybackSettingsView: View {
         NavigationStack {
             Form {
                 Section {
+                    // 【重複タイトル対策】.pickerStyle(.inline)はPickerのラベル("テーマ")を
+                    // 枠内の一番上に選択不可の見出しとして表示してしまい、Section見出し
+                    // (「見た目のテーマ」)と紛らわしく重複する。.labelsHidden()で視覚的にだけ
+                    // 隠す(VoiceOver用のラベル自体は残る)。演出パターン・動画の音のPickerも同様。
                     Picker("テーマ", selection: $themeRawValue) {
                         ForEach(AppTheme.allCases) { theme in
                             Text(theme.displayName).tag(theme.rawValue)
                         }
                     }
                     .pickerStyle(.inline)
+                    .labelsHidden()
                     .accessibilityIdentifier("appThemePicker")
                 } header: {
                     Text("見た目のテーマ")
@@ -33,6 +38,7 @@ struct PlaybackSettingsView: View {
                         }
                     }
                     .pickerStyle(.inline)
+                    .labelsHidden()
                     .accessibilityIdentifier("presentationPatternPicker")
                 } header: {
                     Text("演出パターン")
@@ -102,6 +108,7 @@ struct PlaybackSettingsView: View {
                         Text("音楽が鳴っていたら動画は無音").tag(VideoAudioMixMode.muteWhenOtherAudioPlaying)
                     }
                     .pickerStyle(.inline)
+                    .labelsHidden()
                     .accessibilityIdentifier("videoAudioMixModePicker")
                 } header: {
                     Text("動画の音と他アプリの音楽")
@@ -118,6 +125,7 @@ struct PlaybackSettingsView: View {
             }
         }
         .themedTint()
+        .themedFontDesign()
     }
 
     /// "0.5秒" / "4秒" のような表記(整数はそのまま、それ以外は小数第1位まで)。

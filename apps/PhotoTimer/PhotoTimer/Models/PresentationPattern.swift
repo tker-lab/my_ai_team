@@ -15,13 +15,16 @@ enum PresentationPattern: String, Codable, CaseIterable, Identifiable, Hashable 
 
     var id: String { rawValue }
 
+    // 【2026-09-06 CEO要望】具体的なシーン名(結婚式ムービー風、等)ではなく、それぞれの
+    // 世界観に合う形容詞的なイメージの名前に変更。CEOが例に挙げた「スタイリッシュ風」という
+    // 単語自体はそのまま採用していない(あくまで「形容詞で」という方向性の例として受け取った)。
     var displayName: String {
         switch self {
         case .classic: return "シンプル"
-        case .weddingFilm: return "結婚式ムービー風"
-        case .stadiumVision: return "スタジアムビジョン風"
-        case .retirementCeremony: return "引退セレモニー風"
-        case .blooperCredits: return "NG集エンドロール風"
+        case .weddingFilm: return "エレガント風"
+        case .stadiumVision: return "ダイナミック風"
+        case .retirementCeremony: return "ノーブル風"
+        case .blooperCredits: return "ポップ風"
         }
     }
 

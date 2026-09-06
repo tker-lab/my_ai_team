@@ -1,1 +1,2 @@
-v6_help_01_help_location_section.png	t=18.5s
+絞り込み条件をリセットした(前のテストの選択を引き継がないため)
+v6_help_01_help_location_section.png	t=20.9s

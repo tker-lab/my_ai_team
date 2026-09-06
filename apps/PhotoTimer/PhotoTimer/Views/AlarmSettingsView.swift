@@ -69,6 +69,7 @@ struct AlarmSettingsView: View {
                 }
             }
             .themedFormBackground()
+            .themedFontDesign()
             .navigationTitle("アラーム設定")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

@@ -24,6 +24,9 @@ struct ContentView: View {
     /// そのたびに再開確認が走ってしまう(たとえば「閉じる」ボタンで手動終了した直後に何らかの
     /// 理由で古い記録がまだ残っていた場合、設定画面を開いただけで意図せず再開してしまうおそれがある)。
     @State private var hasCheckedForResumeOnLaunch = false
+    /// 大きな時刻表示の字体をテーマに合わせるために参照する(CEO要望・2026-09-06のカラーテーマ機能)。
+    @AppStorage(AppThemeStore.key) private var themeRawValue: String = AppTheme.default.rawValue
+    private var theme: AppTheme { AppTheme(rawValue: themeRawValue) ?? .default }
 
     /// 設定できる範囲(秒)。
     /// 下限1秒(CEO要望・2026-09-04):「一瞬だけ写真が映ってもそれはそれで面白い」という考えから、
@@ -42,7 +45,7 @@ struct ContentView: View {
                     .foregroundStyle(.tint)
 
                 Text(Self.timeString(selectedSeconds))
-                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .font(.system(size: 56, weight: .bold, design: theme.fontDesign))
                     .monospacedDigit()
                     // 自動テスト(XCUITest)が「大きく表示されている時間」を正確に読み取るための目印。
                     // 画面表示や動作には影響しない。

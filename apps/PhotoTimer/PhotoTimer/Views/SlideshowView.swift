@@ -100,6 +100,7 @@ struct SlideshowView: View {
             }
         }
         .statusBarHidden()
+        .themedFontDesign()
         .onAppear {
             controller.start(totalDurationSeconds: totalSeconds, settings: settings, playbackSettings: playbackSettings, alarmSettings: alarmSettings, placeClusters: placeClusters, resumingUntil: resumingUntil)
             // 指摘C: スライドショー中は画面の自動ロックを止める(この画面にいる間だけ)。
@@ -183,7 +184,7 @@ struct SlideshowView: View {
             Spacer()
 
             Text(timeString(controller.remainingSeconds))
-                .font(.system(.title2, design: .rounded).monospacedDigit().bold())
+                .font(.system(.title2, design: theme.fontDesign).monospacedDigit().bold())
                 .foregroundStyle(.white)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 6)
@@ -262,6 +263,10 @@ struct SlideshowView: View {
                     }
                     .frame(maxHeight: 360)
                     .accessibilityIdentifier("sessionHistoryGrid")
+                    // 【2026-09-06 CEO指摘対応】以前はここの5つのボタンが標準の文字色のままで、
+                    // 暗い背景(theme.panelTint)に埋もれて見えにくかった。太字+背景付きの
+                    // 「見えるボタン」にして、ブルー/クリームどちらのテーマでも読みやすくする
+                    // (HistoryActionButtonStyle参照。判定ロジックには一切関わらない見た目だけの変更)。
                     if FeatureFlags.isHistoryDeletionEnabled {
                         if isHistoryDeleteMode {
                             HStack {
@@ -269,18 +274,22 @@ struct SlideshowView: View {
                                     isHistoryDeleteMode = false
                                     selectedHistoryIDs.removeAll()
                                 }
+                                .buttonStyle(.historyAction())
                                 Spacer()
                                 Button("全選択") {
                                     selectedHistoryIDs = Set(controller.displayedAssets.map(\.localIdentifier))
                                 }
+                                .buttonStyle(.historyAction())
                                 .disabled(selectedHistoryIDs.count == controller.displayedAssets.count)
                                 Button("全解除") { selectedHistoryIDs.removeAll() }
+                                    .buttonStyle(.historyAction())
                                     .disabled(selectedHistoryIDs.isEmpty)
                             }
                             if !selectedHistoryIDs.isEmpty {
                                 Button("選択した項目を削除(\(selectedHistoryIDs.count))", role: .destructive) {
                                     showingDeleteConfirmation = true
                                 }
+                                .buttonStyle(.historyAction(emphasis: .destructive))
                                 .accessibilityIdentifier("deleteSelectedHistoryButton")
                             }
                         } else {
@@ -288,6 +297,7 @@ struct SlideshowView: View {
                                 isHistoryDeleteMode = true
                                 selectedHistoryIDs.removeAll()
                             }
+                            .buttonStyle(.historyAction(emphasis: .prominent))
                             .accessibilityIdentifier("enterHistoryDeleteModeButton")
                         }
                     }
@@ -312,6 +322,53 @@ struct SlideshowView: View {
         let m = seconds / 60
         let s = seconds % 60
         return String(format: "%02d:%02d", m, s)
+    }
+}
+
+/// 振り返り一覧の「削除モード」まわりのボタン(削除する項目を選ぶ・削除モード終了・全選択・
+/// 全解除・選択した項目を削除)を見やすくするための共通スタイル(CEO指摘対応・2026-09-06)。
+/// 暗い半透明パネル(theme.panelTint)の上でも、ブルー/クリームどちらのテーマでも読めるよう、
+/// テーマの色に関わらず「白い太字+背景付きのカプセル」で統一する(判定ロジックとは無関係)。
+private struct HistoryActionButtonStyle: ButtonStyle {
+    enum Emphasis {
+        /// 通常のボタン(削除モード終了・全選択・全解除)。
+        case normal
+        /// 最初の入り口となる操作(削除する項目を選ぶ)。少し濃い背景で目立たせる。
+        case prominent
+        /// 実際にデータを削除する操作(選択した項目を削除)。誤操作に気づけるよう赤系にする。
+        case destructive
+    }
+
+    var emphasis: Emphasis = .normal
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(backgroundColor, in: Capsule())
+            .opacity(buttonOpacity(pressed: configuration.isPressed))
+    }
+
+    private var backgroundColor: Color {
+        switch emphasis {
+        case .normal: return .white.opacity(0.28)
+        case .prominent: return .black.opacity(0.6)
+        case .destructive: return .red.opacity(0.85)
+        }
+    }
+
+    private func buttonOpacity(pressed: Bool) -> Double {
+        guard isEnabled else { return 0.35 }
+        return pressed ? 0.7 : 1
+    }
+}
+
+private extension ButtonStyle where Self == HistoryActionButtonStyle {
+    static func historyAction(emphasis: HistoryActionButtonStyle.Emphasis = .normal) -> HistoryActionButtonStyle {
+        HistoryActionButtonStyle(emphasis: emphasis)
     }
 }
 

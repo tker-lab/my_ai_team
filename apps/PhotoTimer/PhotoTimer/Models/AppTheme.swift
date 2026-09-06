@@ -1,13 +1,13 @@
 import SwiftUI
 
 /// アプリ全体の配色テーマ。CEO要望(2026-09-06):設定画面からいつでも切り替えられる
-/// 2種類を用意する。「男性向け/女性向け」という呼び方は暫定のラベルで、UI文言を
-/// 確定するタイミングで見直してよい(演出パターン名と同じ扱い)。
-/// 判定ロジックには一切関わらない、見た目の色だけを差し替えるための値。
+/// 2種類を用意する。表示名は色の名前だけ(「ブルー」「クリーム」)で確定している
+/// (性別を示す言葉は使わない、というCEO決定・2026-09-06)。
+/// 判定ロジックには一切関わらない、見た目の色・字体だけを差し替えるための値。
 enum AppTheme: String, CaseIterable, Identifiable {
-    /// 男性向け:青系統を基調にした爽やかな配色。
+    /// 青系統を基調にした爽やかな配色。
     case oceanBlue
-    /// 女性向け:クリーム色のような柔らかい色合いの、落ち着いた配色。
+    /// クリーム色のような柔らかい色合いの、落ち着いた配色。
     case creamSoft
 
     var id: String { rawValue }
@@ -16,8 +16,19 @@ enum AppTheme: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .oceanBlue: return "ブルー(男性向け・爽やか)"
-        case .creamSoft: return "クリーム(女性向け・やわらか)"
+        case .oceanBlue: return "ブルー"
+        case .creamSoft: return "クリーム"
+        }
+    }
+
+    /// テーマごとの字体(CEO要望・2026-09-06)。SwiftUIの`Font.Design`を切り替えるだけで、
+    /// 文言や機能には一切関わらない。
+    /// ブルー:直線的でシャープな印象にするため、標準(SF Pro)のまま。
+    /// クリーム:丸みのある柔らかい印象にするため、SF Roundedデザインにする。
+    var fontDesign: Font.Design {
+        switch self {
+        case .oceanBlue: return .default
+        case .creamSoft: return .rounded
         }
     }
 
@@ -81,9 +92,22 @@ private struct ThemedTintModifier: ViewModifier {
     }
 }
 
+private struct ThemedFontDesignModifier: ViewModifier {
+    @AppStorage(AppThemeStore.key) private var themeRawValue: String = AppTheme.default.rawValue
+    private var theme: AppTheme { AppTheme(rawValue: themeRawValue) ?? .default }
+    func body(content: Content) -> some View {
+        content.fontDesign(theme.fontDesign)
+    }
+}
+
 extension View {
     /// ボタン・アイコンなどの基調色を、選ばれているテーマのアクセントカラーに合わせる。
     func themedTint() -> some View { modifier(ThemedTintModifier()) }
+
+    /// 文字の書体を、選ばれているテーマの字体(丸み/直線的)に合わせる。
+    /// 明示的にdesignを指定しているFont(例:Font.system(size:weight:design:))には効かない点に注意
+    /// (SwiftUIの仕様。その場合は呼び出し側でtheme.fontDesignを直接渡す)。
+    func themedFontDesign() -> some View { modifier(ThemedFontDesignModifier()) }
 
     /// Form/Listの標準背景を消し、代わりにテーマの背景色を敷く。
     func themedFormBackground() -> some View {

@@ -371,3 +371,37 @@ RootViewに.preferredColorScheme(.light)を追加(テーマの明るい配色と
 検証:新規UIテスト2件追加(4演出パターンの起動・スクリーンショット確認/カラーテーマ切替・再起動後
 保持確認)、既存回帰5件と合わせて全て成功。シミュレータ(iPhone 17)でスクリーンショット多数確認。
 実機(iPhone 14)へのインストール・起動確認も実施(devicectl、写真・動画の削除変更なし)。
+2026-09-06 (UI・文言調整 実装完了、テスト前)
+①テーマに字体対応:AppTheme.fontDesign追加(ブルー=.default/クリーム=.rounded)、themedFontDesign()
+モディファイアを新設しRootView(全体)・各設定シート・SlideshowViewに適用。ホーム画面とスライドショーの
+大きな時刻表示(明示的にdesignを指定していた箇所)もtheme.fontDesignを参照するよう変更。
+②PlaybackSettingsViewの3つの.pickerStyle(.inline)に.labelsHidden()を追加し、Section見出しとの
+重複表示を解消(VoiceOver用ラベルは維持)。
+③演出パターンdisplayNameを形容詞名に変更:結婚式ムービー風→エレガント風、スタジアムビジョン風→
+ダイナミック風、引退セレモニー風→ノーブル風、NG集エンドロール風→ポップ風(内部rawValueは不変)。
+④FilterOptionsView:albumSectionを最後尾に移動、よく撮れてる度footer削除、AIで書類・レシート
+トグル文言から「AIで」を削除、スクショsection footer削除、albumSection footerの「何も選ばない場合〜」
+削除(見つからない時の案内は維持)、subjectSection footerを短縮。
+⑤HelpViewを全面書き換え、タイトルをQ&Aに変更しCEO提供文面(2セクション7問)に差し替え。
+⑥SlideshowViewの振り返り一覧5ボタンにHistoryActionButtonStyle(白背景/黒背景/赤背景の
+太字カプセル)を新設・適用し視認性を改善。
+【追加指示への対応】AppTheme.displayNameは性別表記を外し「ブルー」「クリーム」の色名のみに確定
+(冒頭コメントも実態に合わせ更新)。演出パターンの形容詞化とは別軸の判断として区別した。
+ビルド成功(iPhone 17 シミュレータ)。この後UIテスト・実機確認を実施。
+2026-09-06 (UI・文言調整 完了)
+テスト実行結果:関連UIテスト8件すべて成功(testAestheticsOptions_AppearOnIOS18Plus/
+testHelpScreen_OpensAndShowsGuidance/testColorThemeSelection_AppliesAndPersistsAcrossRelaunch/
+testHistoryDeleteSelection_ShowsConfirmationWithoutDeleting/
+testPresentationPatternSelection_HidesDurationPickersAndStartsSlideshow/
+testAllPresentationPatterns_FillScreenAndDoNotCrash)。文言変更に合わせテストの期待値文字列
+(演出パターン名・テーマ名・トグル文言・Q&Aタイトル/本文)を更新。
+【発見した既存の不具合(今回のスコープ外・未修正)】testFiveFilterCombinationが単独実行でも
+再現性よく失敗。原因はUI変更ではなく、選ばれた写真が「iCloud上にしか無い」等でロード自体に
+失敗し(loadFailed)、テストがこの状態を「決着」として認識していなかったこと
+(noMatchingPhotosの文言しか見ていない)。スクリーンショットで実際にloadFailedの画面
+(雲マークと読み込めませんでしたの表示)を確認済み。アルバム欄の並び替え(今回対応4番)が
+きっかけで顕在化した可能性はあるが、原因自体は写真読み込みの環境要因とテストの見落としであり、
+UI文言修正の範囲外と判断し今回は手を付けていない。秘書へ報告し、別件として追うか判断を仰ぐ。
+実機(iPhone 14)にインストール・起動確認済み(通常起動、写真・動画の変更操作なし)。
+表示設定・絞り込み・Q&A・振り返り一覧のスクリーンショットをverify/に保存
+(v10_theme_02/07, v10_theme_04, v6_help_01, v7_deleteconfirm_01/02)。完了。
