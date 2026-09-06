@@ -19,3 +19,6 @@
 - [SwiftのCodable自動生成はデフォルト値を無視して丸ごと失敗する](swift-codable-default-value-decode-trap.md) — 設定structに項目追加時はdecodeIfPresentのカスタムinitが必須
 - [PHPickerのassetIdentifier取得条件とenumのHashable自動導出の境界線](phpicker-assetidentifier-and-enum-hashable.md) — 写真複数選択機能を作る時に必ず確認
 - [GeometryReader+.animation(value:)の組み合わせはレイアウト崩れの原因になる](geometryreader-animation-transition-glitch.md) — .transition()+.id()の差し替えをアニメーションさせると一時的に不正確なサイズを返す。手動クロスフェードで回避
+- [SwiftUIのPicker重複ラベル・fontDesign・ButtonStyleの3ノウハウ](swiftui-picker-fontdesign-buttonstyle-notes.md) — .labelsHidden()/明示designは環境値で上書きされない/ButtonStyleでも@Environment(\.isEnabled)が効く
+- [run_in_background+コマンド末尾&の二重バックグラウンド化に注意](background-bash-run-in-background-double-detach.md) — 実プロセスがツール追跡から外れ完了通知が実態より早く来る
+- [PhotoTimerのtestFiveFilterCombinationはloadFailedを検知できず失敗しがち](phototimer-fivefilter-test-loadfailed-flake.md) — UI変更とは無関係な既存の見落とし、未修正で報告のみ
