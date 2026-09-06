@@ -402,12 +402,22 @@ final class PhotoTimerUITests: XCTestCase {
         XCTAssertFalse(defaultIntervals.isEmpty, "6秒設定での切り替わりが1回も観測できなかった")
         XCTAssertFalse(shortIntervals.isEmpty, "1秒設定での切り替わりが1回も観測できなかった")
 
-        let avgDefault = defaultIntervals.reduce(0, +) / Double(defaultIntervals.count)
-        let avgShort = shortIntervals.reduce(0, +) / Double(shortIntervals.count)
-        recorder.appendManifestLines(["avgLong(6秒設定)=\(String(format: "%.2f", avgDefault))s avgShort(1秒設定)=\(String(format: "%.2f", avgShort))s"])
+        // XCUITestのアクセシビリティ要素は、写真の切り替え時に一瞬だけ消えてから
+        // 再表示されることがある。0.2秒ポーリングでは、その再表示を実際の切り替えと
+        // 誤認して0.2〜0.4秒の偽の間隔が混ざる。また、UIスレッドの一時的な遅延で
+        // 1回だけ長い間隔になることもある。表示秒数そのものではなく、観測ノイズの影響を
+        // 受けにくい中央値で判定し、1秒設定では物理的にあり得ない短すぎる観測を除外する。
+        let validDefaultIntervals = defaultIntervals.filter { $0 >= 0.5 }
+        let validShortIntervals = shortIntervals.filter { $0 >= 0.5 }
+        XCTAssertFalse(validDefaultIntervals.isEmpty, "6秒設定で有効な切り替わり間隔を観測できなかった: \(defaultIntervals)")
+        XCTAssertFalse(validShortIntervals.isEmpty, "1秒設定で有効な切り替わり間隔を観測できなかった: \(shortIntervals)")
 
-        XCTAssertLessThan(avgShort, avgDefault, "表示秒数を1秒に変更したのに、切り替わり間隔が6秒設定より短くなっていない")
-        XCTAssertLessThan(avgShort, 2.5, "1秒設定にしたのに、切り替わり間隔が1秒より大きくずれている(observed: \(avgShort)s)")
+        let medianDefault = Self.median(validDefaultIntervals)
+        let medianShort = Self.median(validShortIntervals)
+        recorder.appendManifestLines(["medianLong(6秒設定)=\(String(format: "%.2f", medianDefault))s medianShort(1秒設定)=\(String(format: "%.2f", medianShort))s", "filtered short intervals: \(shortIntervals.filter { $0 < 0.5 }.map { String(format: "%.2f", $0) })"])
+
+        XCTAssertLessThan(medianShort, medianDefault, "表示秒数を1秒に変更したのに、切り替わり間隔が6秒設定より短くなっていない")
+        XCTAssertLessThan(medianShort, 1.8, "1秒設定にしたのに、切り替わり間隔が1秒より大きくずれている(observed: \(medianShort)s)")
     }
 
     // MARK: - シナリオ6(CEO要望3): 動画の再生時間の扱いの設定が実際の挙動に反映されるか
@@ -2049,6 +2059,18 @@ final class PhotoTimerUITests: XCTestCase {
             usleep(useconds_t(pollInterval * 1_000_000))
         }
         return intervals
+    }
+
+    /// 観測値の中央値。単発のUI遅延やアクセシビリティの偽イベントに左右されず、
+    /// 実際の表示間隔の中心値を検証するために使う。
+    private static func median(_ values: [TimeInterval]) -> TimeInterval {
+        let sorted = values.sorted()
+        guard !sorted.isEmpty else { return .nan }
+        let middle = sorted.count / 2
+        if sorted.count.isMultiple(of: 2) {
+            return (sorted[middle - 1] + sorted[middle]) / 2
+        }
+        return sorted[middle]
     }
 
     /// メディア要素が「表示され続けている時間」を1サイクル分計測する(現れるのを待ち、消えるまでの秒数を返す)。
