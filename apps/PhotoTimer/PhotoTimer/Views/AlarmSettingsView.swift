@@ -9,15 +9,20 @@ struct AlarmSettingsView: View {
 
     /// 試聴中の音を保持する参照。ここで保持しないと再生の途中で解放されて無音になってしまう。
     @State private var previewPlayer: AVAudioPlayer?
+    /// 見出し・説明文・ボタンの字体をテーマに合わせるために参照する(CEO要望・2026-09-06)。
+    @AppStorage(AppThemeStore.key) private var themeRawValue: String = AppTheme.default.rawValue
+    private var theme: AppTheme { AppTheme(rawValue: themeRawValue) ?? .default }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("音色", selection: $settings.tone) {
+                    Picker(selection: $settings.tone) {
                         ForEach(AlarmTonePattern.allCases) { tone in
-                            Text(tone.rawValue).tag(tone)
+                            Text(tone.rawValue).fontDesign(theme.fontDesign).tag(tone)
                         }
+                    } label: {
+                        Text("音色").fontDesign(theme.fontDesign)
                     }
                     .pickerStyle(.segmented)
                     .accessibilityIdentifier("alarmTonePicker")
@@ -25,47 +30,61 @@ struct AlarmSettingsView: View {
                     Button {
                         playPreview()
                     } label: {
-                        Label("試聴する", systemImage: "speaker.wave.2.fill")
+                        Label {
+                            Text("試聴する").fontDesign(theme.fontDesign)
+                        } icon: {
+                            Image(systemName: "speaker.wave.2.fill")
+                        }
                     }
                     .accessibilityIdentifier("alarmPreviewButton")
                 } header: {
-                    Text("音色")
+                    Text("音色").fontDesign(theme.fontDesign)
                 } footer: {
                     Text("消音スイッチ(マナースイッチ)がオンの状態でもこの試聴ボタンで確認できます。聞こえない場合は、本体の音量ボタンで音量を上げてからお試しください。")
+                        .fontDesign(theme.fontDesign)
                 }
 
                 Section {
-                    Picker("鳴らし方", selection: repeatModeKindBinding) {
-                        Text("回数を指定").tag(0)
-                        Text("止めるまで鳴り続ける").tag(1)
+                    Picker(selection: repeatModeKindBinding) {
+                        Text("回数を指定").fontDesign(theme.fontDesign).tag(0)
+                        Text("止めるまで鳴り続ける").fontDesign(theme.fontDesign).tag(1)
+                    } label: {
+                        Text("鳴らし方").fontDesign(theme.fontDesign)
                     }
                     .pickerStyle(.segmented)
                     .accessibilityIdentifier("alarmRepeatModePicker")
 
                     if case .times = settings.repeatMode {
-                        Picker("回数", selection: repeatCountBinding) {
+                        Picker(selection: repeatCountBinding) {
                             ForEach(AlarmSettingsChoices.repeatCounts, id: \.self) { n in
-                                Text("\(n)回").tag(n)
+                                Text("\(n)回").fontDesign(theme.fontDesign).tag(n)
                             }
+                        } label: {
+                            Text("回数").fontDesign(theme.fontDesign)
                         }
                         .pickerStyle(.menu)
                         .accessibilityIdentifier("alarmRepeatCountPicker")
                     }
                 } header: {
-                    Text("鳴らし方")
+                    Text("鳴らし方").fontDesign(theme.fontDesign)
                 } footer: {
                     if case .untilStopped = settings.repeatMode {
                         Text("タイマーが終わると、画面のボタンを押すまで鳴り続けます(iPhone標準のアラームと同じ挙動です)。")
+                            .fontDesign(theme.fontDesign)
                     } else {
                         Text("選んだ音を指定回数くり返したら自動的に鳴り止みます。画面のボタンで途中で止めることもできます。")
+                            .fontDesign(theme.fontDesign)
                     }
                 }
 
                 Section {
-                    Toggle("バイブレーションを使う", isOn: $settings.useVibration)
+                    Toggle(isOn: $settings.useVibration) {
+                        Text("バイブレーションを使う").fontDesign(theme.fontDesign)
+                    }
                         .accessibilityIdentifier("alarmVibrationToggle")
                 } footer: {
                     Text("バイブレーションは消音スイッチの影響を受けません。ただし本体の「設定→サウンドと触覚→消音時のバイブレーション」がオフの場合は、アプリ側からは振動させられません。")
+                        .fontDesign(theme.fontDesign)
                 }
             }
             .themedFormBackground()
@@ -73,7 +92,7 @@ struct AlarmSettingsView: View {
             .navigationTitle("アラーム設定")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("完了") { dismiss() }
+                    Button { dismiss() } label: { Text("完了").fontDesign(theme.fontDesign) }
                 }
             }
         }

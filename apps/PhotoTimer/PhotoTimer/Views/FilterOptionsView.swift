@@ -19,6 +19,9 @@ struct FilterOptionsView: View {
     /// チップの選択色をテーマに合わせるために参照する(CEO要望・2026-09-06のカラーテーマ機能)。
     @AppStorage(AppThemeStore.key) private var themeRawValue: String = AppTheme.default.rawValue
     private var theme: AppTheme { AppTheme(rawValue: themeRawValue) ?? .default }
+    /// 課金状態(CEO要望・2026-09-06:自作リスト・場所での絞り込みは有料機能)。
+    @ObservedObject private var purchaseManager = PurchaseManager.shared
+    @State private var showingPurchaseSheet = false
 
     var body: some View {
         NavigationStack {
@@ -31,11 +34,28 @@ struct FilterOptionsView: View {
                 }
                 .disabled(settings.isCustomListSelected)
                 .opacity(settings.isCustomListSelected ? 0.45 : 1)
+                // 【2026-09-06変更:自作リストは有料機能】未購入でも項目自体は隠さず、
+                // ロックされた状態(選べない・タップすると購入画面が開く)で見せる
+                // (完全に隠すのではなく「機能があることは分かる」というCEO要望の見え方)。
                 if FeatureFlags.isCustomListsEnabled {
                     customListSection
+                } else {
+                    lockedFeatureSection(
+                        title: "保存したリスト",
+                        message: "写真ライブラリから自分で選んで作ったリストを、絞り込み条件として使えるようになります。",
+                        icon: "list.star"
+                    )
                 }
                 Group {
-                    placeSection
+                    if FeatureFlags.isPlaceFilterEnabled {
+                        placeSection
+                    } else {
+                        lockedFeatureSection(
+                            title: "場所",
+                            message: "あなたが実際に撮影した場所から、絞り込めるようになります。",
+                            icon: "mappin.and.ellipse"
+                        )
+                    }
                     subjectSection
                     // 【2026-09-06 CEO要望】アルバムのセクションを一番下に移動。
                     albumSection
@@ -51,15 +71,49 @@ struct FilterOptionsView: View {
             .navigationTitle("絞り込み条件")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("完了") { dismiss() }
+                    Button { dismiss() } label: { Text("完了").fontDesign(theme.fontDesign) }
                 }
                 // 「すべて解除」は以前、画面左上の「キャンセル」の定位置(cancellationAction)に
                 // 置いていたため誤タップしやすかった(タップすると条件が全部消えてしまう)。
                 // 破壊的な操作なので、押しやすいが押し間違えにくい位置(下部ツールバー)に移した。
                 ToolbarItem(placement: .bottomBar) {
-                    Button("すべて解除", role: .destructive) { settings = .default }
+                    Button(role: .destructive) { settings = .default } label: { Text("すべて解除").fontDesign(theme.fontDesign) }
                 }
             }
+            .sheet(isPresented: $showingPurchaseSheet) {
+                PurchaseView()
+            }
+        }
+    }
+
+    /// 未購入時にプレミアム機能のセクションを「ロックされた状態」で見せる共通パーツ。
+    /// タップすると購入画面(PurchaseView)が開く。
+    private func lockedFeatureSection(title: String, message: String, icon: String) -> some View {
+        Section {
+            Button {
+                showingPurchaseSheet = true
+            } label: {
+                HStack {
+                    Image(systemName: icon).foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(title).fontDesign(theme.fontDesign).foregroundStyle(.primary)
+                        Text(message)
+                            .font(.caption)
+                            .fontDesign(theme.fontDesign)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "lock.fill").foregroundStyle(.secondary)
+                }
+            }
+            .accessibilityIdentifier("lockedFeature-\(title)")
+        } header: {
+            HStack(spacing: 4) {
+                Text(title).fontDesign(theme.fontDesign)
+                Image(systemName: "lock.fill").font(.caption2).foregroundStyle(.secondary)
+            }
+        } footer: {
+            Text("プレミアム機能です。タップすると購入画面が開きます。").fontDesign(theme.fontDesign)
         }
     }
 
@@ -67,23 +121,29 @@ struct FilterOptionsView: View {
 
     private var dateSection: some View {
         Section {
-            Picker("期間", selection: dateRangeBinding) {
-                Text("すべて").tag(0)
-                Text("今年").tag(1)
-                Text("今月").tag(2)
-                Text("期間を指定").tag(3)
+            Picker(selection: dateRangeBinding) {
+                Text("すべて").fontDesign(theme.fontDesign).tag(0)
+                Text("今年").fontDesign(theme.fontDesign).tag(1)
+                Text("今月").fontDesign(theme.fontDesign).tag(2)
+                Text("期間を指定").fontDesign(theme.fontDesign).tag(3)
+            } label: {
+                Text("期間").fontDesign(theme.fontDesign)
             }
             if case .custom = settings.dateRange {
-                DatePicker("開始", selection: $customFrom, displayedComponents: .date)
-                DatePicker("終了", selection: $customTo, displayedComponents: .date)
+                DatePicker(selection: $customFrom, displayedComponents: .date) {
+                    Text("開始").fontDesign(theme.fontDesign)
+                }
+                DatePicker(selection: $customTo, displayedComponents: .date) {
+                    Text("終了").fontDesign(theme.fontDesign)
+                }
                     .onChange(of: customFrom) { _, newValue in applyCustomDateRange(from: newValue, to: customTo) }
                     .onChange(of: customTo) { _, newValue in applyCustomDateRange(from: customFrom, to: newValue) }
             }
         } header: {
-            Text("日時")
+            Text("日時").fontDesign(theme.fontDesign)
         } footer: {
             if case .custom = settings.dateRange {
-                Text("開始日の0時から終了日の24時までが対象になります。")
+                Text("開始日の0時から終了日の24時までが対象になります。").fontDesign(theme.fontDesign)
             }
         }
     }
@@ -132,13 +192,17 @@ struct FilterOptionsView: View {
     // MARK: - メディアの種類
 
     private var mediaTypeSection: some View {
-        Section("メディアの種類") {
-            Picker("種類", selection: $settings.mediaType) {
+        Section {
+            Picker(selection: $settings.mediaType) {
                 ForEach(MediaTypeFilter.allCases) { type in
-                    Text(type.rawValue).tag(type)
+                    Text(type.rawValue).fontDesign(theme.fontDesign).tag(type)
                 }
+            } label: {
+                Text("種類").fontDesign(theme.fontDesign)
             }
             .pickerStyle(.segmented)
+        } header: {
+            Text("メディアの種類").fontDesign(theme.fontDesign)
         }
     }
 
@@ -146,7 +210,9 @@ struct FilterOptionsView: View {
 
     private var screenshotSection: some View {
         Section {
-            Toggle("スクリーンショットを除く", isOn: $settings.excludeScreenshots)
+            Toggle(isOn: $settings.excludeScreenshots) {
+                Text("スクリーンショットを除く").fontDesign(theme.fontDesign)
+            }
         }
     }
 
@@ -161,12 +227,16 @@ struct FilterOptionsView: View {
     private var aestheticsSection: some View {
         if #available(iOS 18.0, *) {
             Section {
-                Toggle("よく撮れてる写真を優先する", isOn: $settings.preferHighAesthetics)
+                Toggle(isOn: $settings.preferHighAesthetics) {
+                    Text("よく撮れてる写真を優先する").fontDesign(theme.fontDesign)
+                }
                 if settings.excludeScreenshots {
-                    Toggle("書類・レシートらしい写真を除く", isOn: $settings.strictScreenshotDetection)
+                    Toggle(isOn: $settings.strictScreenshotDetection) {
+                        Text("書類・レシートらしい写真を除く").fontDesign(theme.fontDesign)
+                    }
                 }
             } header: {
-                Text("よく撮れてる度")
+                Text("よく撮れてる度").fontDesign(theme.fontDesign)
             }
         }
     }
@@ -183,7 +253,7 @@ struct FilterOptionsView: View {
     private var albumSection: some View {
         Section {
             if libraryIndex.albums.isEmpty {
-                Text("アルバムが見つかりませんでした").foregroundStyle(.secondary)
+                Text("アルバムが見つかりませんでした").fontDesign(theme.fontDesign).foregroundStyle(.secondary)
             } else {
                 ForEach(libraryIndex.albums) { album in
                     multiSelectRow(
@@ -198,14 +268,14 @@ struct FilterOptionsView: View {
                 Button(role: .destructive) {
                     settings.selectedAlbumIDs.subtract(missingSelectedAlbumIDs)
                 } label: {
-                    Text("見つからないアルバムの選択を解除(\(missingSelectedAlbumIDs.count)件)")
+                    Text("見つからないアルバムの選択を解除(\(missingSelectedAlbumIDs.count)件)").fontDesign(theme.fontDesign)
                 }
             }
         } header: {
-            Text("アルバム")
+            Text("アルバム").fontDesign(theme.fontDesign)
         } footer: {
             if !missingSelectedAlbumIDs.isEmpty {
-                Text("選択していたアルバムが写真アプリ側で削除されたため見つかりません。上のボタンで選択を解除できます。")
+                Text("選択していたアルバムが写真アプリ側で削除されたため見つかりません。上のボタンで選択を解除できます。").fontDesign(theme.fontDesign)
             }
         }
     }
@@ -223,7 +293,7 @@ struct FilterOptionsView: View {
     private var customListSection: some View {
         Section {
             if customLists.isEmpty {
-                Text("保存したリストがありません").foregroundStyle(.secondary)
+                Text("保存したリストがありません").fontDesign(theme.fontDesign).foregroundStyle(.secondary)
             } else {
                 ForEach(customLists) { list in
                     multiSelectRow(
@@ -242,22 +312,25 @@ struct FilterOptionsView: View {
                 Button(role: .destructive) {
                     settings.selectedCustomListIDs.removeAll()
                 } label: {
-                    Text("見つからないリストの選択を解除")
+                    Text("見つからないリストの選択を解除").fontDesign(theme.fontDesign)
                 }
             }
-            NavigationLink("リストを管理") {
+            NavigationLink {
                 CustomListsView()
+            } label: {
+                Text("リストを管理").fontDesign(theme.fontDesign)
             }
             .accessibilityIdentifier("manageCustomListsLink")
         } header: {
-            Text("保存したリスト")
+            Text("保存したリスト").fontDesign(theme.fontDesign)
         } footer: {
             if missingSelectedCustomListID == nil {
                 Text(settings.isCustomListSelected
                      ? "このリストだけを表示します。他の絞り込みは一時的に使われません。もう一度タップすると解除できます。"
                      : "写真ライブラリから自分で選んで作ったリストです。1つ選ぶと、そのリストの写真・動画だけを対象にします。")
+                    .fontDesign(theme.fontDesign)
             } else {
-                Text("選択していたリストが削除されたため見つかりません。上のボタンで選択を解除できます。")
+                Text("選択していたリストが削除されたため見つかりません。上のボタンで選択を解除できます。").fontDesign(theme.fontDesign)
             }
         }
     }
@@ -282,10 +355,11 @@ struct FilterOptionsView: View {
                 HStack {
                     ProgressView()
                     Text("撮影地を集計しています…")
+                        .fontDesign(theme.fontDesign)
                         .foregroundStyle(.secondary)
                 }
             } else if libraryIndex.placeClusters.isEmpty {
-                Text("位置情報付きの写真が見つかりませんでした").foregroundStyle(.secondary)
+                Text("位置情報付きの写真が見つかりませんでした").fontDesign(theme.fontDesign).foregroundStyle(.secondary)
             } else {
                 ForEach(libraryIndex.placeClusters) { place in
                     multiSelectRow(
@@ -300,16 +374,17 @@ struct FilterOptionsView: View {
                 Button(role: .destructive) {
                     settings.selectedPlaceIDs.subtract(missingSelectedPlaceIDs)
                 } label: {
-                    Text("見つからない場所の選択を解除(\(missingSelectedPlaceIDs.count)件)")
+                    Text("見つからない場所の選択を解除(\(missingSelectedPlaceIDs.count)件)").fontDesign(theme.fontDesign)
                 }
             }
         } header: {
-            Text("場所")
+            Text("場所").fontDesign(theme.fontDesign)
         } footer: {
             if missingSelectedPlaceIDs.isEmpty {
                 Text("あなたが実際に撮影した場所から自動でリストを作成します(位置情報は端末内だけで処理し、地名の変換にのみOS標準の仕組みを使います)。")
+                    .fontDesign(theme.fontDesign)
             } else {
-                Text("以前選んでいた場所が今の一覧に見つかりません。上のボタンで選択を解除できます。")
+                Text("以前選んでいた場所が今の一覧に見つかりません。上のボタンで選択を解除できます。").fontDesign(theme.fontDesign)
             }
         }
     }
@@ -365,7 +440,7 @@ struct FilterOptionsView: View {
                     moodMigrationNoticeVisible = false
                     FilterSettingsStore.moodsDroppedByMigrationNoticePending = false
                 } label: {
-                    Text("分かりました")
+                    Text("分かりました").fontDesign(theme.fontDesign)
                 }
             }
             if libraryIndex.isSamplingCategories {
@@ -373,16 +448,18 @@ struct FilterOptionsView: View {
                     ProgressView()
                     Text("よく撮っているカテゴリを集計中(並び順のみ更新されます)")
                         .font(.footnote)
+                        .fontDesign(theme.fontDesign)
                         .foregroundStyle(.secondary)
                 }
             }
         } header: {
-            Text("カテゴリ")
+            Text("カテゴリ").fontDesign(theme.fontDesign)
         } footer: {
             if moodMigrationNoticeVisible {
                 Text("以前は雰囲気とカテゴリを両方選べましたが、今はどちらか1つだけになりました。カテゴリの選択を優先したため、以前選んでいた雰囲気の指定は解除されています。")
+                    .fontDesign(theme.fontDesign)
             } else {
-                Text("雰囲気・色・カテゴリを通して1つだけ選べます。")
+                Text("雰囲気・色・カテゴリを通して1つだけ選べます。").fontDesign(theme.fontDesign)
             }
         }
     }
@@ -392,7 +469,7 @@ struct FilterOptionsView: View {
     private func multiSelectRow(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack {
-                Text(title).foregroundStyle(.primary)
+                Text(title).fontDesign(theme.fontDesign).foregroundStyle(.primary)
                 Spacer()
                 if isSelected {
                     Image(systemName: "checkmark").foregroundStyle(.tint)
@@ -409,6 +486,7 @@ struct FilterOptionsView: View {
                 } label: {
                     Text(title(item))
                         .font(.footnote)
+                        .fontDesign(theme.fontDesign)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .background(isSelected(item) ? theme.accentColor : Color.secondary.opacity(0.15))

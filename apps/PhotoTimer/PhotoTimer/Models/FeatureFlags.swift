@@ -11,23 +11,27 @@ import Foundation
 /// 「課金状態を見て判定する」のように、この関数の中身だけを書き換えれば済む
 /// (呼び出し側=SlideshowView等は一切変更不要)。
 ///
-/// 【現時点(2026-09-05)の位置づけ】課金機能自体はまだ実装していない(CEO決定: 課金は後回し)ため、
-/// 今はまだ「常にtrue(全員に見せる)」という最も単純な実装にしてある。課金機能を実装する時に、
-/// ここを例えば `PurchaseManager.shared.isPremiumUnlocked` のような条件に差し替えるだけでよい。
+/// 【2026-09-06 CEO決定:有料にする機能が3つに確定】演出パターン・自作リスト(リスト作成)・
+/// 場所での絞り込みの3つを、`PurchaseManager`(StoreKit 2で購入状態を管理する)を見て
+/// 判定するように変更した。削除機能・振り返り一覧は無料機能として確定したため、
+/// 引き続き常にtrueのまま。
 enum FeatureFlags {
-    /// 振り返り一覧から写真・動画を削除できる機能。将来の課金状態をここへ接続する。
+    /// 振り返り一覧から写真・動画を削除できる機能。無料機能として確定(2026-09-06)。
     static var isHistoryDeletionEnabled: Bool {
         true
     }
 
-
-    /// タイマー終了後の振り返り一覧。将来の課金状態をここへ接続する。
+    /// タイマー終了後の振り返り一覧。無料機能として確定(2026-09-06)。
     static var isSessionHistoryEnabled: Bool { true }
 
     /// 自作リスト(写真ライブラリから自分で選んだ写真をリスト化し、絞り込み条件として使う機能)。
-    /// 【2026-09-05追加】CEO要望「自分で写真を選んでリスト化し、いつでも呼び出して再生」は
-    /// 将来の課金コンテンツ候補のひとつ。今回はCEOが実機で試せるよう true(全員に見せる)にしてある。
-    /// 課金機能として切り分ける時は、削除機能(isHistoryDeletionEnabled)と同じく、ここの中身だけを
-    /// 差し替えれば済む(呼び出し側=FilterOptionsView等は変更不要)。
-    static var isCustomListsEnabled: Bool { true }
+    /// 有料機能(2026-09-06 CEO決定)。購入状態(PurchaseManager)を見て判定する。
+    static var isCustomListsEnabled: Bool { PurchaseManager.shared.isPremiumUnlocked }
+
+    /// 演出パターン(結婚式ムービー風・スタジアムビジョン風等。「シンプル」は含まない)。
+    /// 有料機能(2026-09-06 CEO決定)。購入状態(PurchaseManager)を見て判定する。
+    static var isPresentationPatternsEnabled: Bool { PurchaseManager.shared.isPremiumUnlocked }
+
+    /// 場所での絞り込み。有料機能(2026-09-06 CEO決定)。購入状態(PurchaseManager)を見て判定する。
+    static var isPlaceFilterEnabled: Bool { PurchaseManager.shared.isPremiumUnlocked }
 }

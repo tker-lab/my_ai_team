@@ -75,7 +75,10 @@ struct SlideshowView: View {
 
             // 演出の装飾は常に写真・動画の「外側」に重ねるだけ。主素材を切り抜いたり、
             // 顔などを避けるための推測を行ったりしないため、縦横どちらの素材でも全体が分かる。
-            if playbackSettings.presentationPattern != .classic {
+            // 演出パターンは有料機能。実際に流すかどうかはTimerController側でも購入状態を
+            // 再確認しているが(FeatureFlags.isPresentationPatternsEnabled)、装飾の表示判定も
+            // 同じ条件で揃えておく(設定に非classicの値が残っていても、未購入なら装飾も出さない)。
+            if playbackSettings.presentationPattern != .classic && FeatureFlags.isPresentationPatternsEnabled {
                 PresentationDecorationOverlay(
                     pattern: playbackSettings.presentationPattern,
                     variation: controller.displayToken
@@ -206,9 +209,10 @@ struct SlideshowView: View {
                 .font(.largeTitle)
                 .foregroundStyle(.white)
             Text(message(for: reason))
+                .fontDesign(theme.fontDesign)
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
-            Button("閉じる") { dismiss() }
+            Button { dismiss() } label: { Text("閉じる").fontDesign(theme.fontDesign) }
                 .buttonStyle(.borderedProminent)
         }
         .padding()
@@ -238,10 +242,13 @@ struct SlideshowView: View {
         VStack(spacing: 12) {
             Text("タイマー終了")
                 .font(.title2.bold())
+                .fontDesign(theme.fontDesign)
                 .foregroundStyle(.white)
             if controller.isAlarmSounding {
-                Button("アラームを止める") {
+                Button {
                     controller.stopAlarm()
+                } label: {
+                    Text("アラームを止める").fontDesign(theme.fontDesign)
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.red)
@@ -302,7 +309,7 @@ struct SlideshowView: View {
                         }
                     }
                 }
-                Button("閉じる") { dismiss() }
+                Button { dismiss() } label: { Text("閉じる").fontDesign(theme.fontDesign) }
                     .buttonStyle(.borderedProminent)
                     .accessibilityIdentifier("finishedCloseButton")
             }
@@ -341,10 +348,16 @@ private struct HistoryActionButtonStyle: ButtonStyle {
 
     var emphasis: Emphasis = .normal
     @Environment(\.isEnabled) private var isEnabled
+    // 【2026-09-06追加】このボタン群もテーマの字体を反映させるため、ButtonStyle内でも
+    // 自分でテーマを読む(呼び出し側のBoolean("文字列")ラベルはButtonStyle外からはfontDesignを
+    // 直接付けられないため、ここで一括して適用するのが確実)。
+    @AppStorage(AppThemeStore.key) private var themeRawValue: String = AppTheme.default.rawValue
+    private var theme: AppTheme { AppTheme(rawValue: themeRawValue) ?? .default }
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.subheadline.weight(.semibold))
+            .fontDesign(theme.fontDesign)
             .foregroundStyle(.white)
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
@@ -486,7 +499,10 @@ private struct HistoryThumbnail: View {
         let options = PHImageRequestOptions()
         options.deliveryMode = .opportunistic
         options.resizeMode = .fast
-        options.isNetworkAccessAllowed = false
+        // 【2026-09-06変更】これは表示専用のサムネイル取得(振り返り一覧)であり、判定・分析用の
+        // 取得(CandidateEngine・CategorySampler。そちらは端末内のみで十分)とは別物。
+        // iCloud上にしかない写真でもサムネイルが表示されるようにtrueにする。
+        options.isNetworkAccessAllowed = true
         return await withCheckedContinuation { continuation in
             final class ResumeBox: @unchecked Sendable { var didResume = false }
             let box = ResumeBox()

@@ -65,6 +65,7 @@ struct ContentView: View {
                         .accessibilityIdentifier("minutesWheel")
 
                         Text("分")
+                            .fontDesign(theme.fontDesign)
                             .foregroundStyle(.secondary)
                             .padding(.trailing, 16)
 
@@ -84,12 +85,14 @@ struct ContentView: View {
                         .accessibilityIdentifier("secondsWheel")
 
                         Text("秒")
+                            .fontDesign(theme.fontDesign)
                             .foregroundStyle(.secondary)
                     }
                     .frame(height: 150)
 
                     Text("設定可能な範囲: \(Self.presetLabel(minSeconds)) 〜 180分")
                         .font(.caption2)
+                        .fontDesign(theme.fontDesign)
                         .foregroundStyle(.secondary)
                 }
                 .padding(.horizontal)
@@ -102,8 +105,10 @@ struct ContentView: View {
                     HStack {
                         Image(systemName: "line.3.horizontal.decrease.circle")
                         Text("絞り込み条件")
+                            .fontDesign(theme.fontDesign)
                         Spacer()
                         Text(filterSummary)
+                            .fontDesign(theme.fontDesign)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                         Image(systemName: "chevron.right")
@@ -121,6 +126,7 @@ struct ContentView: View {
                 } label: {
                     Text("スタート")
                         .font(.title3.bold())
+                        .fontDesign(theme.fontDesign)
                         .frame(maxWidth: .infinity)
                         .padding()
                 }

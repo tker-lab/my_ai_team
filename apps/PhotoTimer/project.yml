@@ -65,5 +65,10 @@ schemes:
     test:
       targets:
         - PhotoTimerUITests
+      # 課金機能(2026-09-06)をXcodeの「StoreKitテスト」で無料のまま試せるようにする設定。
+      # UIテストの実行でもこのファイルを本物のApp Storeの代わりに参照する。
+      storeKitConfiguration: PhotoTimer/Configuration.storekit
     run:
       config: Debug
+      # 実行(シミュレータ・実機で普通に起動する時)もこのファイルを参照する。
+      storeKitConfiguration: PhotoTimer/Configuration.storekit

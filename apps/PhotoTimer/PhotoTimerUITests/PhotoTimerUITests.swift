@@ -863,6 +863,9 @@ final class PhotoTimerUITests: XCTestCase {
     // からテストを実行すること。
     func testLegacyPlaceSelection_MigratesAndOffersClear() throws {
         let app = XCUIApplication()
+        // 【2026-09-06追加】場所での絞り込みは有料機能になったため、機能そのものの動作
+        // (移行・解除)を見るこのテストでは購入済み扱いを強制する(DEBUG限定。PurchaseManager参照)。
+        app.launchEnvironment["PHOTOTIMER_UI_TEST_FORCE_PREMIUM"] = "1"
         app.launch()
         let recorder = ScreenshotRecorder(scenario: "v5_legacyplace")
         try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
@@ -1285,6 +1288,9 @@ final class PhotoTimerUITests: XCTestCase {
     // 再生秒数をユーザーに指定させない(パターン側が決めた秒数を使う)。UIはこの2項目を隠す。
     func testPresentationPatternSelection_HidesDurationPickersAndStartsSlideshow() throws {
         let app = XCUIApplication()
+        // 【2026-09-06追加】演出パターンは有料機能になったため、機能そのものの動作を見る
+        // このテストでは購入済み扱いを強制する(DEBUG限定。PurchaseManager参照)。
+        app.launchEnvironment["PHOTOTIMER_UI_TEST_FORCE_PREMIUM"] = "1"
         app.launch()
         let recorder = ScreenshotRecorder(scenario: "v9_presentationpattern")
         try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
@@ -1294,7 +1300,9 @@ final class PhotoTimerUITests: XCTestCase {
         settingsButton.tap()
 
         // 既定(シンプル)の時は、これまで通り表示秒数のピッカーが出ているはず。
-        XCTAssertTrue(app.buttons["photoDurationPicker"].waitForExistence(timeout: 5), "既定(シンプル)なのに表示秒数のピッカーが無い")
+        // 【2026-09-06追加】設定画面の一番上に「プレミアム機能」セクションが増えたため、
+        // このピッカーが初期表示のまま見える位置より下に来ることがある。スクロールして探す。
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: app.buttons["photoDurationPicker"]), "既定(シンプル)なのに表示秒数のピッカーが無い")
         recorder.shoot(app, label: "classic_shows_duration_pickers")
 
         let weddingOption = app.buttons["エレガント風"]
@@ -1343,6 +1351,9 @@ final class PhotoTimerUITests: XCTestCase {
     // CEOに実機で1回試してもらう(完了報告に記載)。
     func testCustomListsManagement_OpensAndShowsEmptyState() throws {
         let app = XCUIApplication()
+        // 【2026-09-06追加】自作リストは有料機能になったため、機能そのものの動作を見る
+        // このテストでは購入済み扱いを強制する(DEBUG限定。PurchaseManager参照)。
+        app.launchEnvironment["PHOTOTIMER_UI_TEST_FORCE_PREMIUM"] = "1"
         app.launch()
         let recorder = ScreenshotRecorder(scenario: "v9_customlists")
         try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
@@ -1378,6 +1389,9 @@ final class PhotoTimerUITests: XCTestCase {
     // 今後同じ不具合が再発した時にこのテストが機械的に検知できるようにするための追加。
     func testAllPresentationPatterns_FillScreenAndDoNotCrash() throws {
         let app = XCUIApplication()
+        // 【2026-09-06追加】演出パターンは有料機能になったため、機能そのものの動作を見る
+        // このテストでは購入済み扱いを強制する(DEBUG限定。PurchaseManager参照)。
+        app.launchEnvironment["PHOTOTIMER_UI_TEST_FORCE_PREMIUM"] = "1"
         app.launch()
         let recorder = ScreenshotRecorder(scenario: "v10_patterns")
         try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
@@ -1478,6 +1492,82 @@ final class PhotoTimerUITests: XCTestCase {
         recorder.writeManifest()
     }
 
+    // MARK: - シナリオ27: 演出パターン・自作リスト・場所での絞り込みが「ロック」状態で見え、購入画面を開ける(2026-09-06)
+    //
+    // StoreKitテスト環境は既定で「未購入」から始まる。実際に購入ボタンを押して完了させる、
+    // Apple自身が描画する別プロセスの購入確認シートまで自動で確定させるのは現実的ではない
+    // (自作リストの写真選択と同じ理由。testCustomListsManagement_OpensAndShowsEmptyStateのコメント参照)
+    // ため、ここでは「ロックされていることが分かる・タップすると購入画面が開く・購入画面に
+    // 商品情報や導線が表示される」ところまでを自動確認する。実際に購入を完了する操作は
+    // CEOに実機・シミュレータで試してもらう(完了報告に手順を記載)。
+    func testPremiumLock_ShowsLockedFeaturesAndOpensPurchaseSheet() throws {
+        let app = XCUIApplication()
+        app.launch() // 【重要】ここではPHOTOTIMER_UI_TEST_FORCE_PREMIUMを付けない(未購入のまま検証する)
+        let recorder = ScreenshotRecorder(scenario: "v11_premiumlock")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+
+        // 1. 絞り込み画面:「保存したリスト」「場所」がロック状態で見えることを確認する。
+        let filterButton = app.buttons["filterButton"]
+        XCTAssertTrue(filterButton.waitForExistence(timeout: 15))
+        filterButton.tap()
+
+        let lockedList = app.buttons["lockedFeature-保存したリスト"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: lockedList), "未購入なのに「保存したリスト」のロック表示が見つからない")
+        recorder.shoot(app, label: "filter_locked_customlist")
+
+        let lockedPlace = app.buttons["lockedFeature-場所"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: lockedPlace), "未購入なのに「場所」のロック表示が見つからない")
+        // 【2026-09-06発覚】存在するだけでは、画面の一番下ギリギリに位置してタップが当たらない
+        // ことがあった(スクリーンショットでは見えるが反応しない)。安定してタップできる位置まで
+        // 追加でスクロールしてから押す。
+        Self.scrollUntilTappable(app: app, element: lockedPlace)
+        recorder.shoot(app, label: "filter_locked_place")
+
+        lockedPlace.tap()
+        let purchaseTitle = app.navigationBars["プレミアム機能"]
+        XCTAssertTrue(purchaseTitle.waitForExistence(timeout: 5), "「場所」のロック表示をタップしても購入画面が開かない")
+        recorder.shoot(app, label: "purchase_sheet_from_place")
+        let productButtonOrError = app.buttons["purchasePremiumButton"].waitForExistence(timeout: 10)
+            || app.staticTexts["商品情報を取得できませんでした。通信状況を確認し、時間をおいてもう一度お試しください。"].waitForExistence(timeout: 3)
+        XCTAssertTrue(productButtonOrError, "購入画面に商品情報も取得失敗の案内も出ない")
+        app.buttons["閉じる"].tap()
+        app.buttons["完了"].tap()
+
+        // 2. 表示設定画面:演出パターンが鍵アイコン付きで見え、選ぶと購入画面が開く(選択自体は反映されない)ことを確認する。
+        let settingsButton = app.buttons["playbackSettingsButton"]
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 10))
+        settingsButton.tap()
+        recorder.shoot(app, label: "playback_settings_locked_patterns")
+
+        let weddingOption = app.buttons["エレガント風"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: weddingOption), "「エレガント風」の選択肢が見つからない")
+        Self.scrollUntilTappable(app: app, element: weddingOption)
+        weddingOption.tap()
+        XCTAssertTrue(app.navigationBars["プレミアム機能"].waitForExistence(timeout: 5), "ロックされた演出パターンを選んでも購入画面が開かない")
+        recorder.shoot(app, label: "purchase_sheet_from_pattern")
+        app.buttons["閉じる"].tap()
+
+        // 選択が反映されず「シンプル」のままであることを確認する(表示秒数ピッカーが出ていること=classicのまま)。
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: app.buttons["photoDurationPicker"]), "ロックされた演出パターンをタップしたのに、シンプル以外に切り替わってしまった")
+
+        // 3. 設定画面から直接、購入画面を開ける導線・購入を復元ボタンがあることを確認する。
+        let openPurchaseButton = app.buttons["openPurchaseSheetButton"]
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: openPurchaseButton), "設定画面に「プレミアム機能を購入する」ボタンが見つからない")
+        Self.scrollUntilTappable(app: app, element: openPurchaseButton)
+        openPurchaseButton.tap()
+        XCTAssertTrue(app.navigationBars["プレミアム機能"].waitForExistence(timeout: 5))
+        recorder.shoot(app, label: "purchase_sheet_from_settings")
+
+        let restoreButton = app.buttons["restorePurchasesButton"]
+        XCTAssertTrue(restoreButton.waitForExistence(timeout: 5), "「購入を復元」ボタンが見つからない")
+        restoreButton.tap() // 実際に復元されるものが無くてもクラッシュしないことのみ確認する。
+        recorder.shoot(app, label: "after_restore_tap_still_locked")
+
+        app.buttons["閉じる"].tap()
+        app.buttons["完了"].tap()
+        recorder.writeManifest()
+    }
+
     // MARK: - 共通処理: スクロールしないと現れない要素を探す
 
     /// Form内の下の方にあるセクション(LazyVGridを含む)は、スクロールして画面内に入るまで
@@ -1494,6 +1584,26 @@ final class PhotoTimerUITests: XCTestCase {
             if element.waitForExistence(timeout: 1) { return true }
         }
         return false
+    }
+
+    /// 【2026-09-06追加】scrollUntilVisibleは「存在するか」だけを見るため、画面のちょうど下端
+    /// ギリギリに存在する場合、見た目には出ているのにタップしても反応しないことがある
+    /// (プレミアム機能のロック表示行のタップで発覚)。タップの直前だけ使う、実際の座標(frame)が
+    /// 下端から十分離れているかまで確認する版。呼び出し前にscrollUntilVisibleで存在自体は
+    /// 確認しておくこと(このメソッドは「安定した位置に来るまで追加でスクロールする」ためだけのもの)。
+    @discardableResult
+    private static func scrollUntilTappable(app: XCUIApplication, element: XCUIElement, maxSwipes: Int = 6) -> Bool {
+        func isComfortablyVisible() -> Bool {
+            guard element.exists else { return false }
+            let frame = element.frame
+            return frame.height > 0 && frame.maxY < app.frame.maxY - 40 && frame.minY > 0
+        }
+        if isComfortablyVisible() { return true }
+        for _ in 0..<maxSwipes {
+            app.swipeUp()
+            if isComfortablyVisible() { return true }
+        }
+        return isComfortablyVisible()
     }
 
     // MARK: - 共通処理: フィルタ操作(雰囲気・カテゴリ)
@@ -1693,8 +1803,10 @@ final class PhotoTimerUITests: XCTestCase {
         XCTAssertTrue(settingsButton.waitForExistence(timeout: 10), "設定(歯車)ボタンが見つからない")
         settingsButton.tap()
 
+        // 【2026-09-06追加】設定画面の一番上に「プレミアム機能」セクションが増えたため、
+        // このピッカーがスクロールしないと画面内に現れないことがある。
         let picker = app.buttons["photoDurationPicker"]
-        XCTAssertTrue(picker.waitForExistence(timeout: 5), "「表示秒数」の設定項目が見つからない")
+        XCTAssertTrue(Self.scrollUntilVisible(app: app, element: picker), "「表示秒数」の設定項目が見つからない")
         picker.tap() // メニュー形式のPickerなので、タップすると選択肢一覧が開く
 
         let option = app.buttons[label]
@@ -1721,16 +1833,18 @@ final class PhotoTimerUITests: XCTestCase {
 
         switch mode {
         case .full:
+            // 【2026-09-06追加】設定画面の一番上に「プレミアム機能」セクションが増えたため、
+            // この選択肢がスクロールしないと画面内に現れないことがある。
             let fullButton = app.buttons["最後まで再生する"]
-            XCTAssertTrue(fullButton.waitForExistence(timeout: 5), "「最後まで再生する」の選択肢が見つからない")
+            XCTAssertTrue(Self.scrollUntilVisible(app: app, element: fullButton), "「最後まで再生する」の選択肢が見つからない")
             fullButton.tap()
         case .capped(let seconds):
             let cappedButton = app.buttons["指定秒数で切り上げる"]
-            XCTAssertTrue(cappedButton.waitForExistence(timeout: 5), "「指定秒数で切り上げる」の選択肢が見つからない")
+            XCTAssertTrue(Self.scrollUntilVisible(app: app, element: cappedButton), "「指定秒数で切り上げる」の選択肢が見つからない")
             cappedButton.tap()
 
             let picker = app.buttons["videoCapPicker"]
-            XCTAssertTrue(picker.waitForExistence(timeout: 5), "「切り上げる秒数」の設定項目が見つからない")
+            XCTAssertTrue(Self.scrollUntilVisible(app: app, element: picker), "「切り上げる秒数」の設定項目が見つからない")
             picker.tap()
 
             let option = app.buttons[seconds]

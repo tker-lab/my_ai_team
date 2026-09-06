@@ -28,22 +28,6 @@ enum PresentationPattern: String, Codable, CaseIterable, Identifiable, Hashable 
         }
     }
 
-    /// 設定画面に出す説明文。判定の内部事情(専用検出・高精度等)には触れず、実際に起きることだけを書く。
-    var summary: String {
-        switch self {
-        case .classic:
-            return "写真・動画を1枚ずつ、これまで通りフェードで切り替えます。"
-        case .weddingFilm:
-            return "上品でやわらかい雰囲気。フルスクリーンの1枚と、複数枚を組み合わせた見せ方を、ゆっくりとした動きで交互に切り替えます。"
-        case .stadiumVision:
-            return "力強くダイナミックな雰囲気。写真全体を見せながら、複数枚の構成と切り替わりに変化をつけます。"
-        case .retirementCeremony:
-            return "記録をたどって、感謝とフィナーレへ進むセレモニー風の構成です。"
-        case .blooperCredits:
-            return "楽しい思い出を、クレジット風の余白と写真・動画の切り替えで見せます。"
-        }
-    }
-
     /// この「間(ま)」の並び(=見せ方の順番)が演出パターンの実体。
     ///
     /// 【2026-09-05 CEO決定:ランダムではなく固定の順番で繰り返す】

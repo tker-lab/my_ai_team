@@ -122,7 +122,10 @@ final class TimerController: NSObject, ObservableObject, AVAudioPlayerDelegate {
         self.playbackSettings = playbackSettings
         self.alarmSettings = alarmSettings
         self.placeClusters = placeClusters
-        self.presentationPattern = playbackSettings.presentationPattern
+        // 【2026-09-06追加】演出パターンは有料機能(FeatureFlags.isPresentationPatternsEnabled)。
+        // 購入前に選んでいた設定が端末に残っている・購入後に返金された等のケースでも、
+        // 実際の再生はここで必ず購入状態を見て決める(設定画面側のロックだけに頼らない)。
+        self.presentationPattern = FeatureFlags.isPresentationPatternsEnabled ? playbackSettings.presentationPattern : .classic
         patternBeatIndex = 0
         pendingPrimaryQueue = []
         consecutiveSkippedBeats = 0

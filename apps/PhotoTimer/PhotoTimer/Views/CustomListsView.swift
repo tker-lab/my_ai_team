@@ -10,11 +10,15 @@ struct CustomListsView: View {
     @State private var showingNamePrompt = false
     @State private var newListName = ""
     @State private var editingList: CustomPhotoList?
+    /// 見出し・説明文の字体をテーマに合わせるために参照する(CEO要望・2026-09-06)。
+    @AppStorage(AppThemeStore.key) private var themeRawValue: String = AppTheme.default.rawValue
+    private var theme: AppTheme { AppTheme(rawValue: themeRawValue) ?? .default }
 
     var body: some View {
         List {
             if lists.isEmpty {
                 Text("まだリストがありません。右上の「+」から、写真ライブラリから選んで作成できます。")
+                    .fontDesign(theme.fontDesign)
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(lists) { list in
@@ -23,9 +27,10 @@ struct CustomListsView: View {
                     } label: {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(list.name).foregroundStyle(.primary)
+                                Text(list.name).fontDesign(theme.fontDesign).foregroundStyle(.primary)
                                 Text("\(list.assetLocalIdentifiers.count)枚")
                                     .font(.caption)
+                                    .fontDesign(theme.fontDesign)
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()
@@ -109,17 +114,23 @@ private struct CustomListEditView: View {
 
     @State private var showingPicker = false
     @State private var showingDeleteConfirm = false
+    /// 見出し・説明文・ボタンの字体をテーマに合わせるために参照する(CEO要望・2026-09-06)。
+    @AppStorage(AppThemeStore.key) private var themeRawValue: String = AppTheme.default.rawValue
+    private var theme: AppTheme { AppTheme(rawValue: themeRawValue) ?? .default }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("名前") {
+                Section {
                     TextField("リストの名前", text: $list.name)
+                        .fontDesign(theme.fontDesign)
                         .accessibilityIdentifier("customListNameField")
+                } header: {
+                    Text("名前").fontDesign(theme.fontDesign)
                 }
                 Section {
                     if list.assetLocalIdentifiers.isEmpty {
-                        Text("写真がありません").foregroundStyle(.secondary)
+                        Text("写真がありません").fontDesign(theme.fontDesign).foregroundStyle(.secondary)
                     } else {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 6) {
                             ForEach(list.assetLocalIdentifiers, id: \.self) { assetID in
@@ -132,17 +143,24 @@ private struct CustomListEditView: View {
                     Button {
                         showingPicker = true
                     } label: {
-                        Label("写真を追加・選び直す", systemImage: "photo.badge.plus")
+                        Label {
+                            Text("写真を追加・選び直す").fontDesign(theme.fontDesign)
+                        } icon: {
+                            Image(systemName: "photo.badge.plus")
+                        }
                     }
                     .accessibilityIdentifier("editCustomListPhotosButton")
                 } header: {
-                    Text("写真(\(list.assetLocalIdentifiers.count)枚)")
+                    Text("写真(\(list.assetLocalIdentifiers.count)枚)").fontDesign(theme.fontDesign)
                 } footer: {
                     Text("写真の右上の×で、このリストから外せます(写真そのものは削除されません)。")
+                        .fontDesign(theme.fontDesign)
                 }
                 Section {
-                    Button("このリストを削除", role: .destructive) {
+                    Button(role: .destructive) {
                         showingDeleteConfirm = true
+                    } label: {
+                        Text("このリストを削除").fontDesign(theme.fontDesign)
                     }
                     .accessibilityIdentifier("deleteCustomListButton")
                 }
@@ -152,9 +170,11 @@ private struct CustomListEditView: View {
             .navigationTitle("リストを編集")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("完了") {
+                    Button {
                         onSave(list)
                         dismiss()
+                    } label: {
+                        Text("完了").fontDesign(theme.fontDesign)
                     }
                 }
             }
@@ -225,7 +245,10 @@ private struct CustomListThumbnail: View {
             let options = PHImageRequestOptions()
             options.deliveryMode = .opportunistic
             options.resizeMode = .fast
-            options.isNetworkAccessAllowed = false
+            // 【2026-09-06変更】これは表示専用のサムネイル取得(自作リスト管理画面)であり、
+            // 判定・分析用の取得(CandidateEngine・CategorySampler。そちらは端末内のみで十分)とは
+            // 別物。iCloud上にしかない写真でもサムネイルが表示されるようにtrueにする。
+            options.isNetworkAccessAllowed = true
             image = await Self.thumbnail(for: asset, options: options)
         }
     }
