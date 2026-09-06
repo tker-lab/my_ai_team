@@ -1551,6 +1551,12 @@ final class PhotoTimerUITests: XCTestCase {
         XCTAssertTrue(Self.scrollUntilVisible(app: app, element: app.buttons["photoDurationPicker"]), "ロックされた演出パターンをタップしたのに、シンプル以外に切り替わってしまった")
 
         // 3. 設定画面から直接、購入画面を開ける導線・購入を復元ボタンがあることを確認する。
+        // 【2026-09-06発覚】scrollUntilVisibleは下方向(swipeUp)にしかスクロールできないため、
+        // 演出パターンの選択肢を見るために下までスクロールした後だと、画面最上部にある
+        // 「プレミアム機能」セクションへは戻れない。設定画面を一度閉じて開き直し、
+        // 常に上端から始まる状態にしてから探す。
+        app.buttons["完了"].tap()
+        settingsButton.tap()
         let openPurchaseButton = app.buttons["openPurchaseSheetButton"]
         XCTAssertTrue(Self.scrollUntilVisible(app: app, element: openPurchaseButton), "設定画面に「プレミアム機能を購入する」ボタンが見つからない")
         Self.scrollUntilTappable(app: app, element: openPurchaseButton)

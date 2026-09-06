@@ -22,3 +22,8 @@
 - [SwiftUIのPicker重複ラベル・fontDesign・ButtonStyleの3ノウハウ](swiftui-picker-fontdesign-buttonstyle-notes.md) — .labelsHidden()/明示designは環境値で上書きされない/ButtonStyleでも@Environment(\.isEnabled)が効く
 - [run_in_background+コマンド末尾&の二重バックグラウンド化に注意](background-bash-run-in-background-double-detach.md) — 実プロセスがツール追跡から外れ完了通知が実態より早く来る
 - [PhotoTimerのtestFiveFilterCombinationはloadFailedを検知できず失敗しがち](phototimer-fivefilter-test-loadfailed-flake.md) — UI変更とは無関係な既存の見落とし、未修正で報告のみ
+- [Font.Design(.rounded等)は日本語グリフに効かない](font-design-rounded-no-effect-on-japanese-text.md) — ラテン文字・数字のみ反映、CJKはHiragino系のまま変わらない
+- [見慣れない未追跡ディレクトリを削除する前にgit diffで並行セッションの痕跡を確認](verify-before-deleting-unfamiliar-untracked-dirs.md) — untrackedの削除は復元不可、CEO公開文書は特に慎重に
+- [XCUITestのtap()はForm末尾で存在確認だけだと反応しないことがある](xcuitest-tap-fails-silently-near-screen-edge.md) — frame基準のscrollUntilTappableで下端余白を確認してから叩く
+- [xcodegenのstoreKitConfigurationはrun:/test:配下に書く](xcodegen-storekit-configuration-scheme-placement.md) — スキーム直下は無効、test:配下も反映されないことがあり.xcscheme手動パッチが必要な場合あり
+- [StoreKitテストはXcodeから直接Runしないと有効にならない](storekit-testing-requires-xcode-run-not-cli.md) — xcodebuild単体実行では本物のMedia APIに問い合わせに行ってしまう(Apple仕様)

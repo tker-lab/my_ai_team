@@ -1,8 +1,11 @@
-v3_videoduration_01_video_mode_set.png	t=24.3s
-v3_videoduration_02_capped_after_start.png	t=29.0s
-capped(3秒設定) on-duration: nil
-v3_videoduration_03_capped_observed.png	t=49.1s
-v3_videoduration_04_video_mode_set.png	t=56.3s
-v3_videoduration_05_full_after_start.png	t=61.0s
-full(最後まで再生) on-duration: nil
-v3_videoduration_06_full_observed.png	t=81.1s
+前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)
+v3_videoduration_01_stray_running_timer_detected.png	t=5.3s
+絞り込み条件をリセットした(前のテストの選択を引き継がないため)
+v3_videoduration_02_video_mode_set.png	t=40.7s
+v3_videoduration_03_capped_after_start.png	t=45.4s
+capped(3秒設定) on-duration: 2.07
+v3_videoduration_04_capped_observed.png	t=47.6s
+v3_videoduration_05_video_mode_set.png	t=59.4s
+v3_videoduration_06_full_after_start.png	t=64.1s
+full(最後まで再生) on-duration: 5.10
+v3_videoduration_07_full_observed.png	t=69.2s

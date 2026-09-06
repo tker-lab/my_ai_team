@@ -57,7 +57,7 @@ struct ContentView: View {
                     HStack(spacing: 0) {
                         Picker("分", selection: minutesBinding) {
                             ForEach(0...(maxSeconds / 60), id: \.self) { m in
-                                Text("\(m)").tag(m)
+                                Text("\(m)").fontDesign(theme.fontDesign).tag(m)
                             }
                         }
                         .pickerStyle(.wheel)
@@ -77,7 +77,7 @@ struct ContentView: View {
                         // 内部の補正とホイールの見た目が食い違う状況自体を起こらなくしている。
                         Picker("秒", selection: secondsBinding) {
                             ForEach(secondsWheelRange, id: \.self) { s in
-                                Text("\(s)").tag(s)
+                                Text("\(s)").fontDesign(theme.fontDesign).tag(s)
                             }
                         }
                         .pickerStyle(.wheel)

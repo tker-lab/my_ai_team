@@ -13,3 +13,4 @@
 - [住所・勤務先はGit管理ファイルに書かない](no-personal-info-in-tracked-files.md) — 移行後にCEOに聞き直し、秘書メモリにだけ持つ
 - [MacBook環境のパス](mac-environment.md) — Macユーザー名はtakahashitakayuki。拠点は~/my_ai_team、メモリ配置先も別名になる
 - [Artifactは要望時のみ更新](artifact-update-on-request-only.md) — 図解付き資料は都度再発行せず、まとまった区切りか要望があった時に更新する
+- [Codexとの並行運用に注意](codex-parallel-work-awareness.md) — 見覚えのない成果物はCodex由来の可能性。CEOはCodexに頼む時に範囲を一言伝える運用にした

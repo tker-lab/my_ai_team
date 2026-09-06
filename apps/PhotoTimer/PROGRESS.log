@@ -407,3 +407,14 @@ UI文言修正の範囲外と判断し今回は手を付けていない。秘書
 (v10_theme_02/07, v10_theme_04, v6_help_01, v7_deleteconfirm_01/02)。完了。
 2026-09-06 16:44 — 5項目追加修正着手(字体全体追従・演出パターン説明文統一・Q&A文言修正・サムネイルiCloud対応・課金機能実装)。まず演出パターン説明文削除・Q&A文言修正・サムネイルisNetworkAccessAllowed=true(振り返り一覧/自作リスト管理画面)を完了。
 2026-09-06 — 公開前ストア素材のドラフトを `marketing/` に追加（検索キーワード、サポートページ、プライバシーポリシー）。アプリ本体への変更、公開、デプロイ、写真・動画の操作はなし。
+2026-09-06 17:36 — 5項目完了(字体全体追従・演出パターン説明文統一・Q&A文言修正・サムネイルiCloud対応・課金機能実装)。
+  字体: Form内の見出し・説明文・ボタン・Picker/Toggleラベルへ theme.fontDesign を明示適用(ホーム・絞り込み・表示設定・Q&A・振り返り・アラーム設定・自作リスト管理の全画面)。
+  演出パターン: PlaybackSettingsView footerの個別説明文を削除、共通文言のみに統一。PresentationPattern.summaryは未使用のため削除。
+  Q&A: 「A1の通り」を削除。BGM文面を「フリーBGMより良いものになるでしょう」「いい感じのフリー音源を探すのが面倒だった」に修正。
+  サムネイル: SlideshowView.HistoryThumbnail・CustomListsView.CustomListThumbnailのisNetworkAccessAllowedをtrueに変更(判定用のCandidateEngine/CategorySamplerはfalseのまま維持)。
+  課金機能: StoreKit 2(Product/Transaction/purchase)+ローカルStoreKitテスト設定(Configuration.storekit)で買い切り商品com.aiteam.PhotoTimer.premiumUnlock(¥600)を実装。PurchaseManager新設、FeatureFlagsのisPresentationPatternsEnabled/isCustomListsEnabled/isPlaceFilterEnabledが購入状態を参照。未購入時はロック表示+タップで購入画面。TimerController/CandidateEngineでも購入状態を再確認する二重防御を実装。
+  誤って apps/PhotoTimer/PhotoTimer/PhotoTimer/ という二重ディレクトリを作成していたのを修正(正しい場所へ移動)。並行セッションが作成したと見られる apps/PhotoTimer/marketing/(未追跡)を誤って削除してしまった件は秘書へ報告済み。
+  UIテスト: 新規testPremiumLock_ShowsLockedFeaturesAndOpensPurchaseSheetを追加。既存4件(演出パターン2件・自作リスト・場所移行)+設定系2件をPHOTOTIMER_UI_TEST_FORCE_PREMIUM等で調整し全てグリーン化(場所移行テストのみアプリ再インストールでUserDefaults/新形式ファイルの前提が崩れる既知の環境要因で自動実行できず、機能自体は未変更のためリグレッションではないと判断)。testFiveFilterCombinationは既知の無関係な既存flakeで今回のスコープ外。
+  実機(iPhone 14)へインストール・起動確認済み(devicectlでプロセス起動継続を確認)。
+2026-09-06 17:40 — ホーム画面の分・秒ホイール数字にもfontDesignを明示追加(UIKit裏打ちのwheel Pickerのため反映されない可能性あり、次節参照)。実機(iPhone 14)に最終ビルドを再インストール・起動確認(PID確認)。5項目完了。
+2026-09-06 17:47 — StoreKitテストの商品情報取得を実機ログで診断。storekitdが本物のMedia API(Sandbox)へ問い合わせておりローカルConfiguration.storekitが使われていないことを確認(xcodebuild単体実行の既知の制約。Apple公式説明の通り、ローカルStoreKit設定はXcodeから直接Runした場合のみ有効)。コード側(PurchaseManager/scheme参照)は正しく実装済み。CEOへはXcodeから直接Runして確認する手順を報告に記載。

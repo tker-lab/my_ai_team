@@ -1,10 +1,11 @@
 前回のタイマーが自動再開された状態を検出。閉じてホームへ戻す(テスト前提を揃えるため)
 v3_photoduration_01_stray_running_timer_detected.png	t=5.2s
-v3_photoduration_02_photo_duration_set_6秒.png	t=25.9s
-v3_photoduration_03_default_after_start.png	t=31.1s
-long(6秒設定) intervals: []
-v3_photoduration_04_after_close_1.png	t=47.2s
-v3_photoduration_05_photo_duration_set_1秒.png	t=55.1s
-v3_photoduration_06_short_after_start.png	t=60.3s
-short(1秒設定) intervals: []
-v3_photoduration_07_final.png	t=68.6s
+絞り込み条件をリセットした(前のテストの選択を引き継がないため)
+v3_photoduration_02_photo_duration_set_6秒.png	t=37.8s
+v3_photoduration_03_default_after_start.png	t=43.0s
+long(6秒設定) intervals: ["4.85", "6.02"]
+v3_photoduration_04_after_close_1.png	t=58.9s
+v3_photoduration_05_photo_duration_set_1秒.png	t=71.1s
+v3_photoduration_06_short_after_start.png	t=76.2s
+short(1秒設定) intervals: ["0.70", "1.96", "0.23", "0.92", "1.15", "0.92", "1.16"]
+v3_photoduration_07_final.png	t=84.5s
