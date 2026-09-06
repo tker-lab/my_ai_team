@@ -1084,7 +1084,11 @@ final class PhotoTimerUITests: XCTestCase {
         recorder.writeManifest()
     }
 
-    // MARK: - シナリオ19: 振り返りで個別選択→確認まで進めること(実削除は禁止)
+    // MARK: - シナリオ19: 振り返りで複数選択→確認まで進めること(実削除は禁止)
+    //
+    // 【2026-09-06変更】複数選択削除は有料機能になったため、機能そのものの動作を見るこのテストでは
+    // 購入済み扱いを強制する(DEBUG限定。PurchaseManager参照。他の有料機能のテストと同じ考え方)。
+    // 未購入時に購入案内が出ることは別のtestBulkDeleteRequiresPurchase_SingleDeleteStaysFreeで確認する。
     //
     // 【安全のため実際には削除しない】このテスト用ライブラリ(15件)は他の多くのテストが前提にしている
     // 共有リソースのため、ここで実際に削除してしまうと他のテストに影響する。そのため「確認ダイアログが
@@ -1092,6 +1096,7 @@ final class PhotoTimerUITests: XCTestCase {
     // 別途手元の使い捨てシミュレータでの確認に委ねる(完了報告に記載)。
     func testHistoryDeleteSelection_ShowsConfirmationWithoutDeleting() throws {
         let app = XCUIApplication()
+        app.launchEnvironment["PHOTOTIMER_UI_TEST_FORCE_PREMIUM"] = "1"
         app.launch()
         let recorder = ScreenshotRecorder(scenario: "v7_deleteconfirm")
         try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
@@ -1122,6 +1127,63 @@ final class PhotoTimerUITests: XCTestCase {
         XCTAssertTrue(cancelButton.waitForExistence(timeout: 3), "選択枚数付きの確認画面が出ない")
         recorder.shoot(app, label: "selection_confirmation")
         cancelButton.tap() // ここで止め、写真アプリへの削除要求は絶対に出さない
+        recorder.writeManifest()
+        XCTAssertEqual(app.state, .runningForeground)
+    }
+
+    // MARK: - シナリオ28: 複数選択削除は未購入だと購入案内になり、単体削除は無料のまま使えること(2026-09-06)
+    //
+    // 【安全のため実際には削除しない】上のtestHistoryDeleteSelectionと同じ理由で、確認ダイアログが
+    // 出るところまでで止め、実際の削除確定(OS標準の確認)は行わない。
+    func testBulkDeleteRequiresPurchase_SingleDeleteStaysFree() throws {
+        let app = XCUIApplication()
+        app.launch() // 【重要】ここではPHOTOTIMER_UI_TEST_FORCE_PREMIUMを付けない(未購入のまま検証する)
+        let recorder = ScreenshotRecorder(scenario: "v12_bulkdeletelock")
+        try Self.ensurePhotosAccessGranted(app: app, recorder: recorder)
+        try Self.dismissAnyStrayRunningTimer(app: app, recorder: recorder)
+        app.buttons["filterButton"].tap()
+        let clearFilters = app.buttons["すべて解除"]
+        XCTAssertTrue(clearFilters.waitForExistence(timeout: 5))
+        clearFilters.tap()
+        app.buttons["完了"].tap()
+        try Self.setTotalTimer(app: app, minutes: "0", seconds: "5")
+
+        let startButton = app.buttons["startButton"]
+        XCTAssertTrue(startButton.waitForExistence(timeout: 10))
+        startButton.tap()
+
+        let stopAlarm = app.buttons["stopAlarmButton"]
+        if stopAlarm.waitForExistence(timeout: 12) { stopAlarm.tap() }
+        XCTAssertTrue(app.scrollViews["sessionHistoryGrid"].waitForExistence(timeout: 5), "終了後の振り返り一覧が出ない")
+
+        // 1. 未購入で「削除する項目を選ぶ」を押すと、複数選択モードに入る代わりに購入画面が開く。
+        app.buttons["enterHistoryDeleteModeButton"].tap()
+        XCTAssertTrue(app.navigationBars["プレミアム機能"].waitForExistence(timeout: 5), "未購入なのに複数選択削除モードに入れてしまった(購入画面が開かない)")
+        recorder.shoot(app, label: "bulk_delete_locked_purchase_sheet")
+        // 【重要】終了画面自体にも同じラベル(finishedCloseButton)の「閉じる」ボタンがシート裏に
+        // 存在するため、app.buttons["閉じる"]だと一致が2件になり失敗する。購入画面
+        // (navigationBar「プレミアム機能」)の中の「閉じる」だけに絞る。
+        app.navigationBars["プレミアム機能"].buttons["閉じる"].tap()
+        // 選択モードに入っていない(チェックのUI=「削除モード終了」ボタンが出ていない)ことを確認する。
+        XCTAssertFalse(app.buttons["削除モード終了"].exists, "購入画面を閉じたのに複数選択モードに入ったままになっている")
+
+        // 2. 単体削除(無料)は購入状態に関係なく使える。サムネイルをタップして全画面プレビューを開く。
+        app.scrollViews["sessionHistoryGrid"].buttons.firstMatch.tap()
+        let closePreview = app.buttons["closeHistoryPreviewButton"]
+        XCTAssertTrue(closePreview.waitForExistence(timeout: 5), "サムネイルをタップしても全画面プレビューが開かない")
+        recorder.shoot(app, label: "history_preview_opened")
+
+        let deletePreviewButton = app.buttons["deleteHistoryPreviewButton"]
+        XCTAssertTrue(deletePreviewButton.exists, "未購入なのに単体削除ボタンが見つからない(無料機能のはず)")
+        deletePreviewButton.tap()
+        let cancelButton = app.buttons["キャンセル"]
+        XCTAssertTrue(cancelButton.waitForExistence(timeout: 3), "単体削除の確認画面が出ない")
+        recorder.shoot(app, label: "single_delete_confirmation")
+        cancelButton.tap() // ここで止め、写真アプリへの削除要求は絶対に出さない
+
+        // キャンセルしたのでプレビューは開いたままのはず(誤って閉じていないか)。
+        XCTAssertTrue(closePreview.exists, "確認をキャンセルしただけなのにプレビューが閉じてしまった")
+        closePreview.tap()
         recorder.writeManifest()
         XCTAssertEqual(app.state, .runningForeground)
     }

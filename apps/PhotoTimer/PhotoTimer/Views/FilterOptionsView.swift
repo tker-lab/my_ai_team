@@ -19,7 +19,7 @@ struct FilterOptionsView: View {
     /// チップの選択色をテーマに合わせるために参照する(CEO要望・2026-09-06のカラーテーマ機能)。
     @AppStorage(AppThemeStore.key) private var themeRawValue: String = AppTheme.default.rawValue
     private var theme: AppTheme { AppTheme(rawValue: themeRawValue) ?? .default }
-    /// 課金状態(CEO要望・2026-09-06:場所での絞り込みは有料機能。自作リストは無料)。
+    /// 課金状態(CEO要望・2026-09-06:自作リスト・場所での絞り込みは有料機能)。
     @ObservedObject private var purchaseManager = PurchaseManager.shared
     @State private var showingPurchaseSheet = false
 
@@ -34,9 +34,20 @@ struct FilterOptionsView: View {
                 }
                 .disabled(settings.isCustomListSelected)
                 .opacity(settings.isCustomListSelected ? 0.45 : 1)
-                // 【2026-09-06変更:自作リストは無料機能に戻した】一時的に有料化していたが、
-                // CEOの最終判断(Codexとも相談)で撤回し、常に使える状態に戻した。
-                customListSection
+                // 【2026-09-06変更:自作リストは有料機能】未購入でも項目自体は隠さず、
+                // ロックされた状態(選べない・タップすると購入画面が開く)で見せる
+                // (完全に隠すのではなく「機能があることは分かる」というCEO要望の見え方)。
+                // 【訂正履歴】一時的に無料へ戻す変更をしたが、CEO確認の結果これは仕様書側の
+                // 記載ミスと判明し、有料のまま据え置くことになった。
+                if FeatureFlags.isCustomListsEnabled {
+                    customListSection
+                } else {
+                    lockedFeatureSection(
+                        title: "保存したリスト",
+                        message: "写真ライブラリから自分で選んで作ったリストを、絞り込み条件として使えるようになります。",
+                        icon: "list.star"
+                    )
+                }
                 Group {
                     if FeatureFlags.isPlaceFilterEnabled {
                         placeSection

@@ -187,7 +187,7 @@ struct PlaybackSettingsView: View {
         } header: {
             Text("プレミアム機能").fontDesign(theme.fontDesign)
         } footer: {
-            Text("複数選択削除・場所での絞り込み・演出パターンをまとめて使えるようになります。")
+            Text("複数選択削除・自作リスト(リスト作成)・場所での絞り込み・演出パターンをまとめて使えるようになります。")
                 .fontDesign(theme.fontDesign)
         }
     }

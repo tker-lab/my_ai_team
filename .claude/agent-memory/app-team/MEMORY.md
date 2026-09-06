@@ -27,3 +27,4 @@
 - [XCUITestのtap()はForm末尾で存在確認だけだと反応しないことがある](xcuitest-tap-fails-silently-near-screen-edge.md) — frame基準のscrollUntilTappableで下端余白を確認してから叩く
 - [xcodegenのstoreKitConfigurationはrun:/test:配下に書く](xcodegen-storekit-configuration-scheme-placement.md) — スキーム直下は無効、test:配下も反映されないことがあり.xcscheme手動パッチが必要な場合あり
 - [StoreKitテストはXcodeから直接Runしないと有効にならない](storekit-testing-requires-xcode-run-not-cli.md) — xcodebuild単体実行では本物のMedia APIに問い合わせに行ってしまう(Apple仕様)
+- [作業中に秘書がgit add -Aで巻き込みコミットすることがある](concurrent-commit-during-task.md) — 完了報告前に必ずgit logで想定外のコミットが無いか確認する

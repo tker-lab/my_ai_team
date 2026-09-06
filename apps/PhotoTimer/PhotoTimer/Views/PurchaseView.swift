@@ -1,7 +1,7 @@
 import SwiftUI
 import StoreKit
 
-/// プレミアム機能(複数選択削除・場所での絞り込み・演出パターン)の購入・復元を行う画面。
+/// プレミアム機能(複数選択削除・自作リスト(リスト作成)・場所での絞り込み・演出パターン)の購入・復元を行う画面。
 /// 設定画面(表示設定)・絞り込み画面のロックされた項目のどちらからも、このシートを開く導線がある。
 struct PurchaseView: View {
     @Environment(\.dismiss) private var dismiss
@@ -17,6 +17,7 @@ struct PurchaseView: View {
             Form {
                 Section {
                     featureRow(icon: "checklist", title: "複数選択削除")
+                    featureRow(icon: "list.star", title: "自作リスト(リスト作成)")
                     featureRow(icon: "mappin.and.ellipse", title: "場所での絞り込み")
                     featureRow(icon: "wand.and.stars", title: "演出パターン")
                 } header: {

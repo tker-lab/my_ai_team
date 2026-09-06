@@ -89,13 +89,16 @@ actor CandidateEngine {
     private var hadUndeterminedCandidatesThisPass = false
 
     init(settings: FilterSettings, placeClusters: [PlaceCluster]) {
-        // 【2026-09-06追加】場所での絞り込みは有料機能(自作リストは2026-09-06に無料へ戻した
-        // ためここでは対象外)。設定画面側のロックだけに頼らず、実際に候補を探す入口でも
-        // 購入状態を見て、未購入なら選択が残っていても使わない(場所は空扱いにする)ようにする
-        // (TimerController.start()のpresentationPatternと同じ「二重に守る」考え方)。
+        // 【2026-09-06追加】場所での絞り込み・自作リストは有料機能。設定画面側のロックだけに
+        // 頼らず、実際に候補を探す入口でも購入状態を見て、未購入なら選択が残っていても
+        // 使わない(場所は空扱いに、リストは選択なし扱いに)ようにする(TimerController.start()の
+        // presentationPatternと同じ「二重に守る」考え方)。
         var sanitized = settings
         if !FeatureFlags.isPlaceFilterEnabled {
             sanitized.selectedPlaceIDs = []
+        }
+        if !FeatureFlags.isCustomListsEnabled {
+            sanitized.selectedCustomListIDs = []
         }
         self.settings = sanitized
         // placeClusters は以前「場所」の一致判定(距離計算)に使っていたが、2026-09-04の修正で

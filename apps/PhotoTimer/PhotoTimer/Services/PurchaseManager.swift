@@ -2,8 +2,8 @@ import Foundation
 import StoreKit
 
 /// 課金状態(購入・復元)を一手に管理するクラス。CEO決定(2026-09-06。Codexとも相談し確定):
-/// 有料にする機能は「複数選択削除・場所での絞り込み・演出パターン」の3つで、個別課金にはせず
-/// 1つの買い切り商品(`premiumProductID`)ですべて解放する。
+/// 有料にする機能は「複数選択削除・自作リスト(リスト作成)・場所での絞り込み・演出パターン」の
+/// 4つで、個別課金にはせず1つの買い切り商品(`premiumProductID`)ですべて解放する。
 ///
 /// 【StoreKit 2について】`Product`(商品情報を取得する型)・`Transaction`(購入結果・所有状況を
 /// 表す型)・`Product.purchase()`(購入処理そのもの)というAppleの新しい課金APIを使っている。
@@ -25,8 +25,8 @@ final class PurchaseManager: ObservableObject {
     /// `Configuration.storekit`(StoreKitテスト用の設定ファイル)に同じIDで登録してある。
     static let premiumProductID = "com.aiteam.PhotoTimer.premiumUnlock"
 
-    /// 購入済みかどうか。`FeatureFlags.swift`の3つの機能フラグ(複数選択削除・場所での絞り込み・
-    /// 演出パターン)はすべてここを見て判定する。
+    /// 購入済みかどうか。`FeatureFlags.swift`の4つの機能フラグ(複数選択削除・自作リスト・
+    /// 場所での絞り込み・演出パターン)はすべてここを見て判定する。
     @Published private(set) var isPremiumUnlocked = false
     /// App Store(またはStoreKitテスト)から取得した商品情報。購入ボタンの表示名・価格に使う。
     @Published private(set) var product: Product?
@@ -39,7 +39,7 @@ final class PurchaseManager: ObservableObject {
     private var transactionListenerTask: Task<Void, Never>?
 
     private init() {
-        // 【DEBUG限定・2026-09-06追加】複数選択削除・場所での絞り込み・演出パターン自体の動作を
+        // 【DEBUG限定・2026-09-06追加】複数選択削除・自作リスト・場所での絞り込み・演出パターン自体の動作を
         // 確認する既存のUIテストは、課金機能とは無関係に「機能そのものが正しく動くか」を見たい。
         // 実際のStoreKit購入確認ダイアログ(システムUI)を自動化するのは不安定なため、
         // 他所(FilterSettingsStore.PHOTOTIMER_UI_TEST_SEARCH_BUDGET)と同じ考え方で、
