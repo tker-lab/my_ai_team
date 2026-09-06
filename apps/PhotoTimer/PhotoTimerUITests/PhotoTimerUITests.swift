@@ -1593,6 +1593,7 @@ final class PhotoTimerUITests: XCTestCase {
         // 独立した入口が失われていないことを検証する。
         let homePremiumButton = app.buttons["homePremiumPurchaseButton"]
         XCTAssertTrue(homePremiumButton.waitForExistence(timeout: 5), "未購入時の初期画面にプレミアム購入入口がない")
+        XCTAssertEqual(homePremiumButton.label, "プレミアム機能", "ホームの購入入口に価格や長い文言を表示しない")
 
         // 1. 絞り込み画面:「保存したリスト」「場所」がロック状態で見えることを確認する。
         let filterButton = app.buttons["filterButton"]

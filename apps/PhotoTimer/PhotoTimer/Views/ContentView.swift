@@ -175,11 +175,9 @@ struct ContentView: View {
                         Button {
                             showingPurchaseSheet = true
                         } label: {
-                            Label("300円", systemImage: "sparkles")
-                                .font(.subheadline)
-                                .fontDesign(theme.fontDesign)
+                            Image(systemName: "sparkles")
                         }
-                        .accessibilityLabel("プレミアム機能、300円")
+                        .accessibilityLabel("プレミアム機能")
                         .accessibilityIdentifier("homePremiumPurchaseButton")
                     }
                 }
