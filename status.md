@@ -14,13 +14,14 @@
 - **一時停止**:顧問(海外畜産統計の自動取得基盤づくり。9ソース実装済み)。**新しいソース(サイト)から取得する必要が出た時に再開する**(2026-09-01にCEO判断) → 詳細は [advisory_usda_project.md](advisory_usda_project.md)
 - **サブ・ぼちぼち相談**:ライフサポート部(都度カジュアルに相談に乗る程度)
 - **完了**:MacBookへの環境移行(2026-09-01完了)。手順書は [mac_migration.md](mac_migration.md)
-- **稼働中**:アプリ開発部(2026-09-02にYouTubeネタ帳のNotion構築が完了。2アプリ本体は未着手) → 詳細は [app_team_notion_idea_db.md](app_team_notion_idea_db.md)
+- **稼働中**:アプリ開発部(2026-09-02にYouTubeネタ帳のNotion構築が完了) → 詳細は [app_team_notion_idea_db.md](app_team_notion_idea_db.md)
+- **Codexが担当中**:PhotoTimer(メモリータイマー)の**App Store公開までの作業一式**(ストア素材・プライバシーポリシー等)。**2026-09-08時点でCEOがCodex側で進行中のため、この窓口からアプリ開発部を起動しないこと。** PhotoTimer関連の見覚えのないコミットはCodex由来 → 詳細は [app_team_photo_timer.md](app_team_photo_timer.md)
 - **一時停止**:広報部(発信するアウトプットが揃ってから本格稼働)
 - **将来構想・未着手**:コミュニケーション基盤(Discord構想) → 詳細は [communication_plan.md](communication_plan.md)
 - **将来構想・仕様待ち**:運営状態ダッシュボード(ルール・部署定義・メモリをPC/スマホから確認できるアプリかサイト) → 経緯は [ai_team_operation_design.md](ai_team_operation_design.md) の9章
 
 ## 次にやること候補
-- アプリ開発部:**Xcodeの環境構築が2026-09-03に別セッションで進行中(CEOが直接対応)。** 完了後はこの窓口経由でアプリ開発部に振り直し、内容を記録に残すこと
+- アプリ開発部:**PhotoTimerの公開作業はCodex側で進行中(上記参照)。この窓口では動かさない。** 公開が終わった段階で、次のアプリに移るかどうかをCEOに確認する
 - 動画部:**まずWindowsからMacへ動画素材をLocalSendで移送する(約1.2GB)。** その後、編集がどこまで済んでいるかを実物で確認 → サムネイル/タイトルの検討・カットイン用効果音の選定 ※撮り直し2箇所は実施済みと判明(2026-09-02)。詳細は [youtube_team_video1.md](youtube_team_video1.md)
 - 顧問:(停止中。再開時は)UN Comtradeの2014年以降の再取得、MLA再取得の完了確認。Macにデータ本体が無いためフル再取得4.5〜5時間が必要
 
