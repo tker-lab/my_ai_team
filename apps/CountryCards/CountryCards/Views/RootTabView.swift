@@ -10,6 +10,9 @@ struct RootTabView: View {
 
             GachaHomeView()
                 .tabItem { Label("ガチャ", systemImage: "shippingbox") }
+
+            ProfileView()
+                .tabItem { Label("プロフィール", systemImage: "person.crop.circle") }
         }
     }
 }
