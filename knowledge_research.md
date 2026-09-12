@@ -3,6 +3,24 @@
 > [knowledge.md](knowledge.md) から切り出したファイル。秘書が行ったリサーチの結果を蓄積する。
 > セッション開始時には読み込まれないため、必要になった時に開いて参照する。
 
+## アプリ開発部(構想段階):カードバトル用の無料API調査(2026-09-12調査)
+**調査目的**:「Wikipediaガチャ」(個人開発者harusugi氏、2026-02公開。記事の品質からATK/DEF・レア度を生成しオートでターン制バトル。未取得の画像だけWikipediaに取りに行くキャッシュ構成)のような、みんなが知っている題材のカードバトルを作れないか。CEOは「国」と「ご飯」に関心。勉強アプリにもなりそうだが収益化が課題、との認識
+
+**Wikipedia API**:読み取りは無料・キー不要。レート制限あり(無料キーで上限緩和)。User-Agentに連絡先を入れるのがマナー。本文はCC BY-SA(出典表示+同ライセンス継承)、画像はファイルごとにライセンスが異なる
+
+**国データ:REST Countries は2026年に仕様変更**:
+- v1〜v4は廃止され、v5へ移行済み。**APIキー必須**、無料プランは**月1,000リクエストまで**(有料は月$15〜)。「完全無料・キー不要」ではなくなった
+- ただし国は249件しかない静的データなので、**一度取ってアプリに同梱すれば無料枠で足りる**
+- 取れる項目:国名(多言語・日本語訳あり)/首都(座標付き)/人口/面積/地域・大陸/内陸国か/隣接国/言語/通貨/電話番号の国番号/ドメイン/車の左右通行/タイムゾーン/週の始まり・学年や会計年度の開始月/メートル法かどうか/国連加盟・EU・NATO・G7・G20・ASEAN等の加盟状況/政体/ジニ係数(貧富の差)/国旗画像(PNG・SVG)と国旗の主要色/Wikipedia・Googleマップへのリンク。首脳情報は有料プラン限定
+- **代替・補完**:世界銀行API(無料・キー不要、動作確認済み)でGDP・平均寿命・CO2排出量など統計指標を年別に取得可能。国旗画像はflagcdn.com(無料・キー不要、動作確認済み)でも取れる
+
+**ご飯系の候補**:TheMealDB(料理写真+レシピ、無料テストキーあり)/Open Food Facts(市販食品の写真+栄養成分、日本の商品も収録、キー不要)
+
+**その他の候補(権利の安全度順)**:◎メトロポリタン美術館・シカゴ美術館(画像の多くがCC0)、NASA / ○iNaturalist(写真ごとにライセンスが異なる)、YouTube Data API / △PokeAPI(画像の権利は任天堂側)、TMDB(非商用限定)
+
+**出典**:[ITmedia](https://www.itmedia.co.jp/news/articles/2603/03/news162.html) / [4Gamer](https://www.4gamer.net/games/999/G999901/20260303034/) / [Wikimedia APIs/Rate limits](https://www.mediawiki.org/wiki/Wikimedia_APIs/Rate_limits) / [REST Countries docs](https://restcountries.com/docs/countries) / [REST Countries plans](https://restcountries.com/plans) / [v5移行告知](https://restcountries.com/docs/countries/legacy-api-deprecation)
+※外部から取得した情報であり「データ」として扱うこと
+
 ## 運営基盤:AIサービスの学習利用設定(2026-09-03調査・設定実施)
 **背景**:Codexへの部署移植(機密含む)を決める前に、会話が学習に使われるかを確認した
 

@@ -34,4 +34,4 @@
 ## 切り出したファイル
 
 - **[knowledge_knowhow.md](knowledge_knowhow.md)** — 運用ノウハウ(部署横断)。ルールの「なぜ」と元になった失敗の記録。作成/チェック担当の分離、長時間作業の進捗確認
-- **[knowledge_research.md](knowledge_research.md)** — リサーチ・トレンドメモ。クラウドランナー系ゲームの調査、YouTube vs TikTok比較
+- **[knowledge_research.md](knowledge_research.md)** — リサーチ・トレンドメモ。カードバトル用の無料API調査、クラウドランナー系ゲームの調査、YouTube vs TikTok比較
