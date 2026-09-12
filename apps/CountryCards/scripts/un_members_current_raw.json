@@ -1,0 +1,2762 @@
+{
+  "head" : {
+    "vars" : [ "countryLabel", "iso2", "iso3" ]
+  },
+  "results" : {
+    "bindings" : [ {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "AF"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "AFG"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Afghanistan"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "AL"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ALB"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Albania"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "DZ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "DZA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Algeria"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "AD"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "AND"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Andorra"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "AO"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "AGO"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Angola"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "AG"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ATG"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Antigua and Barbuda"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "AR"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ARG"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Argentina"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "AM"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ARM"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Armenia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "AU"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "AUS"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Australia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "AT"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "AUT"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Austria"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "AZ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "AZE"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Azerbaijan"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BH"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BHR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Bahrain"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BD"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BGD"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Bangladesh"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BB"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BRB"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Barbados"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BY"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BLR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Belarus"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BE"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BEL"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Belgium"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BZ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BLZ"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Belize"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BJ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BEN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Benin"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BT"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BTN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Bhutan"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BO"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BOL"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Bolivia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BA"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BIH"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Bosnia and Herzegovina"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BW"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BWA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Botswana"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BR"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BRA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Brazil"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BN"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BRN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Brunei"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BG"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BGR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Bulgaria"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BF"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BFA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Burkina Faso"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BI"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BDI"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Burundi"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "KH"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "KHM"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Cambodia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "CM"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "CMR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Cameroon"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "CA"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "CAN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Canada"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "CV"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "CPV"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Cape Verde"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "CF"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "CAF"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Central African Republic"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "TD"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "TCD"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Chad"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "CL"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "CHL"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Chile"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "CO"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "COL"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Colombia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "KM"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "COM"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Comoros"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "CR"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "CRI"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Costa Rica"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "HR"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "HRV"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Croatia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "CU"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "CUB"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Cuba"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "CY"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "CYP"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Cyprus"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "CZ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "CZE"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Czech Republic"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "CD"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "COD"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Democratic Republic of the Congo"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "DJ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "DJI"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Djibouti"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "DM"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "DMA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Dominica"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "DO"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "DOM"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Dominican Republic"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "EC"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ECU"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Ecuador"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "EG"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "EGY"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Egypt"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SV"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SLV"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "El Salvador"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "GQ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "GNQ"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Equatorial Guinea"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "ER"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ERI"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Eritrea"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "EE"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "EST"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Estonia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SZ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SWZ"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Eswatini"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "ET"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ETH"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Ethiopia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "FM"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "FSM"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Federated States of Micronesia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "FJ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "FJI"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Fiji"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "FI"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "FIN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Finland"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "FR"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "FRA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "France"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "GA"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "GAB"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Gabon"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "GE"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "GEO"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Georgia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "DE"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "DEU"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Germany"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "GH"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "GHA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Ghana"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "GR"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "GRC"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Greece"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "GD"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "GRD"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Grenada"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "GT"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "GTM"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Guatemala"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "GN"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "GIN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Guinea"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "GW"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "GNB"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Guinea-Bissau"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "GY"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "GUY"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Guyana"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "HT"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "HTI"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Haiti"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "HN"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "HND"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Honduras"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "HU"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "HUN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Hungary"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "IS"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ISL"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Iceland"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "IN"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "IND"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "India"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "ID"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "IDN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Indonesia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "IR"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "IRN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Iran"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "IQ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "IRQ"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Iraq"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "IE"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "IRL"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Ireland"
+      }
+    }, {
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Islamic State of Afghanistan"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "IL"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ISR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Israel"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "IT"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ITA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Italy"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "CI"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "CIV"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Ivory Coast"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "JM"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "JAM"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Jamaica"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "JP"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "JPN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Japan"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "JO"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "JOR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Jordan"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "KZ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "KAZ"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Kazakhstan"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "KE"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "KEN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Kenya"
+      }
+    }, {
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Kingdom of Denmark"
+      }
+    }, {
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Kingdom of Laos"
+      }
+    }, {
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Kingdom of Nepal"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "NL"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "NLD"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Kingdom of the Netherlands"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "KI"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "KIR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Kiribati"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "KW"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "KWT"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Kuwait"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "KG"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "KGZ"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Kyrgyzstan"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "LA"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "LAO"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Laos"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "LV"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "LVA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Latvia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "LB"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "LBN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Lebanon"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "LS"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "LSO"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Lesotho"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "LR"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "LBR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Liberia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "LY"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "LBY"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Libya"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "LI"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "LIE"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Liechtenstein"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "LT"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "LTU"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Lithuania"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "LU"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "LUX"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Luxembourg"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MG"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MDG"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Madagascar"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MW"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MWI"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Malawi"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MY"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MYS"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Malaysia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MV"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MDV"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Maldives"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "ML"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MLI"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Mali"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MT"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MLT"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Malta"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MH"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MHL"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Marshall Islands"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MR"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MRT"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Mauritania"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MU"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MUS"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Mauritius"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MX"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MEX"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Mexico"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MD"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MDA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Moldova"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MC"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MCO"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Monaco"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MN"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MNG"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Mongolia"
+      }
+    }, {
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Mongolian People's Republic"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "ME"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MNE"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Montenegro"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MA"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MAR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Morocco"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MZ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MOZ"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Mozambique"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MM"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MMR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Myanmar"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "NA"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "NAM"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Namibia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "NR"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "NRU"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Nauru"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "NP"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "NPL"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Nepal"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "NZ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "NZL"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "New Zealand"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "NI"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "NIC"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Nicaragua"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "NE"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "NER"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Niger"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "NG"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "NGA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Nigeria"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "KP"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "PRK"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "North Korea"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "MK"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "MKD"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "North Macedonia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "NO"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "NOR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Norway"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "OM"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "OMN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Oman"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "PK"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "PAK"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Pakistan"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "PW"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "PLW"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Palau"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "PA"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "PAN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Panama"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "PG"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "PNG"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Papua New Guinea"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "PY"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "PRY"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Paraguay"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "CN"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "CHN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "People's Republic of China"
+      }
+    }, {
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "People's Republic of Mozambique"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "PE"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "PER"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Peru"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "PH"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "PHL"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Philippines"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "PL"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "POL"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Poland"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "PT"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "PRT"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Portugal"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "QA"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "QAT"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Qatar"
+      }
+    }, {
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Republic of Afghanistan"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "CG"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "COG"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Republic of the Congo"
+      }
+    }, {
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Republic of the Congo (Léopoldville)"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "RO"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ROU"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Romania"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "RU"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "RUS"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Russia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "RW"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "RWA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Rwanda"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "KN"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "KNA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Saint Kitts and Nevis"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "LC"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "LCA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Saint Lucia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "VC"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "VCT"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Saint Vincent and the Grenadines"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "WS"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "WSM"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Samoa"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SM"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SMR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "San Marino"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SA"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SAU"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Saudi Arabia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SN"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SEN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Senegal"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "RS"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SRB"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Serbia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SC"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SYC"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Seychelles"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SL"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SLE"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Sierra Leone"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SG"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SGP"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Singapore"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SK"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SVK"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Slovakia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SI"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SVN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Slovenia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SB"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SLB"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Solomon Islands"
+      }
+    }, {
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Somali Democratic Republic"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SO"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SOM"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Somalia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "ZA"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ZAF"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "South Africa"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "KR"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "KOR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "South Korea"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SS"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SSD"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "South Sudan"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "ES"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ESP"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Spain"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "LK"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "LKA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Sri Lanka"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SD"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SDN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Sudan"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SR"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SUR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Suriname"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SE"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SWE"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Sweden"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "CH"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "CHE"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Switzerland"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "SY"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "SYR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Syria"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "ST"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "STP"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "São Tomé and Príncipe"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "TJ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "TJK"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Tajikistan"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "TZ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "TZA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Tanzania"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "TH"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "THA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Thailand"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "BS"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "BHS"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "The Bahamas"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "GM"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "GMB"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "The Gambia"
+      }
+    }, {
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Third Hellenic Republic"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "TL"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "TLS"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Timor-Leste"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "TG"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "TGO"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Togo"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "TO"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "TON"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Tonga"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "TT"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "TTO"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Trinidad and Tobago"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "TN"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "TUN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Tunisia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "TR"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "TUR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Turkey"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "TM"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "TKM"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Turkmenistan"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "TV"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "TUV"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Tuvalu"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "UG"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "UGA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Uganda"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "UA"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "UKR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Ukraine"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "AE"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ARE"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "United Arab Emirates"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "GB"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "GBR"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "United Kingdom"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "US"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "USA"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "United States"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "UY"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "URY"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Uruguay"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "UZ"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "UZB"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Uzbekistan"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "VU"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "VUT"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Vanuatu"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "VE"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "VEN"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Venezuela"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "VN"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "VNM"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Vietnam"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "YE"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "YEM"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Yemen"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "ZM"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ZMB"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Zambia"
+      }
+    }, {
+      "iso2" : {
+        "type" : "literal",
+        "value" : "ZW"
+      },
+      "iso3" : {
+        "type" : "literal",
+        "value" : "ZWE"
+      },
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "Zimbabwe"
+      }
+    }, {
+      "countryLabel" : {
+        "xml:lang" : "en",
+        "type" : "literal",
+        "value" : "realm of the United Kingdom"
+      }
+    } ]
+  }
+}
