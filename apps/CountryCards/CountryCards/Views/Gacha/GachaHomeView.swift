@@ -3,6 +3,8 @@ import SwiftUI
 /// ガチャのトップ画面。要素ごとに入り口が10個ある(決定事項)。
 struct GachaHomeView: View {
     @ObservedObject private var database = CardDatabase.shared
+    @ObservedObject private var owned = OwnedCollection.shared
+    @State private var showingPointGacha = false
     private let columns = [GridItem(.adaptive(minimum: 150), spacing: 16)]
 
     var body: some View {
@@ -22,6 +24,17 @@ struct GachaHomeView: View {
             .navigationTitle("ガチャ")
             .navigationDestination(for: CardElement.self) { element in
                 GachaPlayView(element: element)
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("ポイントで引く(\(owned.dupePoints)pt)") {
+                        showingPointGacha = true
+                    }
+                    .font(.caption)
+                }
+            }
+            .sheet(isPresented: $showingPointGacha) {
+                PointGachaElementListView()
             }
         }
     }
