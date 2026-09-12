@@ -298,7 +298,23 @@ Phase 1に加え、就寝中に追加した決定事項もほぼ全て着手済�
 ## 残っている既知の制約
 - 広告SDK未組み込み(視聴完了ボタンで暫定代用)
 - REST Countries公式への切り替え未実施(現在はcountries.dev代替。tker1996@gmail.comでの登録メール確認が完了すれば、部署が正式版で作り直せる)
-- 豆知識は8カ国分のみ実データ、残り185カ国は要リサーチ
+- 豆知識は8カ国分のみ実データ、残り185カ国は要リサーチ(2026-09-13、CEO指示によりリサーチを先行発注。下記参照)
+
+## Game Centerの設定手順(2026-09-13、CEO向け)
+- **アプリ側は既に対応済み**:entitlements(アプリの権限設定ファイル)にGame Centerの項目が入っており、Xcodeで自動署名(Automatic Signing)のままビルドすれば、Apple Developer Portal側のApp ID(`com.aiteam.CountryCards`)へのGame Center機能の登録はXcodeが自動でやってくれる見込み。手動でPortalを触る必要は無いはず
+- **CEOが手動でやる必要があるのはApp Store Connect側だけ**:
+  1. [App Store Connect](https://appstoreconnect.apple.com)で、このアプリ(`com.aiteam.CountryCards`)のApp記録が無ければ新規作成(PhotoTimerと同じ開発者アカウントでOK。まだ審査に出す段階ではないので下書きのままでよい)
+  2. そのアプリの中の「Game Center」の設定画面を開く
+  3. リーダーボードを3つ作成する。**IDは以下の通り、コードの中身と1文字違わず一致させること**:
+     - `com.aiteam.countrycards.leaderboard.cardcount`(所持枚数用)
+     - `com.aiteam.countrycards.leaderboard.battlewins`(対戦勝利数用)
+     - `com.aiteam.countrycards.leaderboard.gachacount`(累計ガチャ回数用)
+  4. それぞれ表示名(日本語で「所持枚数ランキング」等)・スコアの並び順は**「高いほど上位」**・形式は「整数」で作成(3つとも同じ設定でよい。所持枚数の「コンプリートは早いほど上位」はアプリ側のスコア計算で吸収済み)
+- 実機での動作確認は、審査に出していない段階でも、その開発者アカウントに紐づくApp Store Connect上にApp記録さえあれば試せる(TestFlightや公開は不要)
+
+## 豆知識のリサーチ(2026-09-13、CEO指示で先行着手)
+- **CEO指示**:残り185カ国分の豆知識をリサーチだけ先に進めておく。**アプリへの組み込み(trivia.jsonへの反映)は今回はまだしない**。どこか別の場所に保持しておく
+- 対応:アプリ開発部に、`trivia.json`と同じ形式(国ごとに10個、事実確認しやすい項目に限定)で、別ファイルにリサーチ結果を貯めるよう依頼した(下記「残っていること」参照)
 
 ## 残っていること
 - Phase 1をアプリ開発部へ依頼(このセッションで着手)
