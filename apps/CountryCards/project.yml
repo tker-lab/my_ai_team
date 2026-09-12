@@ -43,6 +43,8 @@ targets:
       # 全国ランキング(所持枚数・対戦勝利数・ガチャ回数)をGame Centerで
       # 実現するために必要なフレームワーク。
       - sdk: GameKit.framework
+      # ¥100の10連ガチャ(App内課金)に必要なフレームワーク。
+      - sdk: StoreKit.framework
   # 「タップして開封→カードが順にめくれる」という操作フローが実際に動くかを
   # 人手のタップなしで自動確認するためのUIテスト。アプリ本体は一切変更しない。
   CountryCardsUITests:
@@ -71,3 +73,9 @@ schemes:
         - CountryCardsUITests
     run:
       config: Debug
+      # ¥100の10連ガチャをApp Store Connectの本物の課金無しで試せるようにする設定。
+      # 【既知の制約】xcodegenの制約で test: 配下には反映されないことがあるため、
+      # UIテスト実行では本物のApp Store側に問い合わせに行こうとする。
+      # 通常の実行(Xcodeからの Run、CEOが試す時)ではこの設定が使われる。
+      # 詳細: .claude/agent-memory/app-team/xcodegen-storekit-configuration-scheme-placement.md
+      storeKitConfiguration: CountryCards/Configuration.storekit

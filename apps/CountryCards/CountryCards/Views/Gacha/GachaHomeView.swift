@@ -5,6 +5,7 @@ struct GachaHomeView: View {
     @ObservedObject private var database = CardDatabase.shared
     @ObservedObject private var owned = OwnedCollection.shared
     @State private var showingPointGacha = false
+    @State private var showingIAPGacha = false
     private let columns = [GridItem(.adaptive(minimum: 150), spacing: 16)]
 
     var body: some View {
@@ -27,14 +28,18 @@ struct GachaHomeView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("ポイントで引く(\(owned.dupePoints)pt)") {
-                        showingPointGacha = true
+                    Menu("その他の引き方") {
+                        Button("ポイントで引く(\(owned.dupePoints)pt)") { showingPointGacha = true }
+                        Button("¥100で10連(課金)") { showingIAPGacha = true }
                     }
                     .font(.caption)
                 }
             }
             .sheet(isPresented: $showingPointGacha) {
                 PointGachaElementListView()
+            }
+            .sheet(isPresented: $showingIAPGacha) {
+                IAPGachaElementListView()
             }
         }
     }
