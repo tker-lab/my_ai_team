@@ -10,18 +10,24 @@ struct GachaPlayView: View {
 
     init(element: CardElement) {
         self.element = element
-        _viewModel = StateObject(wrappedValue: GachaPlayViewModel(element: element, database: .shared, owned: .shared))
+        _viewModel = StateObject(wrappedValue: GachaPlayViewModel(
+            element: element, database: .shared, owned: .shared, dailyBonus: .shared
+        ))
     }
 
     var body: some View {
         VStack {
-            switch viewModel.phase {
-            case .introPaused, .introPlaying:
-                introView
-            case .revealing(let index, let faceUp):
-                revealView(index: index, faceUp: faceUp)
-            case .done:
-                resultSummaryView
+            if viewModel.pullResult == nil, viewModel.blockedByDailyLimit {
+                noFreePullsView
+            } else {
+                switch viewModel.phase {
+                case .introPaused, .introPlaying:
+                    introView
+                case .revealing(let index, let faceUp):
+                    revealView(index: index, faceUp: faceUp)
+                case .done:
+                    resultSummaryView
+                }
             }
         }
         .navigationTitle("\(element.displayName)ガチャ")
@@ -31,6 +37,24 @@ struct GachaPlayView: View {
                 viewModel.startPull()
             }
         }
+    }
+
+    /// 無料ガチャの残り回数が0の時に出す画面
+    /// (チェック工程指摘:1日の回数制限が機能していなかった問題への対応)。
+    private var noFreePullsView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "hourglass")
+                .font(.system(size: 50))
+                .foregroundStyle(.secondary)
+            Text("本日の無料ガチャ回数を使い切りました")
+                .font(.headline)
+            Text("ログインボーナス・広告視聴・対戦の勝利で無料ガチャが増えます。\nダブりポイントや¥100の10連なら今すぐ引けます。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - 導入演出(通常モード:タップ待ち / 再生中)
@@ -140,10 +164,17 @@ struct GachaPlayView: View {
                     }
                 }
 
-                Button("もう一度引く") { viewModel.startPull() }
-                    .buttonStyle(.borderedProminent)
-                    .padding(.top)
-                    .padding(.bottom, 32)
+                if viewModel.blockedByDailyLimit {
+                    Text("本日の無料ガチャ回数を使い切りました")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.top)
+                } else {
+                    Button("もう一度引く") { viewModel.startPull() }
+                        .buttonStyle(.borderedProminent)
+                        .padding(.top)
+                }
+                Spacer().frame(height: 32)
             }
             .padding()
         }

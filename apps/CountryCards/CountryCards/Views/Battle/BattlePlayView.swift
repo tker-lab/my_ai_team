@@ -114,7 +114,9 @@ struct BattlePlayView: View {
             Text("\(viewModel.playerWinCount)勝 \(viewModel.cpuWinCount)敗")
                 .font(.headline)
             if viewModel.playerWinCount > viewModel.cpuWinCount {
-                Text("報酬: ダブりポイント +5pt")
+                Text(viewModel.wonFreeGachaBonus
+                    ? "報酬: 無料ガチャ +1回"
+                    : "本日の対戦報酬(1日3回)はすでに受け取り済みです")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

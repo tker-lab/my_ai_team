@@ -31,6 +31,8 @@ final class BattleViewModel: ObservableObject {
     @Published private(set) var phase: Phase
     @Published private(set) var roundResults: [RoundResult] = []
     @Published private(set) var pendingCPUCard: Card?
+    /// 対戦勝利によって無料ガチャが増えたかどうか(1日3回の上限に達していた場合はfalse)。
+    @Published private(set) var wonFreeGachaBonus = false
 
     private let database: CardDatabase
     private let deckManager: DeckManager
@@ -82,11 +84,9 @@ final class BattleViewModel: ObservableObject {
         phase = .finished
         if playerWinCount > cpuWinCount {
             owned.recordBattleWin()
-            // 【暫定判断】対戦の勝利報酬。決定事項には「ガチャの回数が増える」との
-            // 方針はあるが、具体的な仕組み(1日3回までの管理場所)はPhase 2で
-            // ガチャの入手手段全体(ログイン・広告・対戦)を作る時にまとめて実装する
-            // 前提で、今回はダブりポイントを5pt付与する簡易な報酬にしている。
-            _ = owned.receiveBattleWinBonus()
+            // 決定事項どおり「対戦の勝利:1日3回まで」ガチャが増える
+            // (4勝目以降も対戦自体は何度でもできるが、ガチャは増えない)。
+            wonFreeGachaBonus = DailyBonusManager.shared.claimBattleBonus()
             GameCenterManager.shared.syncAllScores(owned: owned, database: database)
         }
     }

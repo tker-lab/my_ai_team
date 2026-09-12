@@ -8,6 +8,7 @@ final class BattleUITests: XCTestCase {
 
     func testBattleCanBePlayedToCompletion() throws {
         let app = XCUIApplication()
+        app.launchArguments = ["-uiTestReset"]
         app.launch()
 
         app.tabBars.buttons["対戦"].tap()

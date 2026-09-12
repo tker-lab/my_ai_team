@@ -16,7 +16,8 @@ final class OwnedCollection: ObservableObject {
     private let defaults = UserDefaults.standard
     private let ownedCardIDsKey = "ownedCardIDs"
     private let dupePointsKey = "dupePoints"
-    private let lastLoginBonusDateKey = "lastLoginBonusDate"
+    // 「1日の回数制限」はDailyBonusManagerに一本化した(このクラスにキーの
+    // 定義だけあって読み書きされていない、というチェック工程の指摘に対応)。
     private let firstLaunchDateKey = "firstLaunchDate"
     private let usernameKey = "username"
     private let battleWinCountKey = "battleWinCount"
@@ -82,17 +83,6 @@ final class OwnedCollection: ObservableObject {
     func recordBattleWin() {
         battleWinCount += 1
         defaults.set(battleWinCount, forKey: battleWinCountKey)
-    }
-
-    /// 対戦に勝った時の簡易報酬(ダブりポイントを付与)。
-    /// 【暫定判断】「対戦の勝利:1日3回まで、ガチャが引ける」という決定事項の
-    /// 本格的な実装(1日の回数管理を含む共通のガチャ入手手段のまとめ)はPhase 2に
-    /// 回し、今回は「勝つとポイントが少し貯まる」という簡易な形にしている。
-    @discardableResult
-    func receiveBattleWinBonus(points: Int = 5) -> Int {
-        dupePoints = min(dupePoints + points, 9999)
-        defaults.set(dupePoints, forKey: dupePointsKey)
-        return dupePoints
     }
 
     /// ガチャを引くたびに呼ぶ。`pullCount`は「3枚出る1回引き」を何回分引いたか

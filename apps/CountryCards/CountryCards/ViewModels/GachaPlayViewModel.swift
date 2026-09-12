@@ -27,21 +27,34 @@ final class GachaPlayViewModel: ObservableObject {
     /// このカードは今回初めて手に入れた(true)か、ダブり(false)か。
     /// 演出上の「新規入手!」表示に使う。
     @Published private(set) var isNewByIndex: [Bool] = []
+    /// 無料ガチャの残り回数が無くて引けなかった時にtrueにする
+    /// (チェック工程指摘:1日の回数制限が無いまま無制限に引けていた問題への対応)。
+    @Published private(set) var blockedByDailyLimit = false
 
     private let engine: GachaEngine
     private let owned: OwnedCollection
+    private let dailyBonus: DailyBonusManager
 
-    init(element: CardElement, database: CardDatabase, owned: OwnedCollection) {
+    init(element: CardElement, database: CardDatabase, owned: OwnedCollection, dailyBonus: DailyBonusManager) {
         self.element = element
         self.owned = owned
+        self.dailyBonus = dailyBonus
         let cardsForElement = database.cards(forElement: element)
         // 北朝鮮のGDPカード(特別カード)は、要素がGDPの時だけ抽選対象に含める。
         let special = element == .gdp ? database.specialCards.first(where: { $0.element == .gdp }) : nil
         self.engine = GachaEngine(cardsForElement: cardsForElement, specialCard: special)
     }
 
-    /// ガチャを1回(3枚)引いて、演出を最初からやり直す。
+    /// ガチャを1回(3枚)引いて、演出を最初からやり直す。無料ガチャの残りが
+    /// 無ければ引かずに`blockedByDailyLimit`を立てるだけで終わる
+    /// (ポイント・課金のガチャはこの制限を受けない。それぞれ別のViewModelで
+    /// ダブりポイント・¥100を直接消費するため)。
     func startPull() {
+        guard dailyBonus.consumeFreePull() else {
+            blockedByDailyLimit = true
+            return
+        }
+        blockedByDailyLimit = false
         let result = engine.drawOnePull()
         pullResult = result
         isNewByIndex = Array(repeating: false, count: result.cards.count)

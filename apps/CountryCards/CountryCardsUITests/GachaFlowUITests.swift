@@ -11,6 +11,7 @@ final class GachaFlowUITests: XCTestCase {
     /// 通常モード:導入演出をタップで開始→カードを1枚ずつタップして見ていく。
     func testNormalModeRevealsThreeCards() throws {
         let app = XCUIApplication()
+        app.launchArguments = ["-uiTestReset"]
         app.launch()
 
         app.tabBars.buttons["ガチャ"].tap()
@@ -43,6 +44,7 @@ final class GachaFlowUITests: XCTestCase {
     /// タップ待ち画面のどちらかに到達し、フリーズしないこと」を確認する)
     func testSkipModeDoesNotFreeze() throws {
         let app = XCUIApplication()
+        app.launchArguments = ["-uiTestReset"]
         app.launch()
 
         app.tabBars.buttons["ガチャ"].tap()

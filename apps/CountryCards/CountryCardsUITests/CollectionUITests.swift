@@ -8,6 +8,7 @@ final class CollectionUITests: XCTestCase {
 
     func testCountryListAndDetailDoNotCrash() throws {
         let app = XCUIApplication()
+        app.launchArguments = ["-uiTestReset"]
         app.launch()
 
         // 起動直後は図鑑タブ(国別)が表示されているはず。「図鑑」という
