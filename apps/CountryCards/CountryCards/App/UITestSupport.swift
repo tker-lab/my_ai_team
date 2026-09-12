@@ -15,7 +15,9 @@ import Foundation
 /// (触れてしまうと、その後の`.shared`初期化が「もう存在するインスタンス」
 /// を使い回し、UserDefaultsをクリアした効果が反映されなくなるため)。
 enum UITestSupport {
-    static func resetAllStateForTesting() {
+    /// `-uiTestReset`: セーブデータを全消去し、ユーザー名だけは登録済みにする
+    /// (オンボーディング画面を毎回突破しなくて済むよう、既存のUIテスト群向け)。
+    static func resetAllStateForTesting(presetUsername: Bool = true) {
         let defaults = UserDefaults.standard
         let keysToRemove = [
             // OwnedCollection
@@ -30,6 +32,10 @@ enum UITestSupport {
         ]
         for key in keysToRemove {
             defaults.removeObject(forKey: key)
+        }
+
+        if presetUsername {
+            defaults.set("テストユーザー", forKey: "username")
         }
     }
 }
