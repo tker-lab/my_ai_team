@@ -19,6 +19,15 @@ struct PointGachaView: View {
             Text("保有ポイント: \(owned.dupePoints)pt")
                 .font(.headline)
 
+            // App Storeガイドライン3.1.1の趣旨(購入前の確率開示)に合わせ、
+            // ポイント消費前にもここから確率を確認できるようにする。
+            // ¥100の10連とは保証内容が違う(ポイント10連はSR以上確定、
+            // ポイント100連はSSR以上確定)ため、専用のsourceで正しい内容を表示する。
+            NavigationLink("排出確率を確認する") {
+                GachaOddsView(source: .point)
+            }
+            .font(.footnote)
+
             ForEach(PointGachaViewModel.PullCount.allCases) { pullCount in
                 Button(pullCount.displayName) {
                     viewModel.pull(pullCount)
