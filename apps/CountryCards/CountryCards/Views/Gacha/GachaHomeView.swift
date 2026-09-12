@@ -27,6 +27,14 @@ struct GachaHomeView: View {
                 GachaPlayView(element: element)
             }
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    // Menu内にNavigationLinkを直接置くと遷移しないことがあるため、
+                    // 排出確率だけは独立したツールバーボタンにする。
+                    NavigationLink { GachaOddsView() } label: {
+                        Label("排出確率", systemImage: "percent")
+                    }
+                    .font(.caption)
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu("その他の引き方") {
                         Button("ポイントで引く(\(owned.dupePoints)pt)") { showingPointGacha = true }

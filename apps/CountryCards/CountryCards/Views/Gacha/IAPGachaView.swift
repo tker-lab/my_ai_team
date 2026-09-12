@@ -25,6 +25,13 @@ struct IAPGachaView: View {
                     .foregroundStyle(.secondary)
             }
 
+            // App Storeガイドライン3.1.1(購入前の確率開示)に対応するため、
+            // 購入ボタンの直前に必ず確率画面への導線を置く。
+            NavigationLink("購入前に排出確率を確認する") {
+                GachaOddsView()
+            }
+            .font(.footnote)
+
             Button {
                 Task { await viewModel.purchaseAndPull() }
             } label: {
