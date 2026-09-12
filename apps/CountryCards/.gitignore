@@ -12,3 +12,6 @@ CountryCards/Info.plist
 # xcodebuildの実行ログ(調査用に都度作る一時ファイル)
 test_run_*.log
 device_*.log
+
+# 動作確認のために都度撮るスクリーンショット(再実行すれば作り直せるため追跡しない)
+verify_*.png
