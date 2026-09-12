@@ -98,6 +98,7 @@ final class GachaPlayViewModel: ObservableObject {
     private func advanceManually(to index: Int) {
         guard let pullResult, index < pullResult.cards.count else {
             phase = .done
+            GameCenterManager.shared.syncAllScores(owned: owned, database: .shared)
             return
         }
         phase = .revealing(index: index, faceUp: false)
@@ -109,6 +110,7 @@ final class GachaPlayViewModel: ObservableObject {
     private func revealAndAutoAdvance(index: Int) {
         guard let pullResult, index < pullResult.cards.count else {
             phase = .done
+            GameCenterManager.shared.syncAllScores(owned: owned, database: .shared)
             return
         }
         let card = pullResult.cards[index]

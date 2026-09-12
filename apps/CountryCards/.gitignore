@@ -6,8 +6,9 @@ build/
 *.xcuserdatad/
 .DS_Store
 
-# Info.plistはxcodegenが project.yml から自動生成するため追跡しない
+# Info.plist・entitlementsはxcodegenが project.yml から自動生成するため追跡しない
 CountryCards/Info.plist
+CountryCards/CountryCards.entitlements
 
 # xcodebuildの実行ログ(調査用に都度作る一時ファイル)
 test_run_*.log

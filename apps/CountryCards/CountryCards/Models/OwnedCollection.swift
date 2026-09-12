@@ -21,6 +21,7 @@ final class OwnedCollection: ObservableObject {
     private let usernameKey = "username"
     private let battleWinCountKey = "battleWinCount"
     private let gachaUseCountKey = "gachaUseCount"
+    private let completionDateKey = "completionDate"
 
     /// 持っているカードのID一覧("JPN_population"のような文字列)。
     @Published private(set) var ownedCardIDs: Set<String>
@@ -37,6 +38,11 @@ final class OwnedCollection: ObservableObject {
     /// ガチャの累計使用回数(3枚出る1回引き=1回とカウント。10連なら+10)。
     @Published private(set) var gachaUseCount: Int
 
+    /// 全カードをコンプリートした日時(未達成ならnil)。全国ランキング(所持枚数)で
+    /// 「コンプリート済み同士は達成が早い人ほど上位」を実現するために使う
+    /// (詳細はGameCenterManagerのスコア計算を参照)。
+    @Published private(set) var completionDate: Date?
+
     private init() {
         let saved = defaults.array(forKey: ownedCardIDsKey) as? [String] ?? []
         self.ownedCardIDs = Set(saved)
@@ -44,6 +50,7 @@ final class OwnedCollection: ObservableObject {
         self.username = defaults.string(forKey: usernameKey)
         self.battleWinCount = defaults.integer(forKey: battleWinCountKey)
         self.gachaUseCount = defaults.integer(forKey: gachaUseCountKey)
+        self.completionDate = defaults.object(forKey: completionDateKey) as? Date
 
         // 初回起動日を記録しておく(「初回ダウンロードから1週間だけ1日3回」の
         // ログインボーナス特典の判定に使う)。
@@ -55,6 +62,16 @@ final class OwnedCollection: ObservableObject {
     /// 何種類のカードを持っているか(ダブりを除いたユニークな枚数)。
     /// プロフィールの王冠アイコンの色分けに使う。
     var uniqueCardCount: Int { ownedCardIDs.count }
+
+    /// まだコンプリート日時を記録していなければ、今のカード数が実際の総数に
+    /// 達した瞬間の日時を1回だけ記録する(2回目以降は何もしない=最初に
+    /// 達成した日時が上書きされないようにする)。
+    func noteCompletionIfNeeded(totalCardCount: Int) {
+        guard completionDate == nil, totalCardCount > 0, uniqueCardCount >= totalCardCount else { return }
+        let now = Date()
+        completionDate = now
+        defaults.set(now, forKey: completionDateKey)
+    }
 
     func updateUsername(_ name: String) {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -120,9 +137,11 @@ final class OwnedCollection: ObservableObject {
         dupePoints = 0
         battleWinCount = 0
         gachaUseCount = 0
+        completionDate = nil
         defaults.removeObject(forKey: ownedCardIDsKey)
         defaults.removeObject(forKey: dupePointsKey)
         defaults.removeObject(forKey: battleWinCountKey)
         defaults.removeObject(forKey: gachaUseCountKey)
+        defaults.removeObject(forKey: completionDateKey)
     }
 }

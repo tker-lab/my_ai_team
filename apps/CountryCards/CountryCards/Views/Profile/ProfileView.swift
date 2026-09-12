@@ -47,6 +47,12 @@ struct ProfileView: View {
                     LabeledContent("ダブりポイント", value: "\(owned.dupePoints)pt")
                 }
 
+                Section {
+                    NavigationLink("全国ランキングを見る") {
+                        LeaderboardView()
+                    }
+                }
+
                 Section("王冠について") {
                     Text("持っているカードの種類数(ダブりを除く)に応じて、王冠の色が10段階で変わります。すべて集めると金色になります。")
                         .font(.caption)
