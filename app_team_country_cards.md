@@ -1,7 +1,17 @@
-# 国カードバトル(仮称)
+# Country Cards Collection(旧称:国カードバトル仮称、通称カンコレ)
 
 > アプリ開発部のプロジェクトファイル。構想・初回依頼書の段階(2026-09-12開始)。
 > 元になった調査は [knowledge_research.md](knowledge_research.md) の「カードバトル用の無料API調査」。
+
+## 正式名称・ストア登録(2026-09-13 CEO決定・秘書がブラウザ操作で実施)
+- **App名**:Country Cards Collection(通称カンコレ)。サブタイトルで「カードバトル」を補う方針(名前欄は30文字上限のため)
+- **Bundle ID**:`com.aiteam.CountryCards`(Apple Developer Portalに登録済み、Game Center機能有効化済み)
+- **App Store Connect**:App記録作成済み(App ID: 6811454348)
+- **Game Center リーダーボード3件、作成・ローカライズ(日本語)済み**:
+  - 所持枚数ランキング:`com.aiteam.countrycards.leaderboard.cardcount`(降順、サフィックス「枚」)
+  - 対戦勝利数ランキング:`com.aiteam.countrycards.leaderboard.battlewins`(降順、サフィックス「勝」)
+  - 累計ガチャ回数ランキング:`com.aiteam.countrycards.leaderboard.gachacount`(降順、サフィックス「回」)
+- 上記はClaude in Chrome(ブラウザ操作連携)を使い、秘書がCEOのログイン後に代行して設定した
 
 ## 経緯
 - CEOが「Wikipediaガチャ」(Wikipedia記事をカード化して戦わせる個人開発のWebゲーム)を見て、同じような仕組みで題材を変えたら面白いと着想した
