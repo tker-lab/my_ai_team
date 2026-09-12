@@ -11,8 +11,16 @@ struct RootTabView: View {
             GachaHomeView()
                 .tabItem { Label("ガチャ", systemImage: "shippingbox") }
 
+            BattleHomeView()
+                .tabItem { Label("対戦", systemImage: "bolt.fill") }
+
             ProfileView()
                 .tabItem { Label("プロフィール", systemImage: "person.crop.circle") }
+        }
+        .onAppear {
+            // 初回起動時だけ、要素ごとにNレアのカードを5枚ずつ持った状態から
+            // スタートする(決定事項どおりの初期デッキ)。
+            DeckManager.shared.seedInitialDeckIfNeeded(database: .shared, owned: .shared)
         }
     }
 }

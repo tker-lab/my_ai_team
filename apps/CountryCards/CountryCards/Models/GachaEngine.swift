@@ -105,6 +105,25 @@ struct GachaEngine {
         }
     }
 
+    /// CPU対戦相手の手札づくり専用:HURを完全に除外した状態で、通常の
+    /// 1・2枚目と同じ確率テーブル(N70/SR22/SSR6/UR2)から1枚だけ選ぶ。
+    /// 「北朝鮮GDPカードはCPUの手札に絶対に入れない」という決定事項に対応する
+    /// (このEngineをCPU用に作る時はspecialCardをnilにして渡すことでも防げるが、
+    /// 呼び出し側の実装ミスに備えてこのメソッド自身もHUR抽選を行わない)。
+    func drawSingleCardForCPU() -> Card {
+        let roll = Double.random(in: 0..<1)
+        var cumulative = 0.0
+        let orderedRarities: [Rarity] = [.n, .sr, .ssr, .ur]
+        for rarity in orderedRarities {
+            guard let weight = Self.normalWeights[rarity] else { continue }
+            cumulative += weight
+            if roll < cumulative, let picked = pickCard(of: rarity, unownedBonus: nil) {
+                return picked
+            }
+        }
+        return fallbackCard(preferredOrder: orderedRarities.reversed(), unownedBonus: nil)
+    }
+
     /// レア度ごとの重みに従って1枚選ぶ。まずHUR(超激レア)を判定し、
     /// 外れたら重み配分どおりに通常レア度から選ぶ。
     private func drawCard(weights: [Rarity: Double], unownedBonus: UnownedBonus?) -> Card {
