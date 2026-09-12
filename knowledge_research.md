@@ -17,6 +17,8 @@
 **導入完了(2026-09-13・MacBook)**:拡張機能v1.0.93+Claude Code v2.1.270で接続テスト成功。つまずき:ChromeがDMG(インストール用ディスク)から直接起動されたままで未インストールだった→アプリケーションフォルダへ移して再起動で解決。VS Code拡張ではフラグ不要で、プロンプトに `@browser` と付けて頼む。**`@browser`は1会話につき最初の1回だけでよい**(付けた時点でその会話にブラウザ操作の道具が追加され、会話が終わるまで残る。自動で有効にする設定はVS Code側に無い)。またVS Code版はClaude Code側の操作確認が出ない作りで、サイトごとの許可はChrome拡張機能側の設定で管理する(拡張機能v2.1.269のコードで確認)
 - **常時ON化(2026-09-13、CEO判断で「この拠点だけ」)**:`@browser`の中身は「`claude --claude-in-chrome-mcp` を接続設定として追加するだけ」と判明。公式名 `claude-in-chrome` は予約済みで使えないため、別名 `chrome-browser` でlocalスコープ(このMacのmy_ai_team限定・Git非同期)に登録済み → 依頼の途中でAIが自分の判断でブラウザを使える。**非公式の裏道なので、Claude Code更新で動かなくなったら `@browser` 運用に戻す。** 部署にも道具が渡る点・操作ごとに許可確認が出る点は了承済み。解除は `claude mcp remove chrome-browser -s local`
 
+**秘書セッションでの動作確認(2026-09-13)**:VSCode再起動後、この会話(秘書)からも`mcp__chrome-browser__*`の道具が使えることを確認。**使い方の要点**:①`list_connected_browsers`で繋がっているChromeを確認(複数ある場合はCEOにAskUserQuestionで選んでもらうのが安全) ②`select_browser`でそのブラウザを選択 ③`tabs_context_mcp{createIfEmpty:true}`でタブを用意してからでないと`navigate`が失敗する(`No tab available`エラーになった) ④操作が終わったタブは`tabs_close_mcp`で閉じる。**接続が0件の時**:Chromeが開いていない/拡張機能のアイコンをクリックしてペアリングし直す必要がある場合がある
+
 **この案件への適用**:今回のGame Center設定(App Store Connect)は既にCEOが手動で進める前提で案内済みだが、次回以降似た「ログイン+管理画面操作」が発生した時は、この仕組みの利用を検討する
 
 **出典**:[Claude Code公式ドキュメント「Use Claude Code with Chrome」](https://code.claude.com/docs/en/chrome)
