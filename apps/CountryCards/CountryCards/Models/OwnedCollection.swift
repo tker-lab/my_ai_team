@@ -18,6 +18,9 @@ final class OwnedCollection: ObservableObject {
     private let dupePointsKey = "dupePoints"
     private let lastLoginBonusDateKey = "lastLoginBonusDate"
     private let firstLaunchDateKey = "firstLaunchDate"
+    private let usernameKey = "username"
+    private let battleWinCountKey = "battleWinCount"
+    private let gachaUseCountKey = "gachaUseCount"
 
     /// 持っているカードのID一覧("JPN_population"のような文字列)。
     @Published private(set) var ownedCardIDs: Set<String>
@@ -25,16 +28,50 @@ final class OwnedCollection: ObservableObject {
     /// ダブりカードのポイント(最大9999、10ポイントでガチャ1回分)。
     @Published private(set) var dupePoints: Int
 
+    /// プロフィール画面に出すユーザー名(未登録ならnil)。
+    @Published private(set) var username: String?
+
+    /// 対戦の累計勝利数(1日でリセットされない、ずっと積み上がる記録)。
+    @Published private(set) var battleWinCount: Int
+
+    /// ガチャの累計使用回数(3枚出る1回引き=1回とカウント。10連なら+10)。
+    @Published private(set) var gachaUseCount: Int
+
     private init() {
         let saved = defaults.array(forKey: ownedCardIDsKey) as? [String] ?? []
         self.ownedCardIDs = Set(saved)
         self.dupePoints = defaults.integer(forKey: dupePointsKey)
+        self.username = defaults.string(forKey: usernameKey)
+        self.battleWinCount = defaults.integer(forKey: battleWinCountKey)
+        self.gachaUseCount = defaults.integer(forKey: gachaUseCountKey)
 
         // 初回起動日を記録しておく(「初回ダウンロードから1週間だけ1日3回」の
         // ログインボーナス特典の判定に使う)。
         if defaults.object(forKey: firstLaunchDateKey) == nil {
             defaults.set(Date(), forKey: firstLaunchDateKey)
         }
+    }
+
+    /// 何種類のカードを持っているか(ダブりを除いたユニークな枚数)。
+    /// プロフィールの王冠アイコンの色分けに使う。
+    var uniqueCardCount: Int { ownedCardIDs.count }
+
+    func updateUsername(_ name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        username = trimmed.isEmpty ? nil : trimmed
+        defaults.set(username, forKey: usernameKey)
+    }
+
+    func recordBattleWin() {
+        battleWinCount += 1
+        defaults.set(battleWinCount, forKey: battleWinCountKey)
+    }
+
+    /// ガチャを引くたびに呼ぶ。`pullCount`は「3枚出る1回引き」を何回分引いたか
+    /// (単発なら1、10連なら10、100連なら100)。
+    func recordGachaUse(pullCount: Int) {
+        gachaUseCount += pullCount
+        defaults.set(gachaUseCount, forKey: gachaUseCountKey)
     }
 
     var isOwned: (Card) -> Bool {
@@ -81,7 +118,11 @@ final class OwnedCollection: ObservableObject {
     func resetForDebug() {
         ownedCardIDs = []
         dupePoints = 0
+        battleWinCount = 0
+        gachaUseCount = 0
         defaults.removeObject(forKey: ownedCardIDsKey)
         defaults.removeObject(forKey: dupePointsKey)
+        defaults.removeObject(forKey: battleWinCountKey)
+        defaults.removeObject(forKey: gachaUseCountKey)
     }
 }

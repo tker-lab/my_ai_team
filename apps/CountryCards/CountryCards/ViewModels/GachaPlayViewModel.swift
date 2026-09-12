@@ -47,6 +47,7 @@ final class GachaPlayViewModel: ObservableObject {
         isNewByIndex = Array(repeating: false, count: result.cards.count)
         isSkipMode = false
         phase = .introPaused
+        owned.recordGachaUse(pullCount: 1)
     }
 
     /// 導入演出エリアをタップ(通常モード開始のトリガー)。
