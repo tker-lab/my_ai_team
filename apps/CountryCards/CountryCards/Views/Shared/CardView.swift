@@ -5,8 +5,8 @@ import SwiftUI
 /// 配色ルール(app_team_country_cards.md決定事項):
 ///   - カード全体のベース色 = レア度(Rarity.baseColor)
 ///   - 縁(枠線)の色 = 要素(CardElement.borderColor)
-/// Phase 1では「キラキラエフェクト」などの作り込みは行わず、色分けと
-/// 情報表示ができていることを優先する(演出の作り込みはPhase 2)。
+///   - SSR以上はうっすら、URはしっかりキラキラのエフェクトを付ける
+///     (SparkleOverlayで実装。sparkleIntensityの値でキラキラの強さを変える)
 struct CardView: View {
     let card: Card
     let country: Country?
@@ -45,6 +45,13 @@ struct CardView: View {
                 .strokeBorder(isRevealed ? card.element.borderColor : .gray, lineWidth: 4)
         )
         .shadow(radius: card.rarity.sparkleIntensity > 0 ? 6 : 2)
+        .overlay {
+            if isRevealed, card.rarity.sparkleIntensity > 0 {
+                SparkleOverlay(intensity: card.rarity.sparkleIntensity)
+                    .allowsHitTesting(false)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
+        }
     }
 
     @ViewBuilder
@@ -68,6 +75,36 @@ struct CardView: View {
                 .frame(height: 70)
                 .overlay(Image(systemName: "questionmark").font(.largeTitle))
         }
+    }
+}
+
+/// SSR以上のカードに乗せる簡易キラキラ演出。GeometryReaderは使わず、固定位置
+/// に配置した「✨」を明滅させるだけの軽い実装(見た目の作り込みはPhase 2で
+/// 続けられるよう、まずは「レア度が高いほど華やかに見える」を成立させる)。
+private struct SparkleOverlay: View {
+    let intensity: Double // 0(無し)〜1(URクラス)
+    @State private var isAnimating = false
+
+    private var sparklePositions: [(x: CGFloat, y: CGFloat, delay: Double)] {
+        [(0.15, 0.15, 0), (0.85, 0.25, 0.3), (0.75, 0.85, 0.6), (0.2, 0.8, 0.9)]
+    }
+
+    var body: some View {
+        ZStack {
+            ForEach(Array(sparklePositions.enumerated()), id: \.offset) { _, pos in
+                Image(systemName: "sparkle")
+                    .font(.system(size: 14 + 6 * intensity))
+                    .foregroundStyle(.white.opacity(0.9))
+                    .opacity(isAnimating ? 0.9 : 0.1)
+                    .position(x: 160 * pos.x, y: 220 * pos.y) // CardViewの固定サイズ(160x220)に合わせる
+                    .animation(
+                        .easeInOut(duration: 1.1).repeatForever(autoreverses: true).delay(pos.delay),
+                        value: isAnimating
+                    )
+            }
+        }
+        .frame(width: 160, height: 220)
+        .onAppear { isAnimating = true }
     }
 }
 
