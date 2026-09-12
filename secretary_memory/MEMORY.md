@@ -10,3 +10,4 @@
 - [MacBook環境のパス](mac-environment.md) — Macユーザー名はtakahashitakayuki。拠点は~/my_ai_team、メモリ配置先も別名になる
 - [Artifactは要望時のみ更新](artifact-update-on-request-only.md) — 図解付き資料は都度再発行せず、まとまった区切りか要望があった時に更新する
 - [Codexとの並行運用に注意](codex-parallel-work-awareness.md) — 見覚えのない成果物はCodex由来の可能性。CEOはCodexに頼む時に範囲を一言伝える運用にした
+- [アイデアは3つで提示](ceo-wants-three-options.md) — CEOが案を求めた時は常に3択に揃える
