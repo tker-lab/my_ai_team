@@ -16,7 +16,7 @@
 - **完了**:MacBookへの環境移行(2026-09-01完了)。手順書は [mac_migration.md](mac_migration.md)
 - **稼働中**:アプリ開発部(2026-09-02にYouTubeネタ帳のNotion構築が完了) → 詳細は [app_team_notion_idea_db.md](app_team_notion_idea_db.md)
 - **Codexが担当中**:PhotoTimer(メモリータイマー)の**App Store公開までの作業一式**(ストア素材・プライバシーポリシー等)。**2026-09-08時点でCEOがCodex側で進行中のため、この窓口からアプリ開発部を起動しないこと。** PhotoTimer関連の見覚えのないコミットはCodex由来 → 詳細は [app_team_photo_timer.md](app_team_photo_timer.md)
-- **実装中(Phase 1)**:国カードバトル(仮称)。2026-09-12に仕様がほぼ確定し、アプリ開発部へPhase 1(データ生成・カード基盤・ガチャ基本ロジック)を発注(PhotoTimerとは別案件なのでこの窓口で扱う) → 詳細は [app_team_country_cards.md](app_team_country_cards.md)
+- **実機確認・チェック待ち**:国カードバトル(仮称)。2026-09-12深夜〜13日未明にPhase 1+追加機能の大部分をアプリ開発部が実装完了(PhotoTimerとは別案件なのでこの窓口で扱う)。CEOの確認・対応が必要な項目あり(REST Countries登録の完了、Game Centerの設定、対戦仕様の仮決め項目)。チェック担当(別セッション)の手配が次のアクション → 詳細は [app_team_country_cards.md](app_team_country_cards.md)
 - **一時停止**:広報部(発信するアウトプットが揃ってから本格稼働)
 - **将来構想・未着手**:コミュニケーション基盤(Discord構想) → 詳細は [communication_plan.md](communication_plan.md)
 - **将来構想・仕様待ち**:運営状態ダッシュボード(ルール・部署定義・メモリをPC/スマホから確認できるアプリかサイト) → 経緯は [ai_team_operation_design.md](ai_team_operation_design.md) の9章
