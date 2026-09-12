@@ -48,16 +48,34 @@ final class DeckManager: ObservableObject {
         (cardIDsByElement[card.element] ?? []).contains(card.id)
     }
 
-    /// デッキへの出し入れ(最大5枚。5枚あるところへ追加しようとしたら何もしない)。
-    func toggle(_ card: Card) {
+    /// `toggle(_:)`の結果。DeckEditorViewが「なぜ変更できなかったか」を
+    /// 案内できるようにするための列挙。
+    enum ToggleResult {
+        case added
+        case removed
+        /// 各要素は最低1枚残す必要があるため、最後の1枚は外せなかった
+        /// (チェック工程指摘:0枚にできると対戦でそのお題が来た時に進行不能になるため)。
+        case blockedByMinimum
+        case blockedByMaximum
+    }
+
+    /// デッキへの出し入れ(要素ごとに最低1枚・最大5枚)。
+    @discardableResult
+    func toggle(_ card: Card) -> ToggleResult {
         var current = cardIDsByElement[card.element] ?? []
         if let index = current.firstIndex(of: card.id) {
+            guard current.count > 1 else { return .blockedByMinimum }
             current.remove(at: index)
-        } else if current.count < 5 {
+            cardIDsByElement[card.element] = current
+            save()
+            return .removed
+        } else {
+            guard current.count < 5 else { return .blockedByMaximum }
             current.append(card.id)
+            cardIDsByElement[card.element] = current
+            save()
+            return .added
         }
-        cardIDsByElement[card.element] = current
-        save()
     }
 
     /// 初回起動時だけ、要素ごとにNレアを5枚ずつランダムでガチャを引かせ、

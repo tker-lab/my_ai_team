@@ -46,13 +46,23 @@ final class BattleViewModel: ObservableObject {
         self.database = database
         self.deckManager = deckManager
         self.owned = owned
-        let element = CardElement.allCases.randomElement()!
+        let element = Self.pickElementWithDeckCards(deckManager: deckManager, database: database)
         self.phase = .choosingCard(element: element, highWins: Bool.random())
         self.pendingCPUCard = Self.drawCPUCard(for: element, database: database)
     }
 
     func deckCards(for element: CardElement) -> [Card] {
         deckManager.deckCards(for: element, database: database)
+    }
+
+    /// お題の要素はランダムだが、デッキ編成でその要素のカードが1枚も無い
+    /// (通常はDeckManager.toggleが最低1枚を保証するため起きないはずだが、
+    /// 念のための保険)場合は選び直し、対戦が進行不能にならないようにする。
+    private static func pickElementWithDeckCards(deckManager: DeckManager, database: CardDatabase) -> CardElement {
+        let candidates = CardElement.allCases.filter {
+            !deckManager.deckCards(for: $0, database: database).isEmpty
+        }
+        return candidates.randomElement() ?? CardElement.allCases.randomElement()!
     }
 
     /// プレイヤーがデッキの中から1枚選んでその回に出す。
@@ -75,7 +85,7 @@ final class BattleViewModel: ObservableObject {
             finish()
             return
         }
-        let element = CardElement.allCases.randomElement()!
+        let element = Self.pickElementWithDeckCards(deckManager: deckManager, database: database)
         pendingCPUCard = Self.drawCPUCard(for: element, database: database)
         phase = .choosingCard(element: element, highWins: Bool.random())
     }
