@@ -20,7 +20,7 @@
 - 連携メモ:栄養関連のリサーチはライフサポート部でも活用できる可能性が高い(要ナレッジ化)
 
 ## 進行中のプロジェクト
-- **国カードバトル(仮称)**:国×要素でカード化するガチャ・コレクション系iPhoneアプリ。2026-09-12構想開始、初回依頼書の【要確認】をCEOが記入待ち → 詳細は [app_team_country_cards.md](app_team_country_cards.md)
+- **国カードバトル(仮称)**:国×要素でカード化するガチャ・コレクション系iPhoneアプリ。2026-09-12構想〜仕様確定、Phase 1(データ生成・カード基盤・ガチャ基本ロジック)着手 → 詳細は [app_team_country_cards.md](app_team_country_cards.md)
 - **Notionネタ帳シリーズ(notion_idea_db)**:YouTubeネタ帳(構築完了)/ 広報ネタ帳(2026-09-02構築完了、要チェック工程)→ 詳細は [app_team_notion_idea_db.md](app_team_notion_idea_db.md)
 
 ## 優先順位
