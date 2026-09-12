@@ -58,6 +58,12 @@ struct ProfileView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+
+                Section {
+                    NavigationLink("このアプリについて(データの出典)") {
+                        AboutView()
+                    }
+                }
             }
             .navigationTitle("プロフィール")
             .alert("ユーザー名を登録", isPresented: $isEditingName) {
