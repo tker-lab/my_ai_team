@@ -6,7 +6,7 @@ import SwiftUI
 /// countries.dev(REST Countries互換の無料データ)から作る。
 /// どちらの由来でも同じ enum で扱えるようにしてある(データの出どころの違いを
 /// アプリ側のコードに持ち込まないため)。
-enum CardElement: String, Codable, CaseIterable, Identifiable {
+enum CardElement: String, Codable, CaseIterable, Identifiable, Hashable {
     case population
     case childRatio
     case popGrowth
