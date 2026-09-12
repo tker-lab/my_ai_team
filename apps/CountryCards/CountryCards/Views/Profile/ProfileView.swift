@@ -67,9 +67,11 @@ struct ProfileView: View {
             }
             .navigationTitle("プロフィール")
             .alert("ユーザー名を登録", isPresented: $isEditingName) {
-                TextField("名前", text: $nameDraft)
+                TextField("名前(\(OwnedCollection.usernameMaxLength)文字まで)", text: $nameDraft)
                 Button("保存") { owned.updateUsername(nameDraft) }
                 Button("キャンセル", role: .cancel) {}
+            } message: {
+                Text("\(OwnedCollection.usernameMaxLength)文字を超えた分は保存されません。")
             }
         }
     }

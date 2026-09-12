@@ -74,8 +74,13 @@ final class OwnedCollection: ObservableObject {
         defaults.set(now, forKey: completionDateKey)
     }
 
+    /// ユーザー名の文字数上限(チェック工程指摘:上限が無かったため設定)。
+    /// プロフィール表示や全国ランキングで極端に長い名前が並ぶのを防ぐ、
+    /// キリのよい暫定値。
+    static let usernameMaxLength = 12
+
     func updateUsername(_ name: String) {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(Self.usernameMaxLength))
         username = trimmed.isEmpty ? nil : trimmed
         defaults.set(username, forKey: usernameKey)
     }
