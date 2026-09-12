@@ -1,0 +1,44 @@
+name: CountryCards
+options:
+  bundleIdPrefix: com.aiteam
+  deploymentTarget:
+    iOS: "17.0"
+targets:
+  CountryCards:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: CountryCards
+    info:
+      path: CountryCards/Info.plist
+      properties:
+        CFBundleDisplayName: 国カードバトル
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        # このアプリは自分の端末に埋め込んだデータだけで動き、外部にデータを
+        # 送信しないため広告SDK導入前の現時点ではネットワーク権限の説明は不要。
+        # Phase 2で広告・IAPを組み込む際にATT(トラッキング許可)の文言をここに追加する。
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aiteam.CountryCards
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY[sdk=iphoneos*]: "Apple Development"
+        CODE_SIGN_IDENTITY[sdk=iphonesimulator*]: "-"
+        # PhotoTimerと同じ無料Apple ID(Personal Team)のTeam IDを使い回す。
+        # (詳細: .claude/agent-memory/app-team/free-apple-id-device-signing.md)
+        DEVELOPMENT_TEAM: ZW257YHSQM
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+schemes:
+  CountryCards:
+    build:
+      targets:
+        CountryCards: all
+    run:
+      config: Debug

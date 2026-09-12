@@ -1,0 +1,14 @@
+# Xcodeが生成する中間ファイル(xcodegenで再生成できるので追跡しない)
+*.xcodeproj/
+DerivedData/
+build/
+*.xcuserstate
+*.xcuserdatad/
+.DS_Store
+
+# Info.plistはxcodegenが project.yml から自動生成するため追跡しない
+CountryCards/Info.plist
+
+# xcodebuildの実行ログ(調査用に都度作る一時ファイル)
+test_run_*.log
+device_*.log
