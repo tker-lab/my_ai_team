@@ -14,11 +14,6 @@ struct CardDetailSheet: View {
                     .scaleEffect(1.3)
                     .padding(.top, 32)
 
-                if let value = card.value {
-                    Text("元の数値: \(value, specifier: "%.2f") \(card.element.unit)")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
                 Text("スコア: \(card.score, specifier: "%.1f")点(0〜100点)")
                     .font(.footnote)
                     .foregroundStyle(.secondary)

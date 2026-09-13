@@ -12,19 +12,39 @@ struct CardView: View {
     let country: Country?
     /// false の場合はシルエット表示(図鑑で未入手カードを見せる時に使う)。
     var isRevealed: Bool = true
+    /// true の場合、国旗・国名・レア度はそのまま見せつつ数値だけ「？？？」に伏せる。
+    /// 【2026-09-13追加】対戦中、決着がつくまで両者の数値を隠すために使う
+    /// (isRevealedとは別軸:isRevealed=falseはカード自体が未入手で全て伏せる、
+    /// hideValue=trueはカードの中身は分かるが数値だけ勝負の決着まで伏せる)。
+    var hideValue: Bool = false
 
     var body: some View {
         VStack(spacing: 8) {
             flagArea
+            // 【2026-09-13修正】サントメ・プリンシペ等、長い国名がカードからはみ出す
+            // バグへの対応。lineLimit(1)だけでは幅に収まらない文字が見切れて
+            // しまうため、minimumScaleFactorで自動的に文字を縮めて収める。
             Text(country?.nameJa ?? "???")
                 .font(.headline)
                 .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .padding(.horizontal, 4)
             Text(card.element.displayName)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            if isRevealed {
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            if isRevealed, hideValue {
+                Text("？？？")
+                    .font(.title3.bold())
+            } else if isRevealed {
+                // 【2026-09-13修正】数値の文字がカードの縁と重なるバグへの対応。
+                // 桁の多い数値でもカード幅(160pt)に収まるよう、自動縮小+1行固定にする。
                 Text(card.displayValue + card.element.unit)
                     .font(.title3.bold())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .padding(.horizontal, 6)
                 if let year = card.year {
                     Text("\(year)年のデータ")
                         .font(.caption2)

@@ -417,8 +417,10 @@ def main():
         })
         print(f"      - {name_ja}: {len(raw)}枚")
 
-    # 特別カード「北朝鮮のGDP」(HUR、1枚のみ)。数値の代わりに「情報なし」を表示し、
+    # 特別カード「北朝鮮のGDP」(HUR、1枚のみ)。数値の代わりに「データ非公開」を表示し、
     # 通常のGDPカード一覧には含めない(世界銀行にもGDPデータが無いことを逆手に取った演出)。
+    # 【2026-09-13変更】単なる欠損(他要素のデータ無し国と同じ「情報なし」)ではなく、
+    # 北朝鮮政府による非公表という事実を反映した文言に変更(CEO決定)。
     cards.append({
         "id": "PRK_gdp_special",
         "iso3": "PRK",
@@ -428,7 +430,7 @@ def main():
         "score": 100.0,
         "rarity": "HUR",
         "isSpecial": True,
-        "displayValueOverride": "情報なし",
+        "displayValueOverride": "データ非公開",
     })
     print("      - GDP(特別カード「北朝鮮のGDP」): 1枚追加")
 
