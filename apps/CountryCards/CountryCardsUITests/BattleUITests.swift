@@ -14,15 +14,30 @@ final class BattleUITests: XCTestCase {
         XCTAssertTrue(startButton.waitForExistence(timeout: 5))
         startButton.tap()
 
-        // 5ターン、それぞれ「手札から1枚選ぶ→次へ」を繰り返す。
+        // 5ターン、それぞれ「対戦する→次へ」を繰り返す
+        // (2026-09-13仕様変更:デッキ廃止によりカードは自動で決まるため、
+        // 手札から選ぶ操作は無くなった)。同時に、
+        // ・決着前は数値が「？？？」で伏せられていること
+        // ・5ターンとも異なるお題(要素)であること
+        // も確認する。
+        var seenTopics: Set<String> = []
         for turn in 1...5 {
-            // 手札のカード(CardView)はボタンとして並んでいるので、最初の1枚を選ぶ。
-            let handCards = app.scrollViews.buttons
-            XCTAssertTrue(handCards.element(boundBy: 0).waitForExistence(timeout: 5), "ターン\(turn): 手札が表示されること")
-            handCards.element(boundBy: 0).tap()
+            let topicText = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "お題:")).firstMatch
+            XCTAssertTrue(topicText.waitForExistence(timeout: 5), "ターン\(turn): お題が表示されること")
+            let topic = topicText.label
+            XCTAssertFalse(seenTopics.contains(topic), "ターン\(turn): 同じお題が2回出ていないこと(出たお題: \(seenTopics))")
+            seenTopics.insert(topic)
+
+            XCTAssertTrue(app.staticTexts["？？？"].firstMatch.exists, "ターン\(turn): 対戦前は数値が伏せられていること")
+
+            let fightButton = app.buttons["battleFightButton"]
+            XCTAssertTrue(fightButton.waitForExistence(timeout: 5), "ターン\(turn): 対戦するボタンが表示されること")
+            fightButton.tap()
 
             let nextButton = app.buttons["次へ"]
             XCTAssertTrue(nextButton.waitForExistence(timeout: 5), "ターン\(turn): 結果画面へ進むこと")
+            // 決着後は「？？？」が消え、両者の数値が公開されているはず。
+            XCTAssertFalse(app.staticTexts["？？？"].firstMatch.exists, "ターン\(turn): 決着後は数値が公開されること")
             nextButton.tap()
         }
 

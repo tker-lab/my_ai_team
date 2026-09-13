@@ -27,8 +27,9 @@ enum UITestSupport {
             // テストが始まるようにする)
             "freePullsAvailable", "firstLaunchDate", "lastLoginGrantDay",
             "adBonusDay", "adBonusCountToday", "battleBonusDay", "battleBonusCountToday",
-            // DeckManager
-            "deckCardIDsByElement", "hasSeededInitialDeck",
+            // StartingCardsProvisioner(旧DeckManager)。旧キーも残しておき、
+            // 過去にテスト済みの端末上に残っていても影響しないようにする。
+            "hasGrantedStartingCards", "deckCardIDsByElement", "hasSeededInitialDeck",
         ]
         for key in keysToRemove {
             defaults.removeObject(forKey: key)

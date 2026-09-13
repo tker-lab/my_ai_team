@@ -20,8 +20,9 @@ struct RootTabView: View {
         }
         .onAppear {
             // 初回起動時だけ、要素ごとにNレアのカードを5枚ずつ持った状態から
-            // スタートする(決定事項どおりの初期デッキ)。
-            DeckManager.shared.seedInitialDeckIfNeeded(database: .shared, owned: .shared)
+            // スタートする(決定事項どおりの「最初の持ちカード」。デッキ廃止後も
+            // これ自体は残す。詳細はStartingCardsProvisionerのコメント参照)。
+            StartingCardsProvisioner.grantStartingCardsIfNeeded(database: .shared, owned: .shared)
         }
         // 決定事項どおり「ゲーム開始時に名前を決めて登録する」ため、ユーザー名が
         // 未登録の間は本編を覆う形で名前入力を必ず表示する

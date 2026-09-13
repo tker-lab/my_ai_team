@@ -1,16 +1,17 @@
 import SwiftUI
 
-/// 対戦画面。「どの要素・どちらが勝ちか」を毎ターン表示し、プレイヤーは
-/// デッキからカードを1枚選ぶ→火花演出とともに両者の実際の数値を見せて
-/// 勝敗を伝える、を5ターン繰り返す。
+/// 対戦画面。
+///
+/// 【2026-09-13仕様変更】デッキ編成の廃止に伴い、プレイヤーがカードを選ぶ操作は
+/// 無くなった。両者のカードは自動で(持っているカードの中からランダムに)決まり、
+/// 「対戦する」をタップすると火花演出とともに数値が公開され、勝敗が決まる。
+/// 数値は決着が付くまで両者とも伏せておく(先に見えると当てっこにならないため)。
 struct BattlePlayView: View {
     @StateObject private var viewModel: BattleViewModel
     @ObservedObject private var database = CardDatabase.shared
 
     init() {
-        _viewModel = StateObject(wrappedValue: BattleViewModel(
-            database: .shared, deckManager: .shared, owned: .shared
-        ))
+        _viewModel = StateObject(wrappedValue: BattleViewModel(database: .shared, owned: .shared))
     }
 
     var body: some View {
@@ -20,8 +21,8 @@ struct BattlePlayView: View {
                 .padding(.top)
 
             switch viewModel.phase {
-            case .choosingCard(let element, let highWins):
-                choosingView(element: element, highWins: highWins)
+            case .ready(let element, let highWins, let playerCard, let cpuCard):
+                readyView(element: element, highWins: highWins, playerCard: playerCard, cpuCard: cpuCard)
             case .revealing(let round):
                 revealingView(round: round)
             case .finished:
@@ -32,7 +33,9 @@ struct BattlePlayView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func choosingView(element: CardElement, highWins: Bool) -> some View {
+    /// カードは決まっているが、数値はまだ伏せてある状態。「対戦する」を
+    /// タップすると決着が付く(=revealBattle()を呼ぶ)。
+    private func readyView(element: CardElement, highWins: Bool, playerCard: Card, cpuCard: Card) -> some View {
         VStack(spacing: 16) {
             Text("お題:「\(element.displayName)」")
                 .font(.title2.bold())
@@ -40,24 +43,25 @@ struct BattlePlayView: View {
                 .font(.headline)
                 .foregroundStyle(highWins ? .blue : .orange)
 
-            Text("あなたの手札から1枚選んでください")
+            Text("あなたとCPUのカードが決まりました。数値は対戦するまで分かりません。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
 
-            ScrollView(.horizontal) {
-                HStack(spacing: 12) {
-                    ForEach(viewModel.deckCards(for: element)) { card in
-                        Button {
-                            viewModel.choose(card)
-                        } label: {
-                            CardView(card: card, country: database.country(for: card.iso3))
-                                .scaleEffect(0.75)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding()
+            HStack(spacing: 24) {
+                battleCardColumn(title: "あなた", card: playerCard, hideValue: true)
+                Text("VS")
+                    .font(.title.bold())
+                    .foregroundStyle(.secondary)
+                battleCardColumn(title: "CPU", card: cpuCard, hideValue: true)
             }
+            .padding()
+
+            Button("対戦する") { viewModel.revealBattle() }
+                .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("battleFightButton")
+
             Spacer()
         }
         .padding(.top)
@@ -71,10 +75,10 @@ struct BattlePlayView: View {
                     .font(.subheadline)
 
                 HStack(spacing: 24) {
-                    battleCardColumn(title: "あなた", card: result.playerCard, won: result.playerWon)
+                    battleCardColumn(title: "あなた", card: result.playerCard, hideValue: false, won: result.playerWon)
                     Text("⚡️")
                         .font(.system(size: 50))
-                    battleCardColumn(title: "CPU", card: result.cpuCard, won: !result.playerWon)
+                    battleCardColumn(title: "CPU", card: result.cpuCard, hideValue: false, won: !result.playerWon)
                 }
                 .padding()
 
@@ -92,16 +96,19 @@ struct BattlePlayView: View {
     }
 
     /// カードと、そのカードの実際の数値(単位付き)を並べて見せる。
-    /// 「なぜ勝った/負けたかが分かる」ようにする決定事項に対応。
-    private func battleCardColumn(title: String, card: Card, won: Bool) -> some View {
+    /// `hideValue`がtrueの間は数値を「？？？」に伏せる(決着前の当てっこ演出)。
+    /// 「なぜ勝った/負けたかが分かる」決定事項は、決着後(hideValue=false)に対応する。
+    private func battleCardColumn(title: String, card: Card, hideValue: Bool, won: Bool = false) -> some View {
         VStack(spacing: 6) {
             Text(title).font(.caption).foregroundStyle(.secondary)
-            CardView(card: card, country: database.country(for: card.iso3))
+            CardView(card: card, country: database.country(for: card.iso3), hideValue: hideValue)
                 .scaleEffect(0.7)
-            Text(card.displayValue + card.element.unit)
-                .font(.footnote.bold())
-            if won {
-                Text("WIN").font(.caption2.bold()).foregroundStyle(.green)
+            if !hideValue {
+                Text(card.displayValue + card.element.unit)
+                    .font(.footnote.bold())
+                if won {
+                    Text("WIN").font(.caption2.bold()).foregroundStyle(.green)
+                }
             }
         }
     }
