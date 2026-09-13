@@ -45,6 +45,15 @@ final class GachaPlayViewModel: ObservableObject {
         self.engine = GachaEngine(cardsForElement: cardsForElement, specialCard: special)
     }
 
+    /// 無料ガチャ使い切り画面から「広告を見てもう1回引く」を押した時に呼ぶ。
+    /// 【2026-09-13追加】CEOの実機確認フィードバック対応。広告視聴で無料ガチャが
+    /// 1回増えたら、そのままもう一度引くところまで自動で進める(ユーザーが
+    /// 「増えた分をもう一度startPullで引き直す」という二度手間をしなくて済むように)。
+    func watchAdForBonusPullThenRetry() {
+        guard dailyBonus.claimAdBonus() else { return }
+        startPull()
+    }
+
     /// ガチャを1回(3枚)引いて、演出を最初からやり直す。無料ガチャの残りが
     /// 無ければ引かずに`blockedByDailyLimit`を立てるだけで終わる
     /// (ポイント・課金のガチャはこの制限を受けない。それぞれ別のViewModelで

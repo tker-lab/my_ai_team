@@ -7,6 +7,7 @@ struct GachaPlayView: View {
     let element: CardElement
     @StateObject private var viewModel: GachaPlayViewModel
     @ObservedObject private var database = CardDatabase.shared
+    @ObservedObject private var dailyBonus = DailyBonusManager.shared
 
     init(element: CardElement) {
         self.element = element
@@ -39,22 +40,54 @@ struct GachaPlayView: View {
         }
     }
 
-    /// 無料ガチャの残り回数が0の時に出す画面
-    /// (チェック工程指摘:1日の回数制限が機能していなかった問題への対応)。
+    /// 無料ガチャの残り回数が0の時に出す画面。
+    /// 【2026-09-13追加】CEOの実機確認フィードバック対応:「広告を見てもう1回引く」
+    /// (本日の広告上限に達していなければ)と「¥100の10連を購入する」の2択を用意する。
     private var noFreePullsView: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             Image(systemName: "hourglass")
                 .font(.system(size: 50))
                 .foregroundStyle(.secondary)
             Text("本日の無料ガチャ回数を使い切りました")
                 .font(.headline)
-            Text("ログインボーナス・広告視聴・対戦の勝利で無料ガチャが増えます。\nダブりポイントや¥100の10連なら今すぐ引けます。")
+            Text("ログインボーナス・対戦の勝利でも無料ガチャが増えます。\nダブりポイントがあればそちらもすぐ引けます。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
+
+            exhaustedOptionsView
+                .padding(.horizontal, 32)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// 「広告を見てもう1回引く」「¥100の10連を購入する」の2択。無料ガチャを
+    /// 使い切った直後(noFreePullsView)と、結果画面から「もう一度引く」を押して
+    /// 使い切った時(resultSummaryView)の両方から共通で使う。
+    private var exhaustedOptionsView: some View {
+        VStack(spacing: 12) {
+            if dailyBonus.adBonusRemainingToday > 0 {
+                // 広告SDKは未組み込みのため、視聴完了をその場でシミュレートする
+                // (実際の広告表示はPhase 2で組み込む。GachaHomeViewの
+                // 「広告を見て+1回」ボタンと同じ仕組みを、この画面からも使えるようにする)。
+                Button {
+                    viewModel.watchAdForBonusPullThenRetry()
+                } label: {
+                    Text("広告を見てもう1回引く(本日あと\(dailyBonus.adBonusRemainingToday)回)")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+            }
+
+            NavigationLink {
+                IAPGachaView(element: element)
+            } label: {
+                Text("¥100の10連を購入する")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+        }
     }
 
     // MARK: - 導入演出(通常モード:タップ待ち / 再生中)
@@ -169,6 +202,8 @@ struct GachaPlayView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .padding(.top)
+                    exhaustedOptionsView
+                        .padding(.horizontal, 32)
                 } else {
                     Button("もう一度引く") { viewModel.startPull() }
                         .buttonStyle(.borderedProminent)
