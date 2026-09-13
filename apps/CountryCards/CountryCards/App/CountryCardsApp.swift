@@ -19,12 +19,34 @@ struct CountryCardsApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootTabView()
+            AppRootView()
                 .onAppear {
                     // Game Centerへのサインイン状態を起動時に確認しておく
                     // (未サインインならシステムがサインイン画面を出してくれる)。
                     GameCenterManager.shared.authenticate()
                 }
+        }
+    }
+}
+
+/// タイトル画面→本編(RootTabView)、という起動の流れを管理する。
+/// 【2026-09-13追加】「起動していきなりタブ画面になる」という指摘への対応。
+/// タイトル画面を見た/見ていないは端末に保存しない(毎回の起動で必ず見せる)。
+private struct AppRootView: View {
+    @State private var hasPassedTitleScreen = false
+
+    var body: some View {
+        // 【UIテストの安定性のための判断】タイトル→本編の切り替えにクロスフェード
+        // アニメーションを付けると、切り替わりの一瞬だけ両方のビューがアクセシビリティ
+        // ツリー上に共存し、UIテストから見た時に同じ名前のボタンが複数見える
+        // (例:タブの「ガチャ」ボタンが2つ検出される)不安定さにつながった。
+        // 見た目のこだわりよりも「実際に動く」ことを優先し、即座に切り替える。
+        if hasPassedTitleScreen {
+            RootTabView()
+        } else {
+            TitleScreenView {
+                hasPassedTitleScreen = true
+            }
         }
     }
 }

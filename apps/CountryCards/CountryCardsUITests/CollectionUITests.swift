@@ -7,9 +7,7 @@ final class CollectionUITests: XCTestCase {
     }
 
     func testCountryListAndDetailDoNotCrash() throws {
-        let app = XCUIApplication()
-        app.launchArguments = ["-uiTestReset"]
-        app.launch()
+        let app = launchPastTitleScreen(arguments: ["-uiTestReset"])
 
         // 起動直後は図鑑タブ(国別)が表示されているはず。「図鑑」という
         // タイトルの一覧画面から、詳細画面(タイトルが変わる)へ遷移できることを確認する。

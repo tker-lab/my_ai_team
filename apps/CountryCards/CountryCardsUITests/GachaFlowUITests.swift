@@ -10,9 +10,7 @@ final class GachaFlowUITests: XCTestCase {
 
     /// 通常モード:導入演出をタップで開始→カードを1枚ずつタップして見ていく。
     func testNormalModeRevealsThreeCards() throws {
-        let app = XCUIApplication()
-        app.launchArguments = ["-uiTestReset"]
-        app.launch()
+        let app = launchPastTitleScreen(arguments: ["-uiTestReset"])
 
         app.tabBars.buttons["ガチャ"].tap()
         let entrance = app.buttons["gachaEntrance_population"]
@@ -43,9 +41,7 @@ final class GachaFlowUITests: XCTestCase {
     /// (どのレア度が出るかは乱数なので、ここでは「スキップ後、一定時間内に結果画面か
     /// タップ待ち画面のどちらかに到達し、フリーズしないこと」を確認する)
     func testSkipModeDoesNotFreeze() throws {
-        let app = XCUIApplication()
-        app.launchArguments = ["-uiTestReset"]
-        app.launch()
+        let app = launchPastTitleScreen(arguments: ["-uiTestReset"])
 
         app.tabBars.buttons["ガチャ"].tap()
         let entrance = app.buttons["gachaEntrance_gdp"]

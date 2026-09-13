@@ -7,9 +7,7 @@ final class BattleUITests: XCTestCase {
     }
 
     func testBattleCanBePlayedToCompletion() throws {
-        let app = XCUIApplication()
-        app.launchArguments = ["-uiTestReset"]
-        app.launch()
+        let app = launchPastTitleScreen(arguments: ["-uiTestReset"])
 
         app.tabBars.buttons["対戦"].tap()
         let startButton = app.buttons["対戦を始める"]

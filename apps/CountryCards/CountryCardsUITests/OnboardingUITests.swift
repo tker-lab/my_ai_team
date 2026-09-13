@@ -8,9 +8,7 @@ final class OnboardingUITests: XCTestCase {
     }
 
     func testMustEnterNameBeforeReachingMainApp() throws {
-        let app = XCUIApplication()
-        app.launchArguments = ["-uiTestResetNoUsername"]
-        app.launch()
+        let app = launchPastTitleScreen(arguments: ["-uiTestResetNoUsername"])
 
         // 名前を入力するまでは、タブバー(本編)にたどり着けないこと。
         let nameField = app.textFields["onboardingNameField"]
