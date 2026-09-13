@@ -47,6 +47,18 @@ enum Rarity: String, Codable, CaseIterable, Comparable {
         }
     }
 
+    /// カード背景用のグラデーション(baseColorと同じ色の方向性を、単色より
+    /// 奥行きが出るよう上下でわずかに濃淡を付けたもの)。
+    /// 【2026-09-13追加】「iPhone標準UIそのままで安っぽい」という指摘への対応
+    /// (全体のビジュアル底上げ)。配色ルール自体(レア度で決める)は変えていない。
+    var baseGradient: LinearGradient {
+        let color = baseColor
+        return LinearGradient(
+            colors: [color.opacity(0.92), color],
+            startPoint: .top, endPoint: .bottom
+        )
+    }
+
     /// SSR以上はうっすら、URはしっかりキラキラ演出を付ける(決定事項どおり)。
     /// この段階(Phase 1)では「キラキラの強さの目安」だけを持たせておき、
     /// 実際のエフェクト描画はPhase 2で作り込む。

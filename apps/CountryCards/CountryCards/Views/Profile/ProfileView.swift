@@ -19,16 +19,23 @@ struct ProfileView: View {
         NavigationStack {
             List {
                 Section {
-                    HStack(spacing: 12) {
+                    HStack(spacing: 14) {
                         Image(systemName: "crown.fill")
-                            .font(.system(size: 32))
-                            .foregroundStyle(tier.color)
+                            .font(.system(size: 36))
+                            .foregroundStyle(
+                                LinearGradient(colors: [tier.color, tier.color.opacity(0.6)], startPoint: .top, endPoint: .bottom)
+                            )
+                            .shadow(color: tier.color.opacity(0.5), radius: 6)
                             .accessibilityIdentifier("profileCrown")
 
                         VStack(alignment: .leading) {
                             Text(owned.username ?? "名前未登録")
                                 .font(.title3.bold())
-                            Text("集めたカード \(owned.uniqueCardCount) / \(database.totalCardCountIncludingSpecial)枚")
+                            // 【2026-09-13修正】Text内で数値をそのまま埋め込むと、iOSが
+                            // 自動でカンマ区切り(例:1,886)を付けてしまう。String(...)で
+                            // 明示的に文字列化することでカンマを付けないようにする
+                            // (数値表示をカンマ区切りにしない、という決定事項に統一)。
+                            Text("集めたカード \(String(owned.uniqueCardCount)) / \(String(database.totalCardCountIncludingSpecial))枚")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -37,8 +44,9 @@ struct ProfileView: View {
                             nameDraft = owned.username ?? ""
                             isEditingName = true
                         }
+                        .buttonStyle(.bordered)
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 6)
                 }
 
                 Section("累計記録") {
@@ -65,6 +73,7 @@ struct ProfileView: View {
                     }
                 }
             }
+            .listStyle(.insetGrouped)
             .navigationTitle("プロフィール")
             .alert("ユーザー名を登録", isPresented: $isEditingName) {
                 TextField("名前(\(OwnedCollection.usernameMaxLength)文字まで)", text: $nameDraft)

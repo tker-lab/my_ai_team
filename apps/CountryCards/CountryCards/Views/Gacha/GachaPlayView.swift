@@ -77,7 +77,7 @@ struct GachaPlayView: View {
                     Text("広告を見てもう1回引く(本日あと\(dailyBonus.adBonusRemainingToday)回)")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.gamePrimary)
             }
 
             NavigationLink {
@@ -206,7 +206,7 @@ struct GachaPlayView: View {
                         .padding(.horizontal, 32)
                 } else {
                     Button("もう一度引く") { viewModel.startPull() }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.gamePrimary)
                         .padding(.top)
                 }
                 Spacer().frame(height: 32)

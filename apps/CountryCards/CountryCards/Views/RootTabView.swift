@@ -18,6 +18,9 @@ struct RootTabView: View {
             ProfileView()
                 .tabItem { Label("プロフィール", systemImage: "person.crop.circle") }
         }
+        // 【2026-09-13追加】タブの選択色をアプリのキーカラーにして、
+        // iPhone標準そのままの見た目から底上げする(ビジュアル改善依頼対応)。
+        .tint(AppTheme.accent)
         .onAppear {
             // 初回起動時だけ、要素ごとにNレアのカードを5枚ずつ持った状態から
             // スタートする(決定事項どおりの「最初の持ちカード」。デッキ廃止後も

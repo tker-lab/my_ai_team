@@ -16,7 +16,9 @@ struct PointGachaView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Text("保有ポイント: \(owned.dupePoints)pt")
+            // 【2026-09-13修正】Text内の数値がiOSに自動でカンマ区切りされる
+            // (例:9,999)のを防ぐため、String(...)で明示的に文字列化する。
+            Text("保有ポイント: \(String(owned.dupePoints))pt")
                 .font(.headline)
 
             // App Storeガイドライン3.1.1の趣旨(購入前の確率開示)に合わせ、

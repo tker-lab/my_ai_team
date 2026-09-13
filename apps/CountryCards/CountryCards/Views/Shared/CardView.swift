@@ -58,13 +58,30 @@ struct CardView: View {
         }
         .padding(12)
         .frame(width: 160, height: 220)
-        .background(isRevealed ? card.rarity.baseColor : Color(white: 0.75))
+        .background {
+            // 【2026-09-13修正】単色の塗りつぶしから、レア度ごとのグラデーションに
+            // 変更(「iPhone標準UIそのままで安っぽい」という指摘への全体的な対応)。
+            // 配色ルール自体(ベース色=レア度)は変えていない。
+            if isRevealed {
+                card.rarity.baseGradient
+            } else {
+                LinearGradient(colors: [Color(white: 0.8), Color(white: 0.68)], startPoint: .top, endPoint: .bottom)
+            }
+        }
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(isRevealed ? card.element.borderColor : .gray, lineWidth: 4)
         )
-        .shadow(radius: card.rarity.sparkleIntensity > 0 ? 6 : 2)
+        .overlay(
+            // カード上端にうっすら光沢を入れ、平坦な塗りより質感を出す。
+            RoundedRectangle(cornerRadius: 16)
+                .fill(
+                    LinearGradient(colors: [.white.opacity(0.22), .clear], startPoint: .top, endPoint: .center)
+                )
+                .allowsHitTesting(false)
+        )
+        .shadow(color: .black.opacity(0.25), radius: card.rarity.sparkleIntensity > 0 ? 8 : 4, y: 3)
         .overlay {
             if isRevealed, card.rarity.sparkleIntensity > 0 {
                 SparkleOverlay(intensity: card.rarity.sparkleIntensity)

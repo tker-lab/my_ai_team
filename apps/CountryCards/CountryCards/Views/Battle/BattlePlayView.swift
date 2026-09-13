@@ -59,7 +59,7 @@ struct BattlePlayView: View {
             .padding()
 
             Button("対戦する") { viewModel.revealBattle() }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.gamePrimary)
                 .accessibilityIdentifier("battleFightButton")
 
             Spacer()
@@ -87,7 +87,7 @@ struct BattlePlayView: View {
                     .foregroundStyle(result.playerWon ? .green : .red)
 
                 Button("次へ") { viewModel.proceedAfterReveal() }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.gamePrimary)
                     .padding(.top)
                 Spacer()
             }

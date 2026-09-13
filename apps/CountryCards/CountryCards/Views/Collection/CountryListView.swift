@@ -29,13 +29,14 @@ struct CountryListView: View {
                         Spacer()
                         let cards = database.cards(forCountry: country.iso3)
                         let ownedCount = cards.filter(owned.owns).count
-                        Text("\(ownedCount)/\(cards.count)枚")
+                        Text("\(String(ownedCount))/\(String(cards.count))枚")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
             }
         }
+        .listStyle(.insetGrouped)
         .navigationDestination(for: String.self) { iso3 in
             CountryDetailView(iso3: iso3)
         }

@@ -22,13 +22,14 @@ struct ElementListView: View {
                         Spacer()
                         let cards = database.cards(forElement: element)
                         let ownedCount = cards.filter(owned.owns).count
-                        Text("\(ownedCount)/\(cards.count)枚")
+                        Text("\(String(ownedCount))/\(String(cards.count))枚")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
             }
         }
+        .listStyle(.insetGrouped)
         .navigationDestination(for: CardElement.self) { element in
             ElementRankingView(element: element)
         }

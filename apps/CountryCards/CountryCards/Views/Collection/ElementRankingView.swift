@@ -35,6 +35,7 @@ struct ElementRankingView: View {
                 .foregroundStyle(isOwned ? .primary : .secondary)
             }
         }
+        .listStyle(.insetGrouped)
         .navigationTitle(element.displayName)
         .sheet(item: $selectedCard) { card in
             CardDetailSheet(card: card, country: database.country(for: card.iso3))

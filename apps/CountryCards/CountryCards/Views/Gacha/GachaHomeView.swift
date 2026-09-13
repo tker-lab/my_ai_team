@@ -40,7 +40,8 @@ struct GachaHomeView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu("その他の引き方") {
-                        Button("ポイントで引く(\(owned.dupePoints)pt)") { showingPointGacha = true }
+                        // String(...)でカンマ区切りを防ぐ(下記PointGachaViewと同じ理由)。
+                        Button("ポイントで引く(\(String(owned.dupePoints))pt)") { showingPointGacha = true }
                         Button("¥100で10連(課金)") { showingIAPGacha = true }
                     }
                     .font(.caption)
@@ -95,16 +96,25 @@ private struct GachaEntranceCard: View {
             Image(systemName: "shippingbox.fill")
                 .font(.system(size: 40))
                 .foregroundStyle(element.borderColor)
+                .shadow(color: element.borderColor.opacity(0.5), radius: 4)
             Text(element.displayName)
-                .font(.headline)
+                .font(.headline.weight(.semibold))
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)
-        .background(element.borderColor.opacity(0.12))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .background(
+            // 【2026-09-13修正】単色の薄塗りから、要素の色を軸にしたグラデーションへ
+            // (ビジュアル改善依頼対応。要素ごとに色を変えるという既存ルールは維持)。
+            LinearGradient(
+                colors: [element.borderColor.opacity(0.20), element.borderColor.opacity(0.06)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 18)
                 .strokeBorder(element.borderColor, lineWidth: 2)
         )
+        .shadow(color: element.borderColor.opacity(0.25), radius: 6, y: 3)
     }
 }

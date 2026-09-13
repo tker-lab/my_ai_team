@@ -21,7 +21,7 @@ struct BattleHomeView: View {
                 NavigationLink("対戦を始める") {
                     BattlePlayView()
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.gamePrimary)
                 Spacer()
             }
             .padding(.top, 40)

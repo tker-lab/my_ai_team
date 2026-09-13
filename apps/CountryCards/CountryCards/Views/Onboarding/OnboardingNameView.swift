@@ -39,7 +39,7 @@ struct OnboardingNameView: View {
             Button("はじめる") {
                 owned.updateUsername(trimmedName)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.gamePrimary)
             .disabled(trimmedName.isEmpty)
             .accessibilityIdentifier("onboardingStartButton")
 
