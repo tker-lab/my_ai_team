@@ -32,3 +32,5 @@
 - [XCUITestのaccessibilityElement(.combine)は要素の型を変える/List内の注意書き行もcellsに数えられる](xcuitest-accessibility-combine-and-cell-index-traps.md) — 型指定クエリの失敗・cellインデックスのズレの原因になる
 - [WikidataのUN加盟国クエリとデバッグprintがデータファイルに紛れ込む事故](wikidata-un-members-query-and-debug-print-pitfall.md) — P582フィルタで現存加盟国のみ抽出、進捗ログはstderrに分離すべき
 - [ガチャ確率表示画面を複数入り口で使い回す落とし穴](gacha-odds-view-shared-across-modes-pitfall.md) — 無料/ポイント/課金で「まとめ買いの保証」が違う時、表示側だけ一括りにしやすい
+- [SwiftUIのText整数補間は勝手にカンマを付ける](swiftui-text-int-interpolation-auto-comma.md) — Text("\(count)")はLocalizedStringKey経由で自動カンマ化、String(value)で明示変換して回避
+- [XCUITest+xcresulttoolでのビジュアル自己確認手法](xcuitest-screenshot-visual-verification-technique.md) — 一時UIテスト+XCTAttachmentでスクショを機械抽出し、報告前に見た目を自分でチェックできる
