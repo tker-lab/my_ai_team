@@ -92,56 +92,110 @@ struct BattlePlayView: View {
 
     private func revealingView(round: Int) -> some View {
         guard let result = viewModel.roundResults.last else { return AnyView(EmptyView()) }
+        // 決着後に見せる「選ばなかった3枚」(候補4枚から選んだ1枚を除いたもの)。
+        // 【2026-09-14仕様追加】その場に提示されていた4枚全部の数値を公開する。
+        let otherCandidates = result.candidates.filter { $0.id != result.playerCard.id }
+
+        let resultText: String
+        let resultColor: Color
+        switch result.outcome {
+        case .playerWin:
+            resultText = "このターンはあなたの勝ち!"
+            resultColor = .green
+        case .cpuWin:
+            resultText = "このターンはCPUの勝ち"
+            resultColor = .red
+        case .draw:
+            // 【2026-09-14バグ修正】数値が同じ時は「引き分け」として表示する
+            // (以前はここが必ず「CPUの勝ち」になっていた)。
+            resultText = "このターンは引き分け"
+            resultColor = .gray
+        }
+
         return AnyView(
-            VStack(spacing: 16) {
-                Text("お題:「\(result.element.displayName)」(\(result.highWins ? "高い方が勝ち" : "低い方が勝ち"))")
-                    .font(.subheadline)
+            ScrollView {
+                VStack(spacing: 16) {
+                    Text("お題:「\(result.element.displayName)」(\(result.highWins ? "高い方が勝ち" : "低い方が勝ち"))")
+                        .font(.subheadline)
 
-                HStack(spacing: 24) {
-                    battleCardColumn(title: "あなた", card: result.playerCard, hideValue: false, won: result.playerWon)
-                    Text("⚡️")
-                        .font(.system(size: 50))
-                    battleCardColumn(title: "CPU", card: result.cpuCard, hideValue: false, won: !result.playerWon)
+                    HStack(spacing: 24) {
+                        battleCardColumn(title: "あなた", card: result.playerCard, badge: result.outcome == .playerWin ? "WIN" : (result.outcome == .draw ? "DRAW" : nil))
+                        Text("⚡️")
+                            .font(.system(size: 50))
+                        battleCardColumn(title: "CPU", card: result.cpuCard, badge: result.outcome == .cpuWin ? "WIN" : (result.outcome == .draw ? "DRAW" : nil))
+                    }
+                    .padding()
+
+                    Text(resultText)
+                        .font(.title3.bold())
+                        .foregroundStyle(resultColor)
+
+                    if !otherCandidates.isEmpty {
+                        Divider().padding(.horizontal, 32)
+                        VStack(spacing: 6) {
+                            Text("選ばなかった手札の数値も公開")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            HStack(spacing: 12) {
+                                ForEach(otherCandidates) { card in
+                                    CardView(card: card, country: database.country(for: card.iso3), hideValue: false)
+                                        .scaleEffect(0.5)
+                                        .frame(width: 160 * 0.5, height: 220 * 0.5)
+                                }
+                            }
+                        }
+                    }
+
+                    Button("次へ") { viewModel.proceedAfterReveal() }
+                        .buttonStyle(.gamePrimary)
+                        .padding(.top)
+                    Spacer(minLength: 12)
                 }
-                .padding()
-
-                Text(result.playerWon ? "このターンはあなたの勝ち!" : "このターンはCPUの勝ち")
-                    .font(.title3.bold())
-                    .foregroundStyle(result.playerWon ? .green : .red)
-
-                Button("次へ") { viewModel.proceedAfterReveal() }
-                    .buttonStyle(.gamePrimary)
-                    .padding(.top)
-                Spacer()
+                .padding(.top)
             }
-            .padding(.top)
         )
     }
 
-    /// カードと、そのカードの実際の数値(単位付き)を並べて見せる。
-    /// `hideValue`がtrueの間は数値を「？？？」に伏せる(決着前の当てっこ演出)。
-    /// 「なぜ勝った/負けたかが分かる」決定事項は、決着後(hideValue=false)に対応する。
-    private func battleCardColumn(title: String, card: Card, hideValue: Bool, won: Bool = false) -> some View {
+    /// カードと、そのカードの実際の数値(単位付き)を並べて見せる。決着後(hideValue=false)
+    /// のカードにのみ呼ぶ想定。「なぜ勝った/負けたかが分かる」決定事項に対応する。
+    private func battleCardColumn(title: String, card: Card, badge: String? = nil) -> some View {
         VStack(spacing: 6) {
             Text(title).font(.caption).foregroundStyle(.secondary)
-            CardView(card: card, country: database.country(for: card.iso3), hideValue: hideValue)
+            CardView(card: card, country: database.country(for: card.iso3), hideValue: false)
                 .scaleEffect(0.7)
-            if !hideValue {
-                Text(card.displayValue + card.element.unit)
-                    .font(.footnote.bold())
-                if won {
-                    Text("WIN").font(.caption2.bold()).foregroundStyle(.green)
-                }
+            Text(card.displayValue + card.element.unit)
+                .font(.footnote.bold())
+            if let badge {
+                Text(badge)
+                    .font(.caption2.bold())
+                    .foregroundStyle(badge == "DRAW" ? .gray : .green)
             }
         }
     }
 
     private var finishedView: some View {
-        VStack(spacing: 16) {
-            Text(viewModel.playerWinCount > viewModel.cpuWinCount ? "対戦に勝利しました!" : "対戦に敗北しました")
+        // 【2026-09-14仕様】5ターン終えた結果、勝ち数が同じ(試合トータルが引き分け)に
+        // なるのも問題ない仕様として扱う。無理に決着を付けない。
+        let matchText: String
+        let matchColor: Color
+        if viewModel.playerWinCount > viewModel.cpuWinCount {
+            matchText = "対戦に勝利しました!"
+            matchColor = .green
+        } else if viewModel.playerWinCount < viewModel.cpuWinCount {
+            matchText = "対戦に敗北しました"
+            matchColor = .red
+        } else {
+            matchText = "対戦は引き分けでした"
+            matchColor = .gray
+        }
+        let record = "\(viewModel.playerWinCount)勝\(viewModel.cpuWinCount)敗"
+            + (viewModel.drawCount > 0 ? "\(viewModel.drawCount)分" : "")
+
+        return VStack(spacing: 16) {
+            Text(matchText)
                 .font(.title.bold())
-                .foregroundStyle(viewModel.playerWinCount > viewModel.cpuWinCount ? .green : .red)
-            Text("\(viewModel.playerWinCount)勝 \(viewModel.cpuWinCount)敗")
+                .foregroundStyle(matchColor)
+            Text(record)
                 .font(.headline)
             if viewModel.playerWinCount > viewModel.cpuWinCount {
                 Text(viewModel.wonFreeGachaBonus

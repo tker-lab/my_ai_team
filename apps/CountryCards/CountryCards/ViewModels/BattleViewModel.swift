@@ -22,15 +22,33 @@ import Foundation
 ///   5ターン中、勝ちが多い方が対戦の勝者、という分かりやすい形にした
 /// - 【暫定判断】5枚以上持っている場合にプレイヤーへ見せる4枚の選び方は、決定事項が
 ///   「部署に一任」としていたため、毎回ランダムな4枚を選ぶ方式にした
+/// - 【2026-09-14 実機フィードバック修正】数値が同じ時は「引き分け」にする(以前は
+///   `>` / `<` の比較しか無く、同値が誤って「負け」扱いになるバグがあった)。
+///   5ターン終えた結果、勝ち数が同じ(試合トータルが引き分け)になるのもそのまま
+///   許容し、無理に決着を付ける処理は追加しない。
+/// - 【2026-09-14 実機フィードバック修正】決着後は選んだ1枚とCPUのカードだけでなく、
+///   その場に提示されていた4枚全部(選ばなかった3枚も含む)の数値を公開する。
+///   そのため RoundResult には候補4枚(candidates)も保持しておく。
 @MainActor
 final class BattleViewModel: ObservableObject {
+    /// 1ターンの決着結果。「引き分け」を独立したケースとして持つ(Boolの勝敗フラグだと
+    /// 同値の扱いが「勝ち」「負け」のどちらかに寄ってしまい、上記のバグの原因になった)。
+    enum RoundOutcome: Equatable {
+        case playerWin
+        case cpuWin
+        case draw
+    }
+
     struct RoundResult: Identifiable {
         let id = UUID()
         let element: CardElement
         let highWins: Bool
         let playerCard: Card
         let cpuCard: Card
-        let playerWon: Bool
+        let outcome: RoundOutcome
+        /// その場に提示されていた候補4枚(選んだ1枚を含む)。決着後にまとめて
+        /// 全部の数値を公開するために保持する。
+        let candidates: [Card]
     }
 
     enum Phase: Equatable {
@@ -55,8 +73,9 @@ final class BattleViewModel: ObservableObject {
     /// 1試合5ターンの間、同じ要素を2回出題しないための「使用済み要素」の記録。
     private var usedElements: Set<CardElement> = []
 
-    var playerWinCount: Int { roundResults.filter(\.playerWon).count }
-    var cpuWinCount: Int { roundResults.filter { !$0.playerWon }.count }
+    var playerWinCount: Int { roundResults.filter { $0.outcome == .playerWin }.count }
+    var cpuWinCount: Int { roundResults.filter { $0.outcome == .cpuWin }.count }
+    var drawCount: Int { roundResults.filter { $0.outcome == .draw }.count }
     var currentRoundNumber: Int { roundResults.count + 1 }
 
     init(database: CardDatabase, owned: OwnedCollection) {
@@ -110,10 +129,10 @@ final class BattleViewModel: ObservableObject {
         guard case .choosing(let element, let highWins, let cpuCard, let candidates) = phase,
               candidates.contains(where: { $0.id == card.id }) else { return }
 
-        let playerWon = Self.resolveWinner(playerCard: card, cpuCard: cpuCard, highWins: highWins)
+        let outcome = Self.resolveOutcome(playerCard: card, cpuCard: cpuCard, highWins: highWins)
         roundResults.append(RoundResult(
             element: element, highWins: highWins,
-            playerCard: card, cpuCard: cpuCard, playerWon: playerWon
+            playerCard: card, cpuCard: cpuCard, outcome: outcome, candidates: candidates
         ))
         phase = .revealing(round: roundResults.count)
     }
@@ -141,6 +160,9 @@ final class BattleViewModel: ObservableObject {
             wonFreeGachaBonus = DailyBonusManager.shared.claimBattleBonus()
             GameCenterManager.shared.syncAllScores(owned: owned, database: database)
         }
+        // playerWinCount == cpuWinCount の場合(試合トータルが引き分け)は、勝利報酬も
+        // 敗北時の処理も無く、そのまま「引き分け」として終える(2026-09-14決定:
+        // 無理に決着を付ける処理は追加しない)。
     }
 
     /// CPUの手札をその場で抽選する(HURは除外。決定事項どおり)。
@@ -151,13 +173,18 @@ final class BattleViewModel: ObservableObject {
     }
 
     /// 勝敗判定。北朝鮮GDPカード(HUR)はどちらの向きでも必ず勝つ。
-    private static func resolveWinner(playerCard: Card, cpuCard: Card, highWins: Bool) -> Bool {
-        if playerCard.isSpecial { return true } // HURは無条件勝利
-        if cpuCard.isSpecial { return false }   // (CPUは本来持たないはずだが保険として)
+    /// 【2026-09-14修正】以前は `>` / `<` の比較結果をそのままBoolにしていたため、
+    /// 両者の数値が同じ場合(公用語の数など小さい整数で同値になりやすい要素)に
+    /// `false` = 「プレイヤーの負け」と誤判定されるバグがあった。同値は明示的に
+    /// `.draw` として扱う。
+    private static func resolveOutcome(playerCard: Card, cpuCard: Card, highWins: Bool) -> RoundOutcome {
+        if playerCard.isSpecial { return .playerWin } // HURは無条件勝利
+        if cpuCard.isSpecial { return .cpuWin }       // (CPUは本来持たないはずだが保険として)
+        if playerCard.score == cpuCard.score { return .draw }
         if highWins {
-            return playerCard.score > cpuCard.score
+            return playerCard.score > cpuCard.score ? .playerWin : .cpuWin
         } else {
-            return playerCard.score < cpuCard.score
+            return playerCard.score < cpuCard.score ? .playerWin : .cpuWin
         }
     }
 }
