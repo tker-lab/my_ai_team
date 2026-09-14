@@ -46,9 +46,16 @@ struct BattlePlayView: View {
             VStack(spacing: 14) {
                 Text("お題:「\(element.displayName)」")
                     .font(.title2.bold())
+                // 【2026-09-14調整】「このターンは高い/低いどちらが勝ちか」はプレイヤーが
+                // カードを選ぶ判断に直結する最重要情報のため、文字を大きくし色付きの
+                // カプセル背景を付けて目立たせる(以前はheadlineの色文字のみで目立たない
+                // との指摘があった)。
                 Text(highWins ? "数値が高い方が勝ち!" : "数値が低い方が勝ち!")
-                    .font(.headline)
-                    .foregroundStyle(highWins ? .blue : .orange)
+                    .font(.title2.bold())
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+                    .background(highWins ? Color.blue : Color.orange, in: Capsule())
 
                 VStack(spacing: 4) {
                     Text("CPUの手札(数値は選ぶまで分かりません)")
@@ -133,7 +140,7 @@ struct BattlePlayView: View {
                     if !otherCandidates.isEmpty {
                         Divider().padding(.horizontal, 32)
                         VStack(spacing: 6) {
-                            Text("選ばなかった手札の数値も公開")
+                            Text("選ばなかった手札")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             HStack(spacing: 12) {

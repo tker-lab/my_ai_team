@@ -45,8 +45,9 @@ final class BattleUITests: XCTestCase {
             XCTAssertFalse(app.staticTexts["？？？"].firstMatch.exists, "ターン\(turn): 決着後は数値が公開されること")
 
             // 【2026-09-14修正確認①】選ばなかった残り3枚の数値も、決着後に公開されること。
+            // (見出し文言は2026-09-14に「選ばなかった手札の数値も公開」→「選ばなかった手札」に短縮)
             XCTAssertTrue(
-                app.staticTexts["選ばなかった手札の数値も公開"].waitForExistence(timeout: 5),
+                app.staticTexts["選ばなかった手札"].waitForExistence(timeout: 5),
                 "ターン\(turn): 選ばなかった3枚の数値も公開されること"
             )
 
