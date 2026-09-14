@@ -16,7 +16,7 @@
 - **完了**:MacBookへの環境移行(2026-09-01完了)。手順書は [mac_migration.md](mac_migration.md)
 - **稼働中**:アプリ開発部(2026-09-02にYouTubeネタ帳のNotion構築が完了) → 詳細は [app_team_notion_idea_db.md](app_team_notion_idea_db.md)
 - **Codexが担当中**:PhotoTimer(メモリータイマー)の**App Store公開までの作業一式**(ストア素材・プライバシーポリシー等)。**2026-09-08時点でCEOがCodex側で進行中のため、この窓口からアプリ開発部を起動しないこと。** PhotoTimer関連の見覚えのないコミットはCodex由来 → 詳細は [app_team_photo_timer.md](app_team_photo_timer.md)
-- **CEOの実機確認待ち**:国カードバトル(仮称)。2026-09-13にClaude in Chromeの接続が完了したので、Game Center設定・実機確認へ戻れる状態(Game Center設定はブラウザ操作連携の活用も検討可)。2026-09-12深夜〜13日未明にPhase 1+追加機能を実装、チェック→致命的2件含む6件修正→再チェック→軽微1件修正まで完了(PhotoTimerとは別案件なのでこの窓口で扱う)。**CEOの対応が必要**:REST Countries登録のメール確認完了、Game CenterのApple Developer Portal/App Store Connect設定、実機での確認(手順は[app_team_country_cards.md](app_team_country_cards.md)の「実機確認の手順」参照)。実機で気づいた点は修正依頼書(テンプレート②)にまとめてから部署へ
+- **Codexのデザイン作業待ち**:Country Cards Collection(旧称:国カードバトル仮称)。実機確認・複数回の修正・豆知識193カ国統合まで完了し、Game Center・AdMobの外部設定も完了(詳細は[app_team_country_cards.md](app_team_country_cards.md))。**2026-09-14深夜、Codexが本体アプリのビュー層ほぼ全体(全体デザイン)を未コミットで編集中と判明。** これが一段落する(commitされる)まで、秘書・app-team側からの追加発注・ビルド・実機反映は保留中。次のアクション:Codexの作業完了後、①広告SDK(AdMob)の組み込み ②その後リリース準備
 - **一時停止**:広報部(発信するアウトプットが揃ってから本格稼働)
 - **将来構想・未着手**:コミュニケーション基盤(Discord構想) → 詳細は [communication_plan.md](communication_plan.md)
 - **将来構想・仕様待ち**:運営状態ダッシュボード(ルール・部署定義・メモリをPC/スマホから確認できるアプリかサイト) → 経緯は [ai_team_operation_design.md](ai_team_operation_design.md) の9章
