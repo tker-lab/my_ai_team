@@ -39,4 +39,23 @@ enum UITestSupport {
             defaults.set("テストユーザー", forKey: "username")
         }
     }
+
+    /// `-uiTestSeedNineCardCountry`: 全状態をリセットした上で、CO2排出量データが
+    /// 無くカードが9種類しか存在しない国(モナコ)の9枚全てを所持済みにする。
+    ///
+    /// 何のためか: 「9枚しか存在しない国は10個目の豆知識が永遠に解放されない」
+    /// バグ(2026-09-14修正)の確認用。9枚集め切った状態を毎回同じ手順で作れる
+    /// ようにし、豆知識が10/10まで解放されることをUIテストで検証できるようにする。
+    ///
+    /// 【重要】CardDatabase(読み込み専用のカード定義データ)を先に参照するのは
+    /// 問題ない。ここで触れてはいけないのはOwnedCollectionのような「所持状況」を
+    /// 保持するシングルトンだけ(上のresetAllStateForTestingの注記を参照)。
+    @MainActor
+    static func seedNineCardCountryForTrivia() {
+        resetAllStateForTesting()
+
+        let iso3 = "MCO" // モナコ:CO2排出量データが無く、カードが9種類のみ存在する国
+        let cardIDs = CardDatabase.shared.cards(forCountry: iso3).map(\.id)
+        UserDefaults.standard.set(cardIDs, forKey: "ownedCardIDs")
+    }
 }

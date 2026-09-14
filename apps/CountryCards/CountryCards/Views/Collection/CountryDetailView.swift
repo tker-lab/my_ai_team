@@ -16,10 +16,32 @@ struct CountryDetailView: View {
         return CardElement.allCases.compactMap { byElement[$0] }
     }
 
-    /// 持っている要素カードの種類数=解放されている豆知識の数
-    /// (決定事項:要素を1種類集めるごとに豆知識が1個ずつ解放される)。
-    private var unlockedTriviaCount: Int {
+    /// この国に実際に存在するカードの枚数(通常10。CO2排出量データの無い7カ国は9)。
+    /// 豆知識10個の解放ペースは、固定の10ではなくこの実枚数を分母にする
+    /// (2026-09-14 バグ修正:9枚国だと分母固定10のままでは10個目が永遠に解放されなかった)。
+    private var totalCardsForCountry: Int { cards.count }
+
+    /// 持っている要素カードの種類数。
+    private var ownedElementCount: Int {
         owned.ownedElementCount(forCountry: iso3, among: cards)
+    }
+
+    /// 解放されている豆知識の数(0〜10)。
+    /// 「持っている枚数 ÷ その国の実カード枚数」の比率を10個に割り振る。
+    /// 例:実カード9枚の国は9枚集め切った時点で10個全部解放される(9÷9×10=10)。
+    /// 実カード10枚の国は従来通り1枚集めるごとに1個ずつ解放される。
+    private var unlockedTriviaCount: Int {
+        guard totalCardsForCountry > 0 else { return 0 }
+        return min(10, ownedElementCount * 10 / totalCardsForCountry)
+    }
+
+    /// 豆知識index番目(0始まり)を解放するのに必要な所持枚数。
+    /// 例:実カード9枚の国でindex=8,9(9個目・10個目)は両方とも9枚必要
+    /// (最後の1枚を集めた瞬間に2個まとめて解放される)。
+    private func cardsNeeded(forTriviaIndex index: Int) -> Int {
+        guard totalCardsForCountry > 0 else { return 0 }
+        // ceil((index+1) * total / 10)
+        return ((index + 1) * totalCardsForCountry + 9) / 10
     }
 
     private let columns = [GridItem(.adaptive(minimum: 160), spacing: 12)]
@@ -61,7 +83,8 @@ struct CountryDetailView: View {
                             .font(.footnote)
                             .foregroundStyle(.primary)
                     } else {
-                        Label("要素カードをもう\(index + 1 - unlockedTriviaCount)種類集めると解放されます", systemImage: "lock.fill")
+                        let needed = max(0, cardsNeeded(forTriviaIndex: index) - ownedElementCount)
+                        Label("要素カードをもう\(needed)種類集めると解放されます", systemImage: "lock.fill")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }

@@ -14,6 +14,10 @@ struct CountryCardsApp: App {
         } else if arguments.contains("-uiTestResetNoUsername") {
             // オンボーディング(名前入力)画面そのものをテストする時専用。
             UITestSupport.resetAllStateForTesting(presetUsername: false)
+        } else if arguments.contains("-uiTestSeedNineCardCountry") {
+            // カードが9種類しか存在しない国(モナコ)の9枚を所持済みにする。
+            // 豆知識10個が固定分母10ではなく実カード枚数で解放されるかの確認専用。
+            UITestSupport.seedNineCardCountryForTrivia()
         }
     }
 

@@ -36,4 +36,41 @@ final class CollectionUITests: XCTestCase {
         let elementDetailTitle = app.navigationBars.matching(detailAppeared).firstMatch
         XCTAssertTrue(elementDetailTitle.waitForExistence(timeout: 5), "要素のランキング画面へ遷移すること")
     }
+
+    /// 【2026-09-14 バグ修正の確認】CO2排出量データが無くカードが9種類しか
+    /// 存在しない国(モナコ)は、9枚集め切った時点で豆知識10個全部が解放される
+    /// はず(修正前は固定分母10のままだったため、9枚では永遠に10個目が
+    /// 解放されなかった)。
+    func testNineCardCountryUnlocksAllTenTrivia() throws {
+        let app = launchPastTitleScreen(arguments: ["-uiTestSeedNineCardCountry"])
+
+        let listTitle = app.navigationBars["図鑑"]
+        XCTAssertTrue(listTitle.waitForExistence(timeout: 5))
+
+        // 国名「モナコ」の行を探してタップする(一覧の並び順に依存しないように
+        // インデックスではなく表示文字列で探す)。193カ国中107番目あたりにいるため、
+        // 一覧は仮想化されており(画面外の行はアクセシビリティツリーに無い)、
+        // 見つかるまで下にスクロールする必要がある。
+        let monacoCell = app.staticTexts["モナコ"]
+        let list = app.collectionViews.firstMatch.exists ? app.collectionViews.firstMatch : app.tables.firstMatch
+        var attempts = 0
+        while !monacoCell.exists, attempts < 40 {
+            list.swipeUp()
+            attempts += 1
+        }
+        XCTAssertTrue(monacoCell.waitForExistence(timeout: 5), "モナコの行が一覧にあること(スクロール後)")
+        monacoCell.tap()
+
+        let detailTitle = app.navigationBars["モナコ"]
+        XCTAssertTrue(detailTitle.waitForExistence(timeout: 5), "モナコの詳細画面へ遷移すること")
+
+        // 豆知識の見出しが「10/10 解放」になっている(分母が実カード枚数の9ではなく
+        // 固定10になっていて、かつ9枚全部集めた時点で10個とも解放されている)ことを確認する。
+        let unlockedHeader = app.staticTexts["豆知識(10/10 解放)"]
+        XCTAssertTrue(unlockedHeader.waitForExistence(timeout: 5), "9枚集め切ったら10/10と表示されること")
+
+        // 鍵アイコン付きの「まだ解放されていません」系の行が残っていないことも確認する。
+        let lockedRow = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "集めると解放されます")).firstMatch
+        XCTAssertFalse(lockedRow.exists, "10個とも解放済みで、鍵付きの行が残っていないこと")
+    }
 }
