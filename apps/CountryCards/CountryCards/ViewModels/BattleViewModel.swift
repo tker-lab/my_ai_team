@@ -4,17 +4,24 @@ import Foundation
 ///
 /// ルール(app_team_country_cards.mdの決定事項どおり):
 /// - 毎ターン「どの要素で比べるか」「高い方/低い方どちらが勝ちか」を両方ランダムに決める
-/// - 【2026-09-13仕様変更】デッキ編成機能を廃止し、プレイヤーの手札もCPUと同じく
-///   「持っているカードの中からランダムに出す」方式に統一した(手動でカードを
-///   選ぶ操作自体が無くなった)。各要素で最低1枚を持ち続ける保証は
-///   StartingCardsProvisioner(初回配布)が担う。
+/// - 【2026-09-14仕様変更】「持っているカードから自動でランダムに1枚出す」方式を廃止し、
+///   以下の選択式フローに変更した:
+///   1. お題(要素・高低)が決まると、CPU側のカードを1枚(国・要素は見える、数値は「?」)
+///      先に提示する
+///   2. プレイヤーには、その要素で持っているカードの中から4枚(数値は「?」)を提示し、
+///      タップして1枚選ばせる(初回配布で各要素5枚Nレアを持っているため4枚に満たない
+///      状況は起きない設計)
+///   3. プレイヤーが選ぶと、両者の数値をまとめて公開して勝敗を決める
+///   これにより「相手の顔ぶれを見てから自分の手札のどれを出すか選ぶ」駆け引きを持たせる。
+///   各要素で最低1枚を持ち続ける保証は StartingCardsProvisioner(初回配布)が担う。
 /// - CPUの手札は、要素ごとに1枚、そのターンごとにガチャと同じ確率でランダムに
 ///   抽選し直す(HUR無し・固定デッキではない)
 /// - 北朝鮮GDPカード(HUR)はどのお題でも必ず勝つジョーカー
-/// - 【2026-09-13追加】1試合5ターンの間、同じ要素を2回出題しない
-///   (10要素中5要素を毎回変えて使う)
+/// - 1試合5ターンの間、同じ要素を2回出題しない(10要素中5要素を毎回変えて使う)
 /// - 【暫定判断】対戦の決着方法(何ターンで勝敗を決めるか)は決定事項に無かったため、
 ///   5ターン中、勝ちが多い方が対戦の勝者、という分かりやすい形にした
+/// - 【暫定判断】5枚以上持っている場合にプレイヤーへ見せる4枚の選び方は、決定事項が
+///   「部署に一任」としていたため、毎回ランダムな4枚を選ぶ方式にした
 @MainActor
 final class BattleViewModel: ObservableObject {
     struct RoundResult: Identifiable {
@@ -27,14 +34,16 @@ final class BattleViewModel: ObservableObject {
     }
 
     enum Phase: Equatable {
-        /// 両者のカードはもう決まっているが、数値はまだ伏せてある
-        /// (「対戦する」をタップすると決着が付く)。
-        case ready(element: CardElement, highWins: Bool, playerCard: Card, cpuCard: Card)
+        /// お題とCPUのカードは決まっており、プレイヤーが4枚の候補から1枚を選ぶのを待っている状態。
+        /// 両者の数値は選び終わるまで伏せたまま。
+        case choosing(element: CardElement, highWins: Bool, cpuCard: Card, candidates: [Card])
         case revealing(round: Int)
         case finished
     }
 
     static let totalRounds = 5
+    /// プレイヤーに提示する候補カードの枚数。
+    static let candidateCount = 4
 
     @Published private(set) var phase: Phase
     @Published private(set) var roundResults: [RoundResult] = []
@@ -55,9 +64,9 @@ final class BattleViewModel: ObservableObject {
         self.owned = owned
         let element = Self.pickElement(excluding: [], database: database, owned: owned)
         self.usedElements = [element]
-        let playerCard = Self.drawPlayerCard(for: element, database: database, owned: owned)
         let cpuCard = Self.drawCPUCard(for: element, database: database)
-        self.phase = .ready(element: element, highWins: Bool.random(), playerCard: playerCard, cpuCard: cpuCard)
+        let candidates = Self.pickPlayerCandidates(for: element, database: database, owned: owned)
+        self.phase = .choosing(element: element, highWins: Bool.random(), cpuCard: cpuCard, candidates: candidates)
     }
 
     /// お題の要素を選ぶ。まだ出していない要素の中から、プレイヤーが実際に
@@ -80,26 +89,31 @@ final class BattleViewModel: ObservableObject {
         return all.filter(owned.owns)
     }
 
-    /// プレイヤーの手札は「持っているカードの中からランダムに出す」(決定事項どおり、
-    /// CPUと同じ方式)。StartingCardsProvisionerの保証により候補が空になることは
-    /// 無いはずだが、万一空だった場合は進行不能を避けるため、ガチャと同じ確率で
-    /// その場で1枚引いた扱いにする(所持はしていない一時的なカードとして使うのみ)。
-    private static func drawPlayerCard(for element: CardElement, database: CardDatabase, owned: OwnedCollection) -> Card {
-        let candidates = ownedCardPool(for: element, database: database, owned: owned)
-        if let picked = candidates.randomElement() {
-            return picked
+    /// プレイヤーに提示する候補カード(その要素で持っているカードからランダムに
+    /// candidateCount枚)。StartingCardsProvisionerの保証により通常は5枚以上
+    /// 持っているはずだが、万一足りない場合は進行不能を避けるため、ガチャと
+    /// 同じ確率でその場で引いた(所持はしていない一時的な)カードで埋める。
+    private static func pickPlayerCandidates(for element: CardElement, database: CardDatabase, owned: OwnedCollection) -> [Card] {
+        var pool = ownedCardPool(for: element, database: database, owned: owned).shuffled()
+        if pool.count > candidateCount {
+            pool = Array(pool.prefix(candidateCount))
         }
-        return drawCPUCard(for: element, database: database)
+        while pool.count < candidateCount {
+            pool.append(drawCPUCard(for: element, database: database))
+        }
+        return pool
     }
 
-    /// カードは決まっているが数値は伏せてある状態から、決着を付けて公開する。
-    func revealBattle() {
-        guard case .ready(let element, let highWins, let playerCard, let cpuCard) = phase else { return }
+    /// プレイヤーが4枚の候補から1枚を選んだ時に呼ぶ。両者の数値をまとめて
+    /// 公開し、決着を付ける。
+    func choosePlayerCard(_ card: Card) {
+        guard case .choosing(let element, let highWins, let cpuCard, let candidates) = phase,
+              candidates.contains(where: { $0.id == card.id }) else { return }
 
-        let playerWon = Self.resolveWinner(playerCard: playerCard, cpuCard: cpuCard, highWins: highWins)
+        let playerWon = Self.resolveWinner(playerCard: card, cpuCard: cpuCard, highWins: highWins)
         roundResults.append(RoundResult(
             element: element, highWins: highWins,
-            playerCard: playerCard, cpuCard: cpuCard, playerWon: playerWon
+            playerCard: card, cpuCard: cpuCard, playerWon: playerWon
         ))
         phase = .revealing(round: roundResults.count)
     }
@@ -113,9 +127,9 @@ final class BattleViewModel: ObservableObject {
         }
         let element = Self.pickElement(excluding: usedElements, database: database, owned: owned)
         usedElements.insert(element)
-        let playerCard = Self.drawPlayerCard(for: element, database: database, owned: owned)
         let cpuCard = Self.drawCPUCard(for: element, database: database)
-        phase = .ready(element: element, highWins: Bool.random(), playerCard: playerCard, cpuCard: cpuCard)
+        let candidates = Self.pickPlayerCandidates(for: element, database: database, owned: owned)
+        phase = .choosing(element: element, highWins: Bool.random(), cpuCard: cpuCard, candidates: candidates)
     }
 
     private func finish() {

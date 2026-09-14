@@ -294,6 +294,13 @@ Phase 1に加え、就寝中に追加した決定事項もほぼ全て着手済�
 
 **部署メモリへの追記(2026-09-12、部署からの報告)**:世界銀行APIの一括取得で起きる欠落パターン、countries.dev の隣接国データの信頼性、XCUITestのアクセシビリティ関連の落とし穴、の3点を部署メモリに記録したとの報告あり(アプリ開発部内に閉じた技術的知見)
 
+## 実機インストールの自動化(2026-09-14 判明)
+**当初「秘書はコマンドで実機ビルドできない(署名情報にアクセスできない)」としていたが、CEOがXcodeにApple IDを再サインインした後は解消し、秘書がコマンドのみで実機へのビルド・インストール・起動まで完結できることを確認した。** 以後、CEOがXcodeの▶ボタンを押す必要はない(IAP・Game Centerの動作確認など、Xcode経由でしか見えない情報を見たい時だけXcode起動が必要)。
+- ビルド:`xcodebuild -project CountryCards.xcodeproj -scheme CountryCards -configuration Debug -destination 'id=<デバイスID>' -allowProvisioningUpdates build`
+- インストール:`xcrun devicectl device install app --device <デバイスID> <ビルドしたCountryCards.appのパス>`
+- 起動:`xcrun devicectl device process launch --device <デバイスID> com.aiteam.CountryCards`
+- デバイスIDの確認:`xcrun devicectl list devices`(iPhoneの画面ロックを解除しておく必要がある。それでも繋がらない時はChromeの時と同様、iPhone側の再ペアリングが必要な場合がある)
+
 ## 実機確認の手順(2026-09-13、CEO向け)
 1. **Xcodeで開いて▶ボタンで実行する**(コマンドラインではなくXcode経由。IAP・Game Centerの確認にはこれが必須):`cd apps/CountryCards && xcodegen generate && open CountryCards.xcodeproj`
 2. 初回起動でユーザー名を決める画面が出るか
