@@ -39,38 +39,44 @@ struct BattlePlayView: View {
     /// お題とCPUのカードは決まっているが、プレイヤーはまだ4枚から1枚を選んでいない状態。
     /// CPUのカードを画面奥(上側)、プレイヤーの手札4枚を画面手前(下側)に配置する。
     private func choosingView(element: CardElement, highWins: Bool, cpuCard: Card, candidates: [Card]) -> some View {
+        // 画面の縦幅が狭い端末でも、できるだけスクロールせずに「CPUの1枚+自分の4枚」を
+        // 一望できるよう、カードの拡大率と余白を詰めてある(スクロール自体はできるので
+        // 収まりきらなくても操作不能にはならない)。
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: 14) {
                 Text("お題:「\(element.displayName)」")
                     .font(.title2.bold())
                 Text(highWins ? "数値が高い方が勝ち!" : "数値が低い方が勝ち!")
                     .font(.headline)
                     .foregroundStyle(highWins ? .blue : .orange)
 
-                VStack(spacing: 6) {
+                VStack(spacing: 4) {
                     Text("CPUの手札(数値は選ぶまで分かりません)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     CardView(card: cpuCard, country: database.country(for: cpuCard.iso3), hideValue: true)
-                        .scaleEffect(0.8)
+                        .scaleEffect(0.72)
+                        // 【CardDetailSheetと同じ考え方】scaleEffectは見た目だけを
+                        // 変えレイアウトサイズは変えないため、frameで縮小後の
+                        // 実サイズを明示し、下の要素との間に無駄な空白を残さない。
+                        .frame(width: 160 * 0.72, height: 220 * 0.72)
                 }
-                .padding(.vertical, 8)
 
                 Divider()
                     .padding(.horizontal, 32)
 
-                VStack(spacing: 10) {
+                VStack(spacing: 8) {
                     Text("あなたの手札から1枚選んでください")
                         .font(.subheadline.bold())
 
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                         ForEach(candidates) { card in
                             Button {
                                 viewModel.choosePlayerCard(card)
                             } label: {
                                 CardView(card: card, country: database.country(for: card.iso3), hideValue: true)
-                                    .scaleEffect(0.62)
-                                    .frame(width: 160 * 0.62, height: 220 * 0.62)
+                                    .scaleEffect(0.56)
+                                    .frame(width: 160 * 0.56, height: 220 * 0.56)
                             }
                             .accessibilityIdentifier("battleCandidateButton")
                         }
@@ -78,9 +84,9 @@ struct BattlePlayView: View {
                     .padding(.horizontal)
                 }
 
-                Spacer(minLength: 24)
+                Spacer(minLength: 12)
             }
-            .padding(.top, 8)
+            .padding(.top, 4)
         }
     }
 
