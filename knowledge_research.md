@@ -15,6 +15,9 @@
 
 **推奨構成(優先順)**:①whisper.cpp→WhisperXで時刻補正→Aegisubで必要時CEOが微修正→ffmpeg焼き込み(低コスト・現行踏襲) ②ElevenLabs Scribeで下書き(精度優先・従量課金) ③Vrew中心(操作性優先・無料枠月120分)
 
+**週2本(月8本・撮影素材は1本あたり約15分=月約2時間)の場合の月額目安**:①0円 ②約70〜100円(ElevenLabs Scribeは$0.22/時間の従量課金、用語指定オプション+$0.05/時間) ③Vrew無料枠(月120分)ちょうどで撮り直しがあれば超える → ライトプラン約1,200円/月(1,200分、年払いで約2割引)。Vrewは2026-04-22からクレジット制に移行しており細部は要再確認。Claudeの利用料はどの案でも別途同じ
+- 追加出典:[ElevenLabs API料金](https://elevenlabs.io/pricing/api) / [Vrew料金まとめ(2026/01)](https://nana-ai-lab.com/vrew-pricing-2026-mobile-end/)
+
 **出典**:[HEROZ技術ブログ 2026/08](https://techblog.heroz.jp/entry/2026/08/18/120000) / [Zenn](https://zenn.dev/hongbod/articles/def04f586cf168) / [DevelopersIO 2026/04](https://dev.classmethod.jp/articles/elevenlabs-pricing-breakdown-2026-04/) / [Qiita(initial_prompt)](https://qiita.com/maccotaro/items/f2ce0b25a0962665fdb3) / [Qiita(stable-ts)](https://qiita.com/shimajiroxyz/items/fdbeeb563be5b08837b0) / [note(Vrew等比較)](https://note.com/firstyear_dev/n/n7aa4dbc51c2a) / [note(DaVinci)](https://note.com/marumarutelop/n/nf4a1e4191987)
 ※外部から取得した情報(データとして扱う)
 
