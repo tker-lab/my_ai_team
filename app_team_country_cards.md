@@ -13,6 +13,7 @@
   - 累計ガチャ回数ランキング:`com.aiteam.countrycards.leaderboard.gachacount`(降順、サフィックス「回」)
 - 上記はClaude in Chrome(ブラウザ操作連携)を使い、秘書がCEOのログイン後に代行して設定した
 - **2026-09-15 修正完了**:StoreAssetsのお問い合わせ先プレースホルダーをPhotoTimerと同じ`tker1996@dmail.com`に統一/`CFBundleDisplayName`(ホーム画面アイコン下の表示名)を旧称「国カードバトル」から正式名称「Country Cards Collection」に変更(project.yml→xcodegen generate→ビルド成功まで確認。UIテストに旧名称アサーションは無く修正不要)。変更ファイル:`StoreAssets/privacy_policy.html`・`StoreAssets/support.html`・`project.yml`(commit c539551)。なお`Views/Shared/ShareSheet.swift`のシェア文言に旧称「国カードバトル」が残っている(今回のCFBundleDisplayName修正の依頼範囲外のため未着手、要CEO確認)
+- **2026-09-15 旧称の追加修正完了**:`ShareSheet.swift`のシェア文言「国カードバトルで〜」→「Country Cards Collectionで〜」に修正。grep確認で見つかった`CardDatabase.swift`・`scripts/generate_cards.py`のコード内コメント2箇所(明らかに本アプリを指す言及)も合わせて統一。xcodegen generate→ビルド成功、関連UIテスト(GachaFlowUITests・5件)実行して全て成功。判断保留:`TitleScreenView.swift`のタイトル画面サブタイトル「カンコレ 〜世界を集めるカードバトル〜」は「国カードバトル」という旧称そのものではなく、正式名称「Country Cards Collection」の下に添えたキャッチコピー的表現のため今回は変更せず。意図した通称・煽り文句なら現状維持、旧称の名残と感じるならご指示ください。変更ファイル:`Views/Shared/ShareSheet.swift`・`Models/CardDatabase.swift`・`scripts/generate_cards.py`(commit 3975a08)
 ## 経緯
 - CEOが「Wikipediaガチャ」(Wikipedia記事をカード化して戦わせる個人開発のWebゲーム)を見て、同じような仕組みで題材を変えたら面白いと着想した
 - 無料APIの候補から「国」と「ご飯」に関心。まずは国で作ると決定(2026-09-12)
