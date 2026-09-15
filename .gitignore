@@ -10,6 +10,7 @@ advisory.md
 advisory_usda_project.md
 .claude/agent-memory/advisory-team/
 life_team.md
+life_team_*.md
 .claude/agent-memory/life-team/
 
 # 秘書メモリのうち機微な2件(マシンごとローカル保存。各マシンでClaudeがCEOに直接聞いて作成する)
