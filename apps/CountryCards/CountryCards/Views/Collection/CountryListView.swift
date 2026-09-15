@@ -6,12 +6,8 @@ struct CountryListView: View {
     @ObservedObject private var owned = OwnedCollection.shared
 
     var body: some View {
-        List {
-            Section {
-                CollectionScopeNoticeView()
-                    .listRowInsets(EdgeInsets())
-                    .listRowSeparator(.hidden)
-            }
+        ScrollView { LazyVStack(spacing: 9) {
+            CollectionScopeNoticeView()
             ForEach(database.countries) { country in
                 NavigationLink(value: country.iso3) {
                     HStack {
@@ -25,18 +21,21 @@ struct CountryListView: View {
                         .frame(width: 40, height: 28)
                         .clipShape(RoundedRectangle(cornerRadius: 4))
 
-                        Text(country.nameJa)
+                        Text(country.nameJa).lineLimit(1).minimumScaleFactor(0.75)
                         Spacer()
                         let cards = database.cards(forCountry: country.iso3)
                         let ownedCount = cards.filter(owned.owns).count
-                        Text("\(String(ownedCount))/\(String(cards.count))枚")
+                        VStack(alignment: .trailing, spacing: 2) { Text(ownedCount == cards.count ? "COMPLETE" : "\(String(ownedCount))/\(String(cards.count))枚").fontWeight(ownedCount == cards.count ? .black : .regular); ProgressView(value: Double(ownedCount), total: Double(max(cards.count, 1))).frame(width: 70).tint(ownedCount == cards.count ? EarthColors.gold : EarthColors.cyan) }
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    .padding(12).frame(minHeight: 58)
+                    .background(EarthColors.panel, in: RoundedRectangle(cornerRadius: 14))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(EarthColors.line))
                 }
+                .buttonStyle(.plain)
             }
-        }
-        .listStyle(.insetGrouped)
+        }.frame(maxWidth: .infinity).padding(.horizontal) }
         .navigationDestination(for: String.self) { iso3 in
             CountryDetailView(iso3: iso3)
         }

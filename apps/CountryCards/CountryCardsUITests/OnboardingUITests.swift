@@ -15,7 +15,7 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertTrue(nameField.waitForExistence(timeout: 5), "起動直後に名前入力画面が出ること")
         // fullScreenCoverの裏にあるTabViewはツリー上には残ることがあるため、
         // 「見えている(タップ可能)かどうか」で覆われていることを確認する。
-        XCTAssertFalse(app.tabBars.buttons["図鑑"].isHittable, "名前入力前はタブバーが操作できないこと")
+        XCTAssertFalse(app.buttons["tab_図鑑"].isHittable, "名前入力前はタブバーが操作できないこと")
 
         let startButton = app.buttons["onboardingStartButton"]
         XCTAssertFalse(startButton.isEnabled, "名前が空の間は「はじめる」が押せないこと")
@@ -25,6 +25,6 @@ final class OnboardingUITests: XCTestCase {
         XCTAssertTrue(startButton.isEnabled)
         startButton.tap()
 
-        XCTAssertTrue(app.tabBars.buttons["図鑑"].waitForExistence(timeout: 5), "名前を決めた後は本編(タブバー)に進めること")
+        XCTAssertTrue(app.buttons["tab_図鑑"].waitForExistence(timeout: 5), "名前を決めた後は本編(タブバー)に進めること")
     }
 }

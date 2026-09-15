@@ -21,6 +21,7 @@ final class PointGachaViewModel: ObservableObject {
     let element: CardElement
     @Published private(set) var results: [GachaPullResult] = []
     @Published private(set) var errorMessage: String?
+    @Published private(set) var isNewByCardIndex: [Bool] = []
 
     private let engine: GachaEngine
     private let owned: OwnedCollection
@@ -55,16 +56,23 @@ final class PointGachaViewModel: ObservableObject {
         }()
 
         let unownedBonus = GachaEngine.UnownedBonus(isOwned: { [owned] card in owned.owns(card) })
-        let pulls = engine.drawMultiplePulls(
+        var pulls = engine.drawMultiplePulls(
             count: pullCount.rawValue,
             finalCardGuarantee: finalGuarantee,
             unownedBonus: unownedBonus
         )
-        for pull in pulls {
-            for card in pull.cards {
-                owned.receive(card)
+#if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-uiTestBatchStops"), pullCount != .one {
+            let pool = CardDatabase.shared.cards(forElement: element)
+            if let low = pool.first(where: { $0.rarity == .n }), let ssr = pool.first(where: { $0.rarity == .ssr }) {
+                var cards = Array(repeating: low, count: pullCount.rawValue * 3)
+                let stopIndices = pullCount == .ten ? [12, 24] : [20, 70, 140, 220, 290]
+                for index in stopIndices where cards.indices.contains(index) { cards[index] = ssr }
+                pulls = stride(from: 0, to: cards.count, by: 3).map { GachaPullResult(cards: Array(cards[$0..<min($0 + 3, cards.count)])) }
             }
         }
+#endif
+        isNewByCardIndex = pulls.flatMap(\.cards).map { owned.receive($0) }
         results = pulls
         owned.recordGachaUse(pullCount: pullCount.rawValue)
         GameCenterManager.shared.syncAllScores(owned: owned, database: .shared)

@@ -10,7 +10,8 @@ struct ElementRankingView: View {
     private var cards: [Card] { database.cards(forElement: element) }
 
     var body: some View {
-        List {
+        ZStack { EarthBackdrop(variant: .archive)
+        ScrollView { LazyVStack(spacing: 8) {
             ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in
                 let country = database.country(for: card.iso3)
                 let isOwned = owned.owns(card)
@@ -33,12 +34,12 @@ struct ElementRankingView: View {
                 }
                 .disabled(!isOwned)
                 .foregroundStyle(isOwned ? .primary : .secondary)
+                .padding(12).background(EarthColors.panel, in: RoundedRectangle(cornerRadius: 13)).overlay(RoundedRectangle(cornerRadius: 13).stroke(EarthColors.line))
             }
-        }
-        .listStyle(.insetGrouped)
-        .navigationTitle(element.displayName)
+        }.padding() }}
+        .earthNavigationTitle(element.displayName)
         .sheet(item: $selectedCard) { card in
-            CardDetailSheet(card: card, country: database.country(for: card.iso3))
+            SheetWithAdDock { CardDetailSheet(card: card, country: database.country(for: card.iso3)) }
         }
     }
 }

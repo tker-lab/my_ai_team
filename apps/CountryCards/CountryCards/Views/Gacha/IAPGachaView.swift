@@ -15,7 +15,7 @@ struct IAPGachaView: View {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
+        ZStack { EarthBackdrop(variant: .gacha(.ur)); VStack(spacing: 16) {
             if let product = store.product {
                 Text("\(product.displayName) — \(product.displayPrice)")
                     .font(.headline)
@@ -30,7 +30,7 @@ struct IAPGachaView: View {
             NavigationLink("購入前に排出確率を確認する") {
                 GachaOddsView(source: .iapTenPull)
             }
-            .font(.footnote)
+            .font(.footnote).foregroundStyle(EarthColors.cyan)
 
             Button {
                 Task { await viewModel.purchaseAndPull() }
@@ -41,7 +41,7 @@ struct IAPGachaView: View {
                     Text("¥100で10連を購入(30枚目SSR以上確定)")
                 }
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(EarthActionButtonStyle(variant: .reward))
             .disabled(store.product == nil || viewModel.isPurchasing)
 
             if let errorMessage = store.errorMessage {
@@ -49,23 +49,12 @@ struct IAPGachaView: View {
             }
 
             if !viewModel.results.isEmpty {
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 140))], spacing: 12) {
-                        ForEach(Array(viewModel.results.enumerated()), id: \.offset) { _, pull in
-                            ForEach(pull.cards) { card in
-                                CardView(card: card, country: database.country(for: card.iso3))
-                                    .scaleEffect(0.85)
-                            }
-                        }
-                    }
-                    .padding()
-                }
+                BatchObservationView(cards: viewModel.results.flatMap(\.cards), isNew: viewModel.isNewByCardIndex)
             } else {
                 Spacer()
             }
-        }
+        }.padding(.horizontal) }
         .padding(.top)
-        .navigationTitle("\(element.displayName)(¥100)")
-        .navigationBarTitleDisplayMode(.inline)
+        .earthNavigationTitle("\(element.displayName)(¥100)")
     }
 }

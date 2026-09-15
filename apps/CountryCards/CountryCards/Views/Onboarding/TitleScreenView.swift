@@ -12,57 +12,54 @@ struct TitleScreenView: View {
     /// タップされたら呼ばれる(呼び出し側でホーム画面への遷移を行う)。
     var onTap: () -> Void
 
-    @State private var isPulsing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isOrbiting = false
+    @State private var isConverging = false
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [Color(red: 0.05, green: 0.12, blue: 0.30), Color(red: 0.15, green: 0.05, blue: 0.35)],
-                startPoint: .topLeading, endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            EarthBackdrop(variant: .home)
+            Circle().stroke(EarthColors.cyan.opacity(0.22), lineWidth: 1).frame(width: 310, height: 110).rotationEffect(.degrees(isOrbiting ? 360 : 0)).offset(y: -120)
 
             VStack(spacing: 20) {
                 Spacer()
 
-                Image(systemName: "globe.asia.australia.fill")
-                    .font(.system(size: 84))
-                    .foregroundStyle(
-                        LinearGradient(colors: [.yellow, .orange], startPoint: .top, endPoint: .bottom)
-                    )
-                    .shadow(color: .orange.opacity(0.5), radius: isPulsing ? 24 : 10)
+                EarthEmblem(size: 132)
+                    .shadow(color: EarthColors.cyan.opacity(isOrbiting ? 0.72 : 0.38), radius: isOrbiting ? 28 : 14)
 
                 Text("Country Cards Collection")
                     .font(.system(size: 28, weight: .heavy, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(EarthColors.text)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
 
                 Text("カンコレ 〜世界を集めるカードバトル〜")
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.75))
+                    .foregroundStyle(EarthColors.secondary)
 
                 Spacer()
 
-                Text("タップしてはじめる")
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 28)
-                    .padding(.vertical, 12)
-                    .background(.white.opacity(isPulsing ? 0.28 : 0.16), in: Capsule())
-                    .overlay(Capsule().strokeBorder(.white.opacity(0.6), lineWidth: 1))
-                    .padding(.bottom, 56)
+                Button("地球図鑑を開く", action: proceed)
+                    .buttonStyle(EarthActionButtonStyle()).padding(.horizontal, 36).padding(.bottom, 56)
+                    .accessibilityLabel("地球図鑑を開く")
+                    .accessibilityHint("ホーム画面へ進みます")
+                    .accessibilityIdentifier("titleScreenTapArea")
             }
+            .scaleEffect(isConverging ? 0.94 : 1)
+            .opacity(isConverging ? 0 : 1)
         }
-        .contentShape(Rectangle())
-        .onTapGesture { onTap() }
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("titleScreenTapArea")
+        .contentShape(Rectangle()).onTapGesture(perform: proceed)
+        .accessibilityAction(named: "はじめる", proceed)
         .onAppear {
-            withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) {
-                isPulsing = true
-            }
+            guard !reduceMotion else { return }
+            Task { try? await Task.sleep(for: .seconds(1.8)); withAnimation(.linear(duration: 10).repeatForever(autoreverses: false)) { isOrbiting = true } }
         }
+    }
+
+    private func proceed() {
+        guard !isConverging else { return }
+        withAnimation(.easeIn(duration: 0.22)) { isConverging = true }
+        Task { try? await Task.sleep(for: .seconds(reduceMotion ? 0.01 : 0.38)); onTap() }
     }
 }
 

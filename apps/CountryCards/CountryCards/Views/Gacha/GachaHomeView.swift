@@ -7,62 +7,53 @@ struct GachaHomeView: View {
     @ObservedObject private var dailyBonus = DailyBonusManager.shared
     @State private var showingPointGacha = false
     @State private var showingIAPGacha = false
+    @ObservedObject private var rewardedAd = RewardedAdCoordinator.shared
     private let columns = [GridItem(.adaptive(minimum: 150), spacing: 16)]
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                dailyStatusBar
+            ZStack {
+                EarthBackdrop(variant: .gacha(.ssr))
+                ScrollView {
+                VStack(spacing: 14) {
+                    EarthTopBar(title: "探索ガチャ") { ResourceChip(label: "DUP", value: "\(owned.dupePoints)", tint: EarthColors.gold) }
+                    HStack(spacing: 10) {
+                        NavigationLink { GachaOddsView() } label: { Label("排出確率", systemImage: "percent") }.buttonStyle(EarthActionButtonStyle(variant: .quiet))
+                        Button("ポイント") { showingPointGacha = true }.buttonStyle(EarthActionButtonStyle(variant: .secondary))
+                        Button("10連") { showingIAPGacha = true }.buttonStyle(EarthActionButtonStyle(variant: .reward))
+                    }.padding(.horizontal)
+                    dailyStatusBar
 
                 LazyVGrid(columns: columns, spacing: 16) {
                     ForEach(CardElement.allCases) { element in
                         NavigationLink(value: element) {
-                            GachaEntranceCard(element: element)
+                            ElementSigilButton(element: element, detail: collectionDetail(element))
                         }
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("gachaEntrance_\(element.rawValue)")
                     }
                 }
                 .padding()
+                }
+                }
             }
-            .navigationTitle("ガチャ")
+            .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: CardElement.self) { element in
                 GachaPlayView(element: element)
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    // Menu内にNavigationLinkを直接置くと遷移しないことがあるため、
-                    // 排出確率だけは独立したツールバーボタンにする。
-                    NavigationLink { GachaOddsView() } label: {
-                        Label("排出確率", systemImage: "percent")
-                    }
-                    .font(.caption)
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu("その他の引き方") {
-                        // String(...)でカンマ区切りを防ぐ(下記PointGachaViewと同じ理由)。
-                        Button("ポイントで引く(\(String(owned.dupePoints))pt)") { showingPointGacha = true }
-                        Button("¥100で10連(課金)") { showingIAPGacha = true }
-                    }
-                    .font(.caption)
-                }
-            }
             .sheet(isPresented: $showingPointGacha) {
-                PointGachaElementListView()
+                SheetWithAdDock { PointGachaElementListView() }
             }
             .sheet(isPresented: $showingIAPGacha) {
-                IAPGachaElementListView()
+                SheetWithAdDock { IAPGachaElementListView() }
             }
-            .alert(
-                "ログインボーナス",
-                isPresented: Binding(
-                    get: { dailyBonus.justGrantedLoginBonus != nil },
-                    set: { if !$0 { dailyBonus.justGrantedLoginBonus = nil } }
-                )
-            ) {
-                Button("OK") { dailyBonus.justGrantedLoginBonus = nil }
-            } message: {
-                Text("無料ガチャ +\(dailyBonus.justGrantedLoginBonus ?? 0)回")
+            .fullScreenCover(isPresented: $rewardedAd.isPresenting) { RewardedAdDevelopmentView(coordinator: rewardedAd) }
+            .overlay(alignment: .top) {
+                if let amount = dailyBonus.justGrantedLoginBonus {
+                    GameToast(message: "ログインボーナス・無料ガチャ +\(amount)回", kind: .success)
+                        .padding().onTapGesture { dailyBonus.justGrantedLoginBonus = nil }
+                        .task { try? await Task.sleep(for: .seconds(3)); dailyBonus.justGrantedLoginBonus = nil }
+                }
             }
         }
     }
@@ -70,51 +61,25 @@ struct GachaHomeView: View {
     /// 無料ガチャの残り回数と、広告視聴で増やすボタン。
     /// (チェック工程指摘:1日の回数制限が機能していなかった問題への対応)
     private var dailyStatusBar: some View {
-        VStack(spacing: 8) {
+        ArchivePanel { VStack(spacing: 8) {
             Text("無料ガチャ残り \(dailyBonus.freePullsAvailable)回")
                 .font(.subheadline.bold())
 
-            Button {
-                // 広告SDKは未組み込みのため、視聴完了をその場でシミュレートする
-                // (実際の広告表示はPhase 2で組み込む)。
-                dailyBonus.claimAdBonus()
-            } label: {
-                Text("広告を見て+1回(本日あと\(dailyBonus.adBonusRemainingToday)回)")
+            if dailyBonus.freePullsAvailable > 0 {
+                Text("下の要素を選んでガチャを引く").font(.caption).foregroundStyle(EarthColors.cyan)
+            } else if dailyBonus.adBonusRemainingToday > 0 {
+                Button("広告を見てガチャを獲得（本日あと\(dailyBonus.adBonusRemainingToday)回）") { rewardedAd.requestPresentation() }
+                    .buttonStyle(EarthActionButtonStyle(variant: .reward)).accessibilityIdentifier("rewardedAdAcquireButton")
+            } else {
+                Text("本日の広告ガチャは終了しました").font(.subheadline.bold()).foregroundStyle(EarthColors.secondary)
             }
-            .buttonStyle(.bordered)
-            .disabled(dailyBonus.adBonusRemainingToday <= 0)
+            if case .failed(let message) = rewardedAd.state { Text(message).font(.caption).foregroundStyle(EarthColors.coral) }
         }
-        .padding(.top)
+        }.padding(.horizontal)
     }
-}
 
-private struct GachaEntranceCard: View {
-    let element: CardElement
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "shippingbox.fill")
-                .font(.system(size: 40))
-                .foregroundStyle(element.borderColor)
-                .shadow(color: element.borderColor.opacity(0.5), radius: 4)
-            Text(element.displayName)
-                .font(.headline.weight(.semibold))
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 24)
-        .background(
-            // 【2026-09-13修正】単色の薄塗りから、要素の色を軸にしたグラデーションへ
-            // (ビジュアル改善依頼対応。要素ごとに色を変えるという既存ルールは維持)。
-            LinearGradient(
-                colors: [element.borderColor.opacity(0.20), element.borderColor.opacity(0.06)],
-                startPoint: .topLeading, endPoint: .bottomTrailing
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 18))
-        .overlay(
-            RoundedRectangle(cornerRadius: 18)
-                .strokeBorder(element.borderColor, lineWidth: 2)
-        )
-        .shadow(color: element.borderColor.opacity(0.25), radius: 6, y: 3)
+    private func collectionDetail(_ element: CardElement) -> String {
+        let cards = database.cards(forElement: element)
+        return "\(cards.filter(owned.owns).count)/\(cards.count)枚"
     }
 }

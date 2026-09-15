@@ -47,7 +47,9 @@ struct CountryDetailView: View {
     private let columns = [GridItem(.adaptive(minimum: 160), spacing: 12)]
 
     var body: some View {
+        ZStack { EarthBackdrop(variant: .archive)
         ScrollView {
+            EarthTopBar(title: country?.nameJa ?? iso3) { ResourceChip(label: "所持", value: "\(ownedElementCount)/\(totalCardsForCountry)") }.padding(.horizontal)
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(cards) { card in
                     Button {
@@ -63,10 +65,10 @@ struct CountryDetailView: View {
             .padding()
 
             triviaSection
-        }
-        .navigationTitle(country?.nameJa ?? iso3)
+        }}
+        .earthNavigationTitle(country?.nameJa ?? iso3)
         .sheet(item: $selectedCard) { card in
-            CardDetailSheet(card: card, country: country)
+            SheetWithAdDock { CardDetailSheet(card: card, country: country) }
         }
     }
 
@@ -96,6 +98,9 @@ struct CountryDetailView: View {
             }
         }
         .padding()
+        .background(EarthColors.panel, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(EarthColors.line))
+        .padding(.horizontal)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

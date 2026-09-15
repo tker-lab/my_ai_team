@@ -8,6 +8,15 @@ struct GachaPlayView: View {
     @StateObject private var viewModel: GachaPlayViewModel
     @ObservedObject private var database = CardDatabase.shared
     @ObservedObject private var dailyBonus = DailyBonusManager.shared
+    @ObservedObject private var rewardedAd = RewardedAdCoordinator.shared
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var resultFilter: ResultFilter = .all
+    @State private var selectedResultCard: Card?
+    @State private var cinematicPackOpen = false
+    @State private var awaitingPackOpen = false
+    @State private var cinematicTask: Task<Void, Never>?
+    @State private var progressOrbit = false
+    private enum ResultFilter: String, CaseIterable { case all = "すべて", rare = "SSR+", new = "NEW" }
 
     init(element: CardElement) {
         self.element = element
@@ -17,7 +26,8 @@ struct GachaPlayView: View {
     }
 
     var body: some View {
-        VStack {
+        ZStack {
+            EarthBackdrop(variant: .gacha(viewModel.pullResult?.highestRarity ?? .n))
             if viewModel.pullResult == nil, viewModel.blockedByDailyLimit {
                 noFreePullsView
             } else {
@@ -31,12 +41,16 @@ struct GachaPlayView: View {
                 }
             }
         }
-        .navigationTitle("\(element.displayName)ガチャ")
-        .navigationBarTitleDisplayMode(.inline)
+        .foregroundStyle(EarthColors.text)
+        .earthNavigationTitle("\(element.displayName)ガチャ")
         .onAppear {
             if viewModel.pullResult == nil {
                 viewModel.startPull()
             }
+        }
+        .onDisappear { cinematicTask?.cancel() }
+        .fullScreenCover(isPresented: $rewardedAd.isPresenting) {
+            RewardedAdDevelopmentView(coordinator: rewardedAd)
         }
     }
 
@@ -67,17 +81,19 @@ struct GachaPlayView: View {
     /// 使い切った時(resultSummaryView)の両方から共通で使う。
     private var exhaustedOptionsView: some View {
         VStack(spacing: 12) {
-            if dailyBonus.adBonusRemainingToday > 0 {
-                // 広告SDKは未組み込みのため、視聴完了をその場でシミュレートする
-                // (実際の広告表示はPhase 2で組み込む。GachaHomeViewの
-                // 「広告を見て+1回」ボタンと同じ仕組みを、この画面からも使えるようにする)。
-                Button {
-                    viewModel.watchAdForBonusPullThenRetry()
-                } label: {
-                    Text("広告を見てもう1回引く(本日あと\(dailyBonus.adBonusRemainingToday)回)")
-                        .frame(maxWidth: .infinity)
+            if dailyBonus.freePullsAvailable > 0 {
+                Button("ガチャを引く") { viewModel.startPull() }
+                    .buttonStyle(EarthActionButtonStyle())
+                    .accessibilityIdentifier("rewardedPullButton")
+            } else if dailyBonus.adBonusRemainingToday > 0 {
+                Button("広告を見てガチャを獲得（本日あと\(dailyBonus.adBonusRemainingToday)回）") {
+                    rewardedAd.requestPresentation()
                 }
-                .buttonStyle(.gamePrimary)
+                .buttonStyle(EarthActionButtonStyle(variant: .reward))
+                .accessibilityIdentifier("rewardedAdAcquireButton")
+            } else {
+                Text("広告で獲得できる本日分は終了しました")
+                    .font(.caption).foregroundStyle(EarthColors.secondary)
             }
 
             NavigationLink {
@@ -86,7 +102,7 @@ struct GachaPlayView: View {
                 Text("¥100の10連を購入する")
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(EarthActionButtonStyle(variant: .reward))
         }
     }
 
@@ -94,18 +110,24 @@ struct GachaPlayView: View {
 
     private var introView: some View {
         ZStack(alignment: .topTrailing) {
-            VStack(spacing: 24) {
-                Spacer()
-                introArtwork
-                Text(viewModel.phase == .introPaused ? "タップして開封" : "開封中...")
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                Spacer()
+            Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityIdentifier("gachaReceiptCommitted").accessibilityLabel("抽選カード受取済み")
+            Button { handleIntroTap() } label: {
+                ZStack {
+                    GachaStormScene(rarity: viewModel.pullResult?.highestRarity ?? .n,
+                                    isPlaying: viewModel.phase == .introPlaying)
+                    GachaPackOpening(rarity: viewModel.pullResult?.highestRarity ?? .n,
+                                     open: cinematicPackOpen)
+                    if viewModel.phase == .introPlaying {
+                        Circle().trim(from: 0.08, to: 0.82).stroke(EarthColors.cyan.opacity(0.7), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                            .frame(width: 286, height: 286).rotationEffect(.degrees(progressOrbit ? 360 : 0))
+                            .animation(reduceMotion ? nil : .linear(duration: 1.6).repeatForever(autoreverses: false), value: progressOrbit)
+                            .allowsHitTesting(false).accessibilityHidden(true)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(introBackgroundColor)
-            .contentShape(Rectangle())
-            .onTapGesture { viewModel.tapIntro() }
+            .buttonStyle(GachaImmediateResponseStyle())
             // VStackはそのままだと中の要素がバラバラのアクセシビリティ要素として
             // 扱われ、外側に付けたidentifierがUIテストから見えなくなる。
             // .combineで「1つのタップ領域」としてまとめてからidentifierを付ける。
@@ -113,65 +135,89 @@ struct GachaPlayView: View {
             .accessibilityIdentifier("gachaIntroArea")
 
             // 画面端の「スキップ」ボタン(決定事項:映像が始まった時点で出ている)。
-            Button("スキップ") { viewModel.tapSkip() }
-                .buttonStyle(.bordered)
-                .tint(.white)
+            Button("スキップ") { cinematicTask?.cancel(); viewModel.tapSkip() }
+                .buttonStyle(EarthActionButtonStyle(variant: .secondary))
                 .padding()
                 .accessibilityIdentifier("gachaSkipButton")
         }
     }
 
-    /// その回で一番高いレア度によって導入演出を4パターンに出し分ける
-    /// (決定事項:N/SRのみ・SSR・UR・HURの4種)。Phase 1では色と簡単な
-    /// アイコンだけで差を付ける簡易版。
-    private var introBackgroundColor: Color {
-        switch viewModel.pullResult?.highestRarity ?? .n {
-        case .n, .sr: return Color(red: 0.25, green: 0.28, blue: 0.35)
-        case .ssr: return Color(red: 0.15, green: 0.25, blue: 0.55)
-        case .ur: return Color(red: 0.35, green: 0.15, blue: 0.55)
-        case .hur: return Color(red: 0.55, green: 0.42, blue: 0.05)
+    private func handleIntroTap() {
+        if viewModel.phase == .introPlaying {
+            if awaitingPackOpen {
+                awaitingPackOpen = false
+                cinematicPackOpen = true
+                cinematicTask?.cancel()
+                cinematicTask = Task {
+                    try? await Task.sleep(for: .milliseconds(reduceMotion ? 120 : 650))
+                    guard !Task.isCancelled else { return }
+                    viewModel.finishIntro()
+                }
+                return
+            }
+            if cinematicPackOpen {
+                cinematicTask?.cancel()
+                viewModel.finishIntro()
+                return
+            }
+            cinematicTask?.cancel()
+            // 早送りは未開封パックで一度止める。開封は次の明示タップで行う。
+            awaitingPackOpen = true
+        } else {
+            playCinematic()
         }
     }
 
-    private var introArtwork: some View {
-        Image(systemName: "shippingbox.fill")
-            .font(.system(size: 80))
-            .foregroundStyle(.white)
-            .rotationEffect(.degrees(viewModel.phase == .introPlaying ? 15 : 0))
-            .scaleEffect(viewModel.phase == .introPlaying ? 1.15 : 1.0)
-            .animation(.easeInOut(duration: 0.6).repeatCount(2, autoreverses: true), value: viewModel.phase)
+    private func playCinematic() {
+        guard viewModel.beginIntro() else { return }
+        cinematicTask?.cancel()
+        cinematicPackOpen = false
+        awaitingPackOpen = false
+        progressOrbit = false
+        DispatchQueue.main.async { progressOrbit = true }
+        let total = reduceMotion ? 0.35 : ((viewModel.pullResult?.highestRarity == .hur) ? 7.15 : 5.9)
+        cinematicTask = Task {
+            try? await Task.sleep(for: .seconds(total * 0.72))
+            guard !Task.isCancelled else { return }
+            cinematicPackOpen = true
+            try? await Task.sleep(for: .seconds(total * 0.28))
+            guard !Task.isCancelled else { return }
+            viewModel.finishIntro()
+        }
     }
 
     // MARK: - カード表示
 
     private func revealView(index: Int, faceUp: Bool) -> some View {
-        VStack(spacing: 24) {
-            Text("\(index + 1) / \(viewModel.pullResult?.cards.count ?? 3)枚目")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-
-            Group {
-                if faceUp, let card = viewModel.pullResult?.cards[index] {
-                    CardView(card: card, country: database.country(for: card.iso3))
-                        .scaleEffect(1.2)
-                        .transition(.opacity)
-                } else {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.gray.opacity(0.6))
-                        .frame(width: 160, height: 220)
-                        .overlay(Image(systemName: "questionmark").font(.largeTitle).foregroundStyle(.white))
+        ZStack {
+            Button {
+                viewModel.tapCard()
+            } label: {
+                ZStack {
+                    VStack(spacing: 24) {
+                        Spacer()
+                        if faceUp, let card = viewModel.pullResult?.cards[index] {
+                            CollectibleCardView(card: card, country: database.country(for: card.iso3), size: .hero, emphasis: .featured)
+                                .transition(.asymmetric(insertion: .scale(scale: 0.9).combined(with: .opacity), removal: .opacity))
+                                .accessibilityIdentifier("gachaCardFace")
+                        } else if let card = viewModel.pullResult?.cards[index] {
+                            CollectibleCardView(card: card, country: nil, size: .hero, revealState: .hidden)
+                                .rotationEffect(.degrees(reduceMotion ? 0 : -1.2))
+                                .accessibilityIdentifier("gachaCardBack")
+                        }
+                        Spacer()
+                    }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity).contentShape(Rectangle())
             }
-            .id(index) // カードが変わるたびに見た目を作り直す(前のカードの状態が残らないように)
-
-            Text(faceUp ? "タップして次へ" : "タップしてめくる")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            .buttonStyle(GachaImmediateResponseStyle())
+            .id(index)
+            if faceUp, let card = viewModel.pullResult?.cards[index], card.rarity >= .ssr {
+                CardTurnFlash(rarity: card.rarity).id("\(index)-\(card.id)")
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .contentShape(Rectangle())
-        .onTapGesture { viewModel.tapCard() }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("gachaRevealArea")
     }
 
@@ -180,21 +226,13 @@ struct GachaPlayView: View {
     private var resultSummaryView: some View {
         ScrollView {
             VStack(spacing: 16) {
-                Text("結果")
-                    .font(.title2.bold())
-                    .padding(.top)
-
-                ForEach(Array((viewModel.pullResult?.cards ?? []).enumerated()), id: \.offset) { offset, card in
-                    let country = database.country(for: card.iso3)
-                    VStack(spacing: 8) {
-                        CardView(card: card, country: country)
-                        if viewModel.isNewByIndex.indices.contains(offset), viewModel.isNewByIndex[offset] {
-                            Text("New!")
-                                .font(.caption.bold())
-                                .foregroundStyle(.orange)
-                        }
-                        CardShareButton(card: card, country: country)
-                    }
+                Text("観測完了").font(.system(size: 28, weight: .black, design: .rounded)).padding(.top)
+                if let indexed = indexedCards.max(by: { $0.card.rarity < $1.card.rarity }) {
+                    resultCard(indexed, size: .hero)
+                }
+                ArchiveSegmentSwitch(items: ResultFilter.allCases.map { ($0, $0.rawValue) }, selection: $resultFilter)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 82), spacing: 10)], spacing: 12) {
+                    ForEach(filteredCards, id: \.index) { indexed in resultCard(indexed, size: .mini) }
                 }
 
                 if viewModel.blockedByDailyLimit {
@@ -206,12 +244,38 @@ struct GachaPlayView: View {
                         .padding(.horizontal, 32)
                 } else {
                     Button("もう一度引く") { viewModel.startPull() }
-                        .buttonStyle(.gamePrimary)
+                        .buttonStyle(EarthActionButtonStyle())
                         .padding(.top)
                 }
                 Spacer().frame(height: 32)
             }
             .padding()
         }
+        .sheet(item: $selectedResultCard) { card in SheetWithAdDock { CardDetailOverlay(card: card, country: database.country(for: card.iso3)) } }
+    }
+
+    private var indexedCards: [(index: Int, card: Card)] { Array((viewModel.pullResult?.cards ?? []).enumerated()).map { ($0.offset, $0.element) } }
+    private var filteredCards: [(index: Int, card: Card)] {
+        let heroIndex = indexedCards.max(by: { $0.card.rarity < $1.card.rarity })?.index
+        return indexedCards.filter { item in
+            guard item.index != heroIndex else { return false }
+            switch resultFilter { case .all: return true; case .rare: return item.card.rarity >= .ssr; case .new: return viewModel.isNewByIndex.indices.contains(item.index) && viewModel.isNewByIndex[item.index] }
+        }
+    }
+    private func resultCard(_ item: (index: Int, card: Card), size: CollectibleCardSize) -> some View {
+        let isNew = viewModel.isNewByIndex.indices.contains(item.index) && viewModel.isNewByIndex[item.index]
+        return VStack(spacing: 5) {
+            Button { selectedResultCard = item.card } label: { CollectibleCardView(card: item.card, country: database.country(for: item.card.iso3), size: size, emphasis: isNew ? .new : .standard) }.buttonStyle(.plain)
+            Text(isNew ? "NEW" : "DUPLICATE +1pt").font(.caption2.bold()).foregroundStyle(isNew ? EarthColors.gold : EarthColors.secondary)
+        }
+    }
+}
+
+private struct GachaImmediateResponseStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .brightness(configuration.isPressed ? 0.12 : 0)
+            .animation(.easeOut(duration: 0.08), value: configuration.isPressed)
     }
 }

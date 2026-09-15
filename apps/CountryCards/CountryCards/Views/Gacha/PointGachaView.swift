@@ -15,7 +15,7 @@ struct PointGachaView: View {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
+        ZStack { EarthBackdrop(variant: .gacha(.ssr)); VStack(spacing: 16) {
             // 【2026-09-13修正】Text内の数値がiOSに自動でカンマ区切りされる
             // (例:9,999)のを防ぐため、String(...)で明示的に文字列化する。
             Text("保有ポイント: \(String(owned.dupePoints))pt")
@@ -28,13 +28,13 @@ struct PointGachaView: View {
             NavigationLink("排出確率を確認する") {
                 GachaOddsView(source: .point)
             }
-            .font(.footnote)
+            .font(.footnote).foregroundStyle(EarthColors.cyan)
 
             ForEach(PointGachaViewModel.PullCount.allCases) { pullCount in
                 Button(pullCount.displayName) {
                     viewModel.pull(pullCount)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(EarthActionButtonStyle())
                 .disabled(!viewModel.canAfford(pullCount))
             }
 
@@ -43,17 +43,7 @@ struct PointGachaView: View {
             }
 
             if !viewModel.results.isEmpty {
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 140))], spacing: 12) {
-                        ForEach(Array(viewModel.results.enumerated()), id: \.offset) { _, pull in
-                            ForEach(pull.cards) { card in
-                                CardView(card: card, country: database.country(for: card.iso3))
-                                    .scaleEffect(0.85)
-                            }
-                        }
-                    }
-                    .padding()
-                }
+                BatchObservationView(cards: viewModel.results.flatMap(\.cards), isNew: viewModel.isNewByCardIndex)
             } else {
                 Spacer()
                 Text("10ポイント=ガチャ1回分。未所持のカードほど当たりやすくなっています。")
@@ -63,9 +53,8 @@ struct PointGachaView: View {
                     .padding()
                 Spacer()
             }
-        }
+        }.padding(.horizontal) }
         .padding(.top)
-        .navigationTitle("\(element.displayName)(ポイント)")
-        .navigationBarTitleDisplayMode(.inline)
+        .earthNavigationTitle("\(element.displayName)(ポイント)")
     }
 }

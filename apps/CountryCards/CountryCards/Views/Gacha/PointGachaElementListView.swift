@@ -4,10 +4,8 @@ import SwiftUI
 struct PointGachaElementListView: View {
     var body: some View {
         NavigationStack {
-            List(CardElement.allCases) { element in
-                NavigationLink(element.displayName, value: element)
-            }
-            .navigationTitle("ポイントで引く")
+            ZStack { EarthBackdrop(variant: .gacha(.ssr)); ScrollView { LazyVGrid(columns: [GridItem(.adaptive(minimum: 145))], spacing: 12) { ForEach(CardElement.allCases) { element in NavigationLink(value: element) { ElementSigilButton(element: element, detail: "未所持優先") }.buttonStyle(.plain).accessibilityIdentifier("pointElement_\(element.rawValue)") } }.padding() } }
+            .earthNavigationTitle("ポイントで引く")
             .navigationDestination(for: CardElement.self) { element in
                 PointGachaView(element: element)
             }

@@ -18,7 +18,8 @@ struct BattlePlayView: View {
     }
 
     var body: some View {
-        VStack {
+        ZStack { EarthBackdrop(variant: .battle); VStack {
+            EarthTopBar(title: "対戦 \(min(viewModel.currentRoundNumber, BattleViewModel.totalRounds))/\(BattleViewModel.totalRounds)") { EmptyView() }
             Text("あなた \(viewModel.playerWinCount)勝 - \(viewModel.cpuWinCount)勝 CPU")
                 .font(.subheadline)
                 .padding(.top)
@@ -31,9 +32,8 @@ struct BattlePlayView: View {
             case .finished:
                 finishedView
             }
-        }
-        .navigationTitle("対戦 \(min(viewModel.currentRoundNumber, BattleViewModel.totalRounds))/\(BattleViewModel.totalRounds)ターン目")
-        .navigationBarTitleDisplayMode(.inline)
+        } }
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     /// お題とCPUのカードは決まっているが、プレイヤーはまだ4枚から1枚を選んでいない状態。
@@ -55,22 +55,16 @@ struct BattlePlayView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 8)
-                    .background(highWins ? Color.blue : Color.orange, in: Capsule())
+                    .background(highWins ? EarthColors.blue : EarthColors.amber, in: RoundedRectangle(cornerRadius: 12))
 
                 VStack(spacing: 4) {
                     Text("CPUの手札(数値は選ぶまで分かりません)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    CardView(card: cpuCard, country: database.country(for: cpuCard.iso3), hideValue: true)
-                        .scaleEffect(0.72)
-                        // 【CardDetailSheetと同じ考え方】scaleEffectは見た目だけを
-                        // 変えレイアウトサイズは変えないため、frameで縮小後の
-                        // 実サイズを明示し、下の要素との間に無駄な空白を残さない。
-                        .frame(width: 160 * 0.72, height: 220 * 0.72)
+                    CollectibleCardView(card: cpuCard, country: database.country(for: cpuCard.iso3), size: .battle, revealState: .valueHidden, hidesRarity: true)
                 }
 
-                Divider()
-                    .padding(.horizontal, 32)
+                Rectangle().fill(EarthColors.line).frame(height: 1).padding(.horizontal, 32)
 
                 VStack(spacing: 8) {
                     Text("あなたの手札から1枚選んでください")
@@ -81,9 +75,7 @@ struct BattlePlayView: View {
                             Button {
                                 viewModel.choosePlayerCard(card)
                             } label: {
-                                CardView(card: card, country: database.country(for: card.iso3), hideValue: true)
-                                    .scaleEffect(0.56)
-                                    .frame(width: 160 * 0.56, height: 220 * 0.56)
+                                CollectibleCardView(card: card, country: database.country(for: card.iso3), size: .mini, revealState: .valueHidden, hidesRarity: true)
                             }
                             .accessibilityIdentifier("battleCandidateButton")
                         }
@@ -127,8 +119,7 @@ struct BattlePlayView: View {
 
                     HStack(spacing: 24) {
                         battleCardColumn(title: "あなた", card: result.playerCard, badge: result.outcome == .playerWin ? "WIN" : (result.outcome == .draw ? "DRAW" : nil))
-                        Text("⚡️")
-                            .font(.system(size: 50))
+                        Image(systemName: "bolt.fill").font(.system(size: 38)).foregroundStyle(EarthColors.gold)
                         battleCardColumn(title: "CPU", card: result.cpuCard, badge: result.outcome == .cpuWin ? "WIN" : (result.outcome == .draw ? "DRAW" : nil))
                     }
                     .padding()
@@ -138,23 +129,21 @@ struct BattlePlayView: View {
                         .foregroundStyle(resultColor)
 
                     if !otherCandidates.isEmpty {
-                        Divider().padding(.horizontal, 32)
+                        Rectangle().fill(EarthColors.line).frame(height: 1).padding(.horizontal, 32)
                         VStack(spacing: 6) {
                             Text("選ばなかった手札")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             HStack(spacing: 12) {
                                 ForEach(otherCandidates) { card in
-                                    CardView(card: card, country: database.country(for: card.iso3), hideValue: false)
-                                        .scaleEffect(0.5)
-                                        .frame(width: 160 * 0.5, height: 220 * 0.5)
+                                    CollectibleCardView(card: card, country: database.country(for: card.iso3), size: .mini, hidesRarity: true)
                                 }
                             }
                         }
                     }
 
                     Button("次へ") { viewModel.proceedAfterReveal() }
-                        .buttonStyle(.gamePrimary)
+                        .buttonStyle(EarthActionButtonStyle())
                         .padding(.top)
                     Spacer(minLength: 12)
                 }
@@ -168,8 +157,7 @@ struct BattlePlayView: View {
     private func battleCardColumn(title: String, card: Card, badge: String? = nil) -> some View {
         VStack(spacing: 6) {
             Text(title).font(.caption).foregroundStyle(.secondary)
-            CardView(card: card, country: database.country(for: card.iso3), hideValue: false)
-                .scaleEffect(0.7)
+            CollectibleCardView(card: card, country: database.country(for: card.iso3), size: .battle, hidesRarity: true)
             Text(card.displayValue + card.element.unit)
                 .font(.footnote.bold())
             if let badge {

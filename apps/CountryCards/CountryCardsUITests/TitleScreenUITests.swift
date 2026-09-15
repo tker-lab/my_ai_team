@@ -13,10 +13,10 @@ final class TitleScreenUITests: XCTestCase {
 
         let titleArea = app.descendants(matching: .any)["titleScreenTapArea"]
         XCTAssertTrue(titleArea.waitForExistence(timeout: 5), "起動直後にタイトル画面が出ること")
-        XCTAssertFalse(app.tabBars.buttons["図鑑"].exists, "タイトル画面の間は本編(タブ)が出ていないこと")
+        XCTAssertFalse(app.buttons["tab_図鑑"].exists, "タイトル画面の間は本編(タブ)が出ていないこと")
 
         titleArea.tap()
 
-        XCTAssertTrue(app.tabBars.buttons["図鑑"].waitForExistence(timeout: 5), "タップ後は本編(タブ)に進めること")
+        XCTAssertTrue(app.buttons["tab_図鑑"].waitForExistence(timeout: 5), "タップ後は本編(タブ)に進めること")
     }
 }

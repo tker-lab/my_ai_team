@@ -13,14 +13,11 @@ struct CollectionHomeView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                Picker("見方", selection: $mode) {
-                    ForEach(ViewMode.allCases) { m in
-                        Text(m.rawValue).tag(m)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding()
+            ZStack {
+                EarthBackdrop(variant: .archive)
+                VStack(spacing: 0) {
+                EarthTopBar(title: "EARTH ARCHIVE") { EmptyView() }
+                ArchiveSegmentSwitch(items: ViewMode.allCases.map { ($0, $0.rawValue) }, selection: $mode).padding()
 
                 switch mode {
                 case .byCountry:
@@ -29,7 +26,7 @@ struct CollectionHomeView: View {
                     ElementListView()
                 }
             }
-            .navigationTitle("図鑑")
+            }.toolbar(.hidden, for: .navigationBar)
         }
     }
 }
@@ -38,14 +35,12 @@ struct CollectionHomeView: View {
 /// 注意書き(決定事項:バチカン・台湾等への説明を先回りしておく)。
 /// 図鑑のどちらの見方からも参照できるよう、共通コンポーネントにしてある。
 struct CollectionScopeNoticeView: View {
+    @State private var showsDetail = false
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("このアプリのカードは国連加盟193カ国が対象です。")
-            Text("データが存在しない国・要素の組み合わせにはカードがありません。")
-        }
-        .font(.caption)
-        .foregroundStyle(.secondary)
-        .padding(.horizontal)
-        .padding(.vertical, 6)
+        Button { showsDetail = true } label: {
+            HStack { Text("国連加盟193カ国を収録").font(.caption); Spacer(); Text("詳細").font(.caption.bold()).foregroundStyle(EarthColors.cyan); Image(systemName: "chevron.right") }
+                .foregroundStyle(EarthColors.secondary).padding(12).background(EarthColors.panel, in: RoundedRectangle(cornerRadius: 12)).overlay(RoundedRectangle(cornerRadius: 12).stroke(EarthColors.line))
+        }.buttonStyle(.plain)
+        .sheet(isPresented: $showsDetail) { SheetWithAdDock { ZStack { EarthBackdrop(variant: .archive); GameModalShell("収録地域について") { Text("データが存在しない国・要素の組み合わせにはカードがありません。バチカン・台湾など国連非加盟地域は対象外です。").foregroundStyle(EarthColors.secondary); Button("閉じる") { showsDetail = false }.buttonStyle(EarthActionButtonStyle()) }.padding(24) } } }
     }
 }

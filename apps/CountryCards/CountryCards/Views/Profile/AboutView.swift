@@ -6,13 +6,9 @@ struct AboutView: View {
     @ObservedObject private var database = CardDatabase.shared
 
     var body: some View {
-        List {
-            Section("対象範囲") {
-                Text(database.note)
-                    .font(.footnote)
-            }
-
-            Section("データの出典") {
+        ZStack { EarthBackdrop(variant: .profile); ScrollView { VStack(spacing: 14) {
+            ArchivePanel { VStack(alignment: .leading, spacing: 8) { Text("対象範囲").font(.headline); Text(database.note).font(.footnote) } }
+            ArchivePanel { VStack(alignment: .leading, spacing: 14) { Text("データの出典").font(.headline)
                 sourceRow(
                     title: "世界銀行(World Bank Open Data)",
                     detail: "人口・GDP・平均寿命など8要素の数値。無料・登録不要のAPIを使用。"
@@ -29,26 +25,21 @@ struct AboutView: View {
                     title: "flagcdn.com",
                     detail: "国旗の画像。"
                 )
-            }
+            } }
 
             if let updated = database.worldBankLastUpdated {
-                Section("データの更新日") {
+                ArchivePanel { VStack(alignment: .leading, spacing: 8) { Text("データの更新日").font(.headline)
                     Text("世界銀行データの最終更新日: \(updated)")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                     Text("カードのデータは年1回程度、アプリの更新で反映します。")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                }
+                } }
             }
-
-            Section {
-                Text("生成日: \(database.generatedAt)")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .navigationTitle("このアプリについて")
+            Text("生成日: \(database.generatedAt)").font(.caption2).foregroundStyle(EarthColors.secondary)
+        }.padding() } }
+        .earthNavigationTitle("このアプリについて")
     }
 
     private func sourceRow(title: String, detail: String) -> some View {

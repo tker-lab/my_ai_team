@@ -30,14 +30,8 @@ struct LeaderboardView: View {
     @State private var isLoading = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            Picker("ランキング", selection: $selectedBoard) {
-                ForEach(Board.allCases) { board in
-                    Text(board.rawValue).tag(board)
-                }
-            }
-            .pickerStyle(.segmented)
-            .padding()
+        ZStack { EarthBackdrop(variant: .profile); VStack(spacing: 0) {
+            ArchiveSegmentSwitch(items: Board.allCases.map { ($0, $0.rawValue) }, selection: $selectedBoard).padding()
 
             if !gameCenter.isAuthenticated {
                 ContentUnavailableFallback(
@@ -53,7 +47,7 @@ struct LeaderboardView: View {
                     message: "ガチャを引いたり対戦したりすると、ここにランキングが表示されます。"
                 )
             } else {
-                List(entries, id: \.player.gamePlayerID) { entry in
+                ScrollView { LazyVStack(spacing: 8) { ForEach(entries, id: \.player.gamePlayerID) { entry in
                     HStack {
                         Text("\(entry.rank)位")
                             .font(.subheadline.bold())
@@ -63,10 +57,11 @@ struct LeaderboardView: View {
                         Text(displayValue(for: entry, board: selectedBoard))
                             .font(.subheadline)
                     }
-                }
+                    .padding(12).background(EarthColors.panel, in: RoundedRectangle(cornerRadius: 13)).overlay(RoundedRectangle(cornerRadius: 13).stroke(EarthColors.line))
+                }.padding(.horizontal) } }
             }
-        }
-        .navigationTitle("全国ランキング")
+        } }
+        .earthNavigationTitle("全国ランキング")
         .task(id: selectedBoard) {
             await reload()
         }

@@ -21,6 +21,8 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         # このアプリは自分の端末に埋め込んだデータだけで動き、外部にデータを
         # 送信しないため広告SDK導入前の現時点ではネットワーク権限の説明は不要。
         # Phase 2で広告・IAPを組み込む際にATT(トラッキング許可)の文言をここに追加する。

@@ -9,7 +9,7 @@ final class BattleUITests: XCTestCase {
     func testBattleCanBePlayedToCompletion() throws {
         let app = launchPastTitleScreen(arguments: ["-uiTestReset"])
 
-        app.tabBars.buttons["対戦"].tap()
+        app.buttons["tab_対戦"].tap()
         let startButton = app.buttons["対戦を始める"]
         XCTAssertTrue(startButton.waitForExistence(timeout: 5))
         startButton.tap()
@@ -36,6 +36,13 @@ final class BattleUITests: XCTestCase {
 
             let candidateButtons = app.buttons.matching(identifier: "battleCandidateButton")
             XCTAssertEqual(candidateButtons.count, 4, "ターン\(turn): プレイヤーの候補が4枚提示されること")
+            for rarity in ["N", "SR", "SSR", "UR", "HUR"] {
+                XCTAssertFalse(app.staticTexts[rarity].exists, "ターン\(turn): 対戦中にレア度 \(rarity) を表示しない")
+            }
+            for index in 0..<candidateButtons.count {
+                let spoken = candidateButtons.element(boundBy: index).label.uppercased()
+                XCTAssertFalse(["、N", "、SR", "、SSR", "、UR", "、HUR"].contains(where: spoken.contains), "VoiceOverラベルからレア度を漏らさない")
+            }
 
             candidateButtons.element(boundBy: 0).tap()
 

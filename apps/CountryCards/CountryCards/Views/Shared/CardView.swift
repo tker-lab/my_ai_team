@@ -1,161 +1,86 @@
 import SwiftUI
 
-/// カード1枚の見た目(コレクション画面・ガチャ演出の両方から共通で使う)。
-///
-/// 配色ルール(app_team_country_cards.md決定事項):
-///   - カード全体のベース色 = レア度(Rarity.baseColor)
-///   - 縁(枠線)の色 = 要素(CardElement.borderColor)
-///   - SSR以上はうっすら、URはしっかりキラキラのエフェクトを付ける
-///     (SparkleOverlayで実装。sparkleIntensityの値でキラキラの強さを変える)
-struct CardView: View {
-    let card: Card
-    let country: Country?
-    /// false の場合はシルエット表示(図鑑で未入手カードを見せる時に使う)。
-    var isRevealed: Bool = true
-    /// true の場合、国旗・国名・レア度はそのまま見せつつ数値だけ「？？？」に伏せる。
-    /// 【2026-09-13追加】対戦中、決着がつくまで両者の数値を隠すために使う
-    /// (isRevealedとは別軸:isRevealed=falseはカード自体が未入手で全て伏せる、
-    /// hideValue=trueはカードの中身は分かるが数値だけ勝負の決着まで伏せる)。
-    var hideValue: Bool = false
-
-    var body: some View {
-        VStack(spacing: 8) {
-            flagArea
-            // 【2026-09-13修正】サントメ・プリンシペ等、長い国名がカードからはみ出す
-            // バグへの対応。lineLimit(1)だけでは幅に収まらない文字が見切れて
-            // しまうため、minimumScaleFactorで自動的に文字を縮めて収める。
-            Text(country?.nameJa ?? "???")
-                .font(.headline)
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
-                .padding(.horizontal, 4)
-            Text(card.element.displayName)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-            if isRevealed, hideValue {
-                Text("？？？")
-                    .font(.title3.bold())
-            } else if isRevealed {
-                // 【2026-09-13修正】数値の文字がカードの縁と重なるバグへの対応。
-                // 桁の多い数値でもカード幅(160pt)に収まるよう、自動縮小+1行固定にする。
-                Text(card.displayValue + card.element.unit)
-                    .font(.title3.bold())
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                    .padding(.horizontal, 6)
-                if let year = card.year {
-                    Text("\(year)年のデータ")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            } else {
-                Text("？？？")
-                    .font(.title3.bold())
-            }
-            RarityBadge(rarity: card.rarity)
-        }
-        .padding(12)
-        .frame(width: 160, height: 220)
-        .background {
-            // 【2026-09-13修正】単色の塗りつぶしから、レア度ごとのグラデーションに
-            // 変更(「iPhone標準UIそのままで安っぽい」という指摘への全体的な対応)。
-            // 配色ルール自体(ベース色=レア度)は変えていない。
-            if isRevealed {
-                card.rarity.baseGradient
-            } else {
-                LinearGradient(colors: [Color(white: 0.8), Color(white: 0.68)], startPoint: .top, endPoint: .bottom)
-            }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(isRevealed ? card.element.borderColor : .gray, lineWidth: 4)
-        )
-        .overlay(
-            // カード上端にうっすら光沢を入れ、平坦な塗りより質感を出す。
-            RoundedRectangle(cornerRadius: 16)
-                .fill(
-                    LinearGradient(colors: [.white.opacity(0.22), .clear], startPoint: .top, endPoint: .center)
-                )
-                .allowsHitTesting(false)
-        )
-        .shadow(color: .black.opacity(0.25), radius: card.rarity.sparkleIntensity > 0 ? 8 : 4, y: 3)
-        .overlay {
-            if isRevealed, card.rarity.sparkleIntensity > 0 {
-                SparkleOverlay(intensity: card.rarity.sparkleIntensity)
-                    .allowsHitTesting(false)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var flagArea: some View {
-        if isRevealed, let url = country?.flagImageURL() {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let image):
-                    image.resizable().aspectRatio(contentMode: .fill)
-                default:
-                    // 通信できない・画像取得失敗時も国名だけで成立するようにする
-                    // (オフラインでもカードの中身は読めるべき、という設計方針)。
-                    Color.gray.opacity(0.3)
-                }
-            }
-            .frame(height: 70)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-        } else {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.gray.opacity(0.4))
-                .frame(height: 70)
-                .overlay(Image(systemName: "questionmark").font(.largeTitle))
-        }
-    }
+enum CollectibleCardSize { case mini, battle, grid, hero, share
+    var dimensions: CGSize { switch self { case .mini: .init(width: 72, height: 100); case .battle: .init(width: 104, height: 146); case .grid: .init(width: 156, height: 218); case .hero: .init(width: 226, height: 316); case .share: .init(width: 360, height: 504) } }
 }
+enum CollectibleCardRevealState { case hidden, valueHidden, revealed }
+enum CollectibleCardEmphasis { case standard, selected, featured, winner, new }
+enum CollectibleCardAnimationPolicy { case live, `static` }
 
-/// SSR以上のカードに乗せる簡易キラキラ演出。GeometryReaderは使わず、固定位置
-/// に配置した「✨」を明滅させるだけの軽い実装(見た目の作り込みはPhase 2で
-/// 続けられるよう、まずは「レア度が高いほど華やかに見える」を成立させる)。
-private struct SparkleOverlay: View {
-    let intensity: Double // 0(無し)〜1(URクラス)
-    @State private var isAnimating = false
-
-    private var sparklePositions: [(x: CGFloat, y: CGFloat, delay: Double)] {
-        [(0.15, 0.15, 0), (0.85, 0.25, 0.3), (0.75, 0.85, 0.6), (0.2, 0.8, 0.9)]
-    }
+struct CollectibleCardView: View {
+    let card: Card; let country: Country?
+    var size: CollectibleCardSize = .grid
+    var revealState: CollectibleCardRevealState = .revealed
+    var emphasis: CollectibleCardEmphasis = .standard
+    var animationPolicy: CollectibleCardAnimationPolicy = .live
+    /// 対戦中はレア度を推測できる文字・色・光をすべて中立化する。
+    var hidesRarity = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var shimmer = false
+    private var d: CGSize { size.dimensions }
+    private var scale: CGFloat { d.width / 160 }
+    private var radius: CGFloat { max(11, 16 * scale) }
 
     var body: some View {
         ZStack {
-            ForEach(Array(sparklePositions.enumerated()), id: \.offset) { _, pos in
-                Image(systemName: "sparkle")
-                    .font(.system(size: 14 + 6 * intensity))
-                    .foregroundStyle(.white.opacity(0.9))
-                    .opacity(isAnimating ? 0.9 : 0.1)
-                    .position(x: 160 * pos.x, y: 220 * pos.y) // CardViewの固定サイズ(160x220)に合わせる
-                    .animation(
-                        .easeInOut(duration: 1.1).repeatForever(autoreverses: true).delay(pos.delay),
-                        value: isAnimating
-                    )
-            }
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .fill(revealState == .hidden ? AnyShapeStyle(EarthColors.navy) : hidesRarity ? AnyShapeStyle(LinearGradient(colors: [EarthColors.mist, Color(red: 0.48, green: 0.55, blue: 0.58)], startPoint: .topLeading, endPoint: .bottomTrailing)) : AnyShapeStyle(card.rarity.baseGradient))
+                .overlay(alignment: .top) { LinearGradient(colors: [.white.opacity(0.3), .clear], startPoint: .top, endPoint: .bottom).frame(height: d.height * 0.38) }
+            if revealState == .hidden { cardBack } else { cardInformation }
+            if !hidesRarity, revealState != .hidden, card.rarity >= .ssr { rarityLight }
         }
-        .frame(width: 160, height: 220)
-        .onAppear { isAnimating = true }
+        .frame(width: d.width, height: d.height)
+        .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+        .overlay { RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(revealState == .hidden ? EarthColors.mist.opacity(0.42) : hidesRarity ? EarthColors.line : card.element.borderColor, lineWidth: max(2, 4 * scale)) }
+        .shadow(color: emphasis == .selected || emphasis == .winner || emphasis == .new ? EarthColors.cyan.opacity(0.52) : .black.opacity(0.42), radius: emphasis == .featured ? 18 : 8, y: 5)
+        .accessibilityElement(children: .combine).accessibilityLabel(accessibilityText)
+        .onAppear { shimmer = !reduceMotion && animationPolicy == .live }
+    }
+
+    private var cardInformation: some View {
+        VStack(spacing: max(3, 7 * scale)) {
+            ZStack(alignment: .topTrailing) { flag; ElementSigil(element: card.element).frame(width: max(22, 31 * scale), height: max(22, 31 * scale)).padding(5 * scale) }
+            Text(country?.nameJa ?? "???").font(.system(size: max(11, 17 * scale), weight: .black, design: .rounded)).lineLimit(1).minimumScaleFactor(0.55)
+            Text(card.element.displayName).font(.system(size: max(9, 12 * scale), weight: .bold, design: .rounded)).foregroundStyle(.black.opacity(0.64)).lineLimit(1).minimumScaleFactor(0.65)
+            Text(revealState == .valueHidden ? "？？？" : card.displayValue + card.element.unit).font(.system(size: max(11, 18 * scale), weight: .black, design: .rounded)).lineLimit(1).minimumScaleFactor(0.42)
+            if size != .mini, let year = card.year, revealState == .revealed { Text("\(year)年のデータ").font(.system(size: max(7, 9 * scale), weight: .semibold)).foregroundStyle(.black.opacity(0.54)) }
+            if !hidesRarity { RarityBadge(rarity: card.rarity, compact: size == .mini) }
+        }.foregroundStyle(.black.opacity(0.86)).padding(max(7, 12 * scale))
+    }
+
+    @ViewBuilder private var flag: some View {
+        if let url = country?.flagImageURL() {
+            AsyncImage(url: url) { phase in
+                if case .success(let image) = phase { image.resizable().aspectRatio(contentMode: .fill) } else { EarthColors.mist.opacity(0.38) }
+            }.frame(height: d.height * 0.31).clipShape(RoundedRectangle(cornerRadius: max(6, 8 * scale)))
+        } else { RoundedRectangle(cornerRadius: max(6, 8 * scale)).fill(EarthColors.mist.opacity(0.38)).frame(height: d.height * 0.31).overlay(Image(systemName: "globe.asia.australia.fill").foregroundStyle(.white.opacity(0.8))) }
+    }
+
+    private var cardBack: some View { ZStack {
+        ForEach(0..<3, id: \.self) { index in RoundedRectangle(cornerRadius: radius - CGFloat(index * 2)).stroke(EarthColors.cyan.opacity(0.18 + Double(index) * 0.12), lineWidth: 1).padding(CGFloat(10 + index * 10) * scale) }
+        EarthEmblem(size: d.width * 0.47)
+        Text("ARCHIVE").font(.system(size: max(7, 10 * scale), weight: .black, design: .monospaced)).tracking(1).foregroundStyle(EarthColors.secondary).offset(y: d.height * 0.28)
+    } }
+
+    private var rarityLight: some View {
+        LinearGradient(colors: [.clear, .white.opacity(card.rarity == .hur ? 0.44 : 0.25), .clear], startPoint: .topLeading, endPoint: .bottomTrailing)
+            .offset(x: shimmer ? d.width : -d.width)
+            .animation(reduceMotion || animationPolicy == .static ? nil : .linear(duration: card.rarity == .hur ? 7 : 9).repeatForever(autoreverses: false), value: shimmer).allowsHitTesting(false)
+    }
+    private var accessibilityText: String {
+        guard revealState != .hidden else { return "未入手カード" }
+        let value = revealState == .valueHidden ? "数値は非公開" : card.displayValue + card.element.unit
+        let base = "\(country?.nameJa ?? "国名不明")、\(card.element.displayName)、\(value)"
+        return hidesRarity ? base : "\(base)、\(card.rarity.displayName)"
     }
 }
 
-/// レア度を示す小さなバッジ(N/SR/SSR/UR/HUR)。
-struct RarityBadge: View {
-    let rarity: Rarity
+struct CardView: View {
+    let card: Card; let country: Country?; var isRevealed = true; var hideValue = false
+    var body: some View { CollectibleCardView(card: card, country: country, size: .grid, revealState: !isRevealed ? .hidden : (hideValue ? .valueHidden : .revealed)) }
+}
 
-    var body: some View {
-        Text(rarity.displayName)
-            .font(.caption.bold())
-            .padding(.horizontal, 8)
-            .padding(.vertical, 2)
-            .background(rarity.baseColor)
-            .clipShape(Capsule())
-            .overlay(Capsule().strokeBorder(.black.opacity(0.2)))
-    }
+struct RarityBadge: View {
+    let rarity: Rarity; var compact = false
+    var body: some View { Text(rarity.displayName).font(.system(size: compact ? 9 : 11, weight: .black, design: .rounded)).tracking(1.1).padding(.horizontal, compact ? 6 : 9).padding(.vertical, compact ? 2 : 3).foregroundStyle(rarity == .n ? .black.opacity(0.75) : .white).background(rarity.baseColor.gradient).clipShape(Capsule()).overlay(Capsule().strokeBorder(.white.opacity(0.44), lineWidth: 0.7)) }
 }

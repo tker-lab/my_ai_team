@@ -8,6 +8,8 @@ import SwiftUI
 struct BattleHomeView: View {
     var body: some View {
         NavigationStack {
+            ZStack {
+                EarthBackdrop(variant: .battle)
             VStack(spacing: 24) {
                 Image(systemName: "bolt.fill")
                     .font(.system(size: 60))
@@ -23,11 +25,12 @@ struct BattleHomeView: View {
                 NavigationLink("対戦を始める") {
                     BattlePlayView()
                 }
-                .buttonStyle(.gamePrimary)
+                .buttonStyle(EarthActionButtonStyle())
                 Spacer()
             }
             .padding(.top, 40)
-            .navigationTitle("対戦")
+            }
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 }

@@ -15,38 +15,28 @@ struct OnboardingNameView: View {
     }
 
     var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
-            Image(systemName: "flag.2.crossed.fill")
-                .font(.system(size: 60))
-                .foregroundStyle(.blue)
-            Text("国カードバトルへようこそ")
-                .font(.title2.bold())
-            Text("プレイヤー名を決めてください")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-
-            TextField("名前(\(OwnedCollection.usernameMaxLength)文字まで)", text: $name)
-                .textFieldStyle(.roundedBorder)
-                .padding(.horizontal, 40)
-                .onChange(of: name) { _, newValue in
-                    if newValue.count > OwnedCollection.usernameMaxLength {
-                        name = String(newValue.prefix(OwnedCollection.usernameMaxLength))
-                    }
-                }
-                .accessibilityIdentifier("onboardingNameField")
-
-            Button("はじめる") {
-                owned.updateUsername(trimmedName)
-            }
-            .buttonStyle(.gamePrimary)
-            .disabled(trimmedName.isEmpty)
-            .accessibilityIdentifier("onboardingStartButton")
-
-            Spacer()
-            Spacer()
+        ZStack { EarthBackdrop(variant: .home); ScrollView {
+            VStack(spacing: 20) {
+                EarthEmblem(size: 88).shadow(color: EarthColors.cyan.opacity(0.6), radius: 20).padding(.top, 28)
+                Text("探査記録を作成").font(.title2.bold())
+                Text("ランキングに表示する名前を決めてください")
+                    .font(.subheadline).foregroundStyle(EarthColors.secondary).multilineTextAlignment(.center)
+                ArchivePanel(variant: .hero) { VStack(alignment: .leading, spacing: 10) {
+                    TextField("観測者名", text: $name).font(.title3.weight(.bold)).padding(16)
+                        .background(EarthColors.ink, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(EarthColors.cyan.opacity(0.7)))
+                        .onChange(of: name) { _, newValue in if newValue.count > OwnedCollection.usernameMaxLength { name = String(newValue.prefix(OwnedCollection.usernameMaxLength)) } }
+                        .accessibilityIdentifier("onboardingNameField")
+                    HStack { Text(trimmedName.isEmpty ? "1文字以上入力してください" : "入力済み").foregroundStyle(trimmedName.isEmpty ? EarthColors.coral : EarthColors.cyan); Spacer(); Text("\(name.count)/\(OwnedCollection.usernameMaxLength)").monospacedDigit() }.font(.caption)
+                } }
+            }.padding(.horizontal, 20).padding(.bottom, 120)
+        } }
+        .safeAreaInset(edge: .bottom) {
+            Button("世界の記録をはじめる") { owned.updateUsername(trimmedName) }
+                .buttonStyle(EarthActionButtonStyle()).disabled(trimmedName.isEmpty)
+                .accessibilityHint(trimmedName.isEmpty ? "観測者名を入力すると有効になります" : "登録してホームへ進みます")
+                .accessibilityIdentifier("onboardingStartButton").padding(.horizontal, 20).padding(.vertical, 10).background(EarthColors.abyss.opacity(0.96))
         }
-        .padding()
         .interactiveDismissDisabled() // 名前を決めるまでは閉じられないようにする
     }
 }

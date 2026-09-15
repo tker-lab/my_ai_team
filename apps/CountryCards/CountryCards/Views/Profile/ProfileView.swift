@@ -17,8 +17,11 @@ struct ProfileView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
+            ZStack {
+                EarthBackdrop(variant: .profile)
+                ScrollView { VStack(spacing: 16) {
+                    EarthTopBar(title: "遠征記録") { EmptyView() }
+                    ArchivePanel(variant: .hero) {
                     HStack(spacing: 14) {
                         Image(systemName: "crown.fill")
                             .font(.system(size: 36))
@@ -37,51 +40,45 @@ struct ProfileView: View {
                             // (数値表示をカンマ区切りにしない、という決定事項に統一)。
                             Text("集めたカード \(String(owned.uniqueCardCount)) / \(String(database.totalCardCountIncludingSpecial))枚")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(EarthColors.secondary)
                         }
                         Spacer()
                         Button("編集") {
                             nameDraft = owned.username ?? ""
                             isEditingName = true
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(EarthActionButtonStyle(variant: .quiet))
                     }
                     .padding(.vertical, 6)
                 }
 
-                Section("累計記録") {
-                    LabeledContent("対戦の累計勝利数", value: "\(owned.battleWinCount)勝")
-                    LabeledContent("ガチャの累計使用回数", value: "\(owned.gachaUseCount)回")
-                    LabeledContent("ダブりポイント", value: "\(owned.dupePoints)pt")
-                }
+                ArchivePanel { VStack(spacing: 14) {
+                    recordRow("対戦の累計勝利数", "\(owned.battleWinCount)勝")
+                    recordRow("ガチャの累計使用回数", "\(owned.gachaUseCount)回")
+                    recordRow("ダブりポイント", "\(owned.dupePoints)pt")
+                } }
 
-                Section {
-                    NavigationLink("全国ランキングを見る") {
-                        LeaderboardView()
-                    }
+                NavigationLink { LeaderboardView() } label: { Label("全国ランキングを見る", systemImage: "chart.bar.fill") }.buttonStyle(EarthActionButtonStyle(variant: .secondary))
+                ArchivePanel { VStack(alignment: .leading, spacing: 8) {
+                    Text("王冠について").font(.headline)
+                    Text("持っているカードの種類数に応じて王冠が10段階で変化し、完全収集で金色になります。").font(.caption).foregroundStyle(EarthColors.secondary)
+                } }
+                NavigationLink { AboutView() } label: { Label("アプリとデータ出典", systemImage: "info.circle.fill") }.buttonStyle(EarthActionButtonStyle(variant: .quiet))
+                }.padding(.horizontal, 16) }
                 }
-
-                Section("王冠について") {
-                    Text("持っているカードの種類数(ダブりを除く)に応じて、王冠の色が10段階で変わります。すべて集めると金色になります。")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                Section {
-                    NavigationLink("このアプリについて(データの出典)") {
-                        AboutView()
-                    }
-                }
-            }
-            .listStyle(.insetGrouped)
-            .navigationTitle("プロフィール")
-            .alert("ユーザー名を登録", isPresented: $isEditingName) {
-                TextField("名前(\(OwnedCollection.usernameMaxLength)文字まで)", text: $nameDraft)
-                Button("保存") { owned.updateUsername(nameDraft) }
-                Button("キャンセル", role: .cancel) {}
-            } message: {
-                Text("\(OwnedCollection.usernameMaxLength)文字を超えた分は保存されません。")
+            .toolbar(.hidden, for: .navigationBar)
+            .sheet(isPresented: $isEditingName) {
+                SheetWithAdDock { GameModalShell("ユーザー名を登録") {
+                    TextField("名前(\(OwnedCollection.usernameMaxLength)文字まで)", text: $nameDraft)
+                        .padding(14).background(EarthColors.panel, in: RoundedRectangle(cornerRadius: 14)).overlay(RoundedRectangle(cornerRadius: 14).stroke(EarthColors.cyan))
+                    Text("\(OwnedCollection.usernameMaxLength)文字を超えた分は保存されません。").font(.caption).foregroundStyle(EarthColors.secondary)
+                    Button("保存") { owned.updateUsername(nameDraft); isEditingName = false }.buttonStyle(EarthActionButtonStyle())
+                }.padding() }
             }
         }
+    }
+
+    private func recordRow(_ label: String, _ value: String) -> some View {
+        HStack { Text(label).foregroundStyle(EarthColors.secondary); Spacer(); Text(value).fontWeight(.black).monospacedDigit() }
     }
 }

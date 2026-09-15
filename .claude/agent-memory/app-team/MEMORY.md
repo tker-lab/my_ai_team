@@ -34,3 +34,5 @@
 - [ガチャ確率表示画面を複数入り口で使い回す落とし穴](gacha-odds-view-shared-across-modes-pitfall.md) — 無料/ポイント/課金で「まとめ買いの保証」が違う時、表示側だけ一括りにしやすい
 - [SwiftUIのText整数補間は勝手にカンマを付ける](swiftui-text-int-interpolation-auto-comma.md) — Text("\(count)")はLocalizedStringKey経由で自動カンマ化、String(value)で明示変換して回避
 - [XCUITest+xcresulttoolでのビジュアル自己確認手法](xcuitest-screenshot-visual-verification-technique.md) — 一時UIテスト+XCTAttachmentでスクショを機械抽出し、報告前に見た目を自分でチェックできる
+- [git commitは今の瞬間のインデックス全体を確定させる](git-commit-index-not-just-your-add.md) — 自分がaddした分だけと思い込むと並行セッションのstage済み変更を巻き込む。commit直前に必ずgit statusで確認
+- [N個集めたらM個解放、の分母固定バグと直し方](proportional-milestone-unlock-formula.md) — min(M, owned*M/N)の比例配分にすればN=M時は従来と完全一致、N<Mでも自然に成立

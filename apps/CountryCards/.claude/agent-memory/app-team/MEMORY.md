@@ -1,0 +1,1 @@
+- [Unit Testターゲットが無い](project_no_unit_test_target.md) — データ変更はswiftスクリプトでのdecode確認+xcodebuildビルドで代用する

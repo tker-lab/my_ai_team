@@ -18,6 +18,10 @@ struct CountryCardsApp: App {
             // カードが9種類しか存在しない国(モナコ)の9枚を所持済みにする。
             // 豆知識10個が固定分母10ではなく実カード枚数で解放されるかの確認専用。
             UITestSupport.seedNineCardCountryForTrivia()
+        } else if arguments.contains("-uiTestRewardedAd") {
+            UITestSupport.seedRewardedAdAvailable()
+        } else if arguments.contains("-uiTestBatchPoints") {
+            UITestSupport.seedBatchPoints()
         }
     }
 

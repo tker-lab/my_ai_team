@@ -40,6 +40,24 @@ enum UITestSupport {
         }
     }
 
+    /// リワード広告のUIテスト用。ログイン付与済み・無料回数0・広告残3回を、
+    /// シングルトン生成前のUserDefaultsだけで再現する。
+    static func seedRewardedAdAvailable() {
+        resetAllStateForTesting()
+        let today = Calendar.current.startOfDay(for: Date())
+        let defaults = UserDefaults.standard
+        defaults.set(Date(), forKey: "firstLaunchDate")
+        defaults.set(today, forKey: "lastLoginGrantDay")
+        defaults.set(0, forKey: "freePullsAvailable")
+        defaults.set(today, forKey: "adBonusDay")
+        defaults.set(0, forKey: "adBonusCountToday")
+    }
+
+    static func seedBatchPoints() {
+        resetAllStateForTesting()
+        UserDefaults.standard.set(9999, forKey: "dupePoints")
+    }
+
     /// `-uiTestSeedNineCardCountry`: 全状態をリセットした上で、CO2排出量データが
     /// 無くカードが9種類しか存在しない国(モナコ)の9枚全てを所持済みにする。
     ///

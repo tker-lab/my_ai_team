@@ -34,24 +34,18 @@ final class GachaPlayViewModel: ObservableObject {
     private let engine: GachaEngine
     private let owned: OwnedCollection
     private let dailyBonus: DailyBonusManager
+    private let database: CardDatabase
+    private var introTask: Task<Void, Never>?
 
     init(element: CardElement, database: CardDatabase, owned: OwnedCollection, dailyBonus: DailyBonusManager) {
         self.element = element
         self.owned = owned
         self.dailyBonus = dailyBonus
+        self.database = database
         let cardsForElement = database.cards(forElement: element)
         // 北朝鮮のGDPカード(特別カード)は、要素がGDPの時だけ抽選対象に含める。
         let special = element == .gdp ? database.specialCards.first(where: { $0.element == .gdp }) : nil
         self.engine = GachaEngine(cardsForElement: cardsForElement, specialCard: special)
-    }
-
-    /// 無料ガチャ使い切り画面から「広告を見てもう1回引く」を押した時に呼ぶ。
-    /// 【2026-09-13追加】CEOの実機確認フィードバック対応。広告視聴で無料ガチャが
-    /// 1回増えたら、そのままもう一度引くところまで自動で進める(ユーザーが
-    /// 「増えた分をもう一度startPullで引き直す」という二度手間をしなくて済むように)。
-    func watchAdForBonusPullThenRetry() {
-        guard dailyBonus.claimAdBonus() else { return }
-        startPull()
     }
 
     /// ガチャを1回(3枚)引いて、演出を最初からやり直す。無料ガチャの残りが
@@ -59,34 +53,59 @@ final class GachaPlayViewModel: ObservableObject {
     /// (ポイント・課金のガチャはこの制限を受けない。それぞれ別のViewModelで
     /// ダブりポイント・¥100を直接消費するため)。
     func startPull() {
+        introTask?.cancel()
         guard dailyBonus.consumeFreePull() else {
             blockedByDailyLimit = true
             return
         }
         blockedByDailyLimit = false
-        let result = engine.drawOnePull()
+        var result = engine.drawOnePull()
+#if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-uiTestForceSSR") {
+            let pool = database.cards(forElement: element)
+            if let n = pool.first(where: { $0.rarity == .n }), let ssr = pool.first(where: { $0.rarity == .ssr }), let sr = pool.first(where: { $0.rarity == .sr }) {
+                result = GachaPullResult(cards: [n, ssr, sr])
+            }
+        }
+#endif
         pullResult = result
-        isNewByIndex = Array(repeating: false, count: result.cards.count)
+        // 抽選成立と同時に全カードを受領する。演出途中で戻る・アプリが中断される
+        // 場合にも「回数だけ消費して未受取」にならず、後続の表向き処理で二重受領しない。
+        isNewByIndex = result.cards.map { owned.receive($0) }
         isSkipMode = false
         phase = .introPaused
         owned.recordGachaUse(pullCount: 1)
     }
 
     /// 導入演出エリアをタップ(通常モード開始のトリガー)。
-    func tapIntro() {
-        guard phase == .introPaused else { return }
-        phase = .introPlaying
-        Task {
-            // 本来は動画・パーティクル演出の再生時間。Phase 1では簡易な待ち時間で代用する。
-            try? await Task.sleep(for: .seconds(1.2))
-            guard self.phase == .introPlaying else { return } // その間にスキップされていたら何もしない
-            self.phase = .revealing(index: 0, faceUp: false)
+    func tapIntro(duration overrideDuration: Double? = nil) {
+        guard beginIntro() else { return }
+        introTask?.cancel()
+        introTask = Task {
+            // 承認済み映像の導入→嵐→パック開封を最後まで再生する。
+            let cinematicDuration = overrideDuration ?? (pullResult?.highestRarity == .hur ? 7.15 : 5.9)
+            try? await Task.sleep(for: .seconds(cinematicDuration))
+            guard !Task.isCancelled else { return }
+            self.finishIntro()
         }
+    }
+
+    @discardableResult
+    func beginIntro() -> Bool {
+        guard phase == .introPaused else { return false }
+        phase = .introPlaying
+        return true
+    }
+
+    func finishIntro() {
+        guard phase == .introPlaying else { return }
+        phase = .revealing(index: 0, faceUp: false)
     }
 
     /// スキップボタン。導入演出を飛ばし、N/SRは自動でめくり、SSR以上で止まる。
     func tapSkip() {
         guard phase == .introPaused || phase == .introPlaying else { return }
+        introTask?.cancel()
         isSkipMode = true
         revealAndAutoAdvance(index: 0)
     }
@@ -109,12 +128,7 @@ final class GachaPlayViewModel: ObservableObject {
     // MARK: - 内部処理
 
     private func revealCard(at index: Int) {
-        guard let pullResult, index < pullResult.cards.count else { return }
-        let card = pullResult.cards[index]
-        let isNew = owned.receive(card)
-        if isNewByIndex.indices.contains(index) {
-            isNewByIndex[index] = isNew
-        }
+        // 受領はstartPull()で原子的に完了済み。ここは演出上の公開のみ。
     }
 
     private func advanceManually(to index: Int) {
@@ -136,10 +150,8 @@ final class GachaPlayViewModel: ObservableObject {
             return
         }
         let card = pullResult.cards[index]
-        revealCard(at: index)
-        phase = .revealing(index: index, faceUp: true)
-
         if card.rarity < .ssr {
+            phase = .revealing(index: index, faceUp: true)
             Task {
                 try? await Task.sleep(for: .seconds(0.6))
                 // 待っている間に3枚目まで進んで終了していないかを確認してから続ける。
@@ -147,7 +159,9 @@ final class GachaPlayViewModel: ObservableObject {
                       currentIndex == index else { return }
                 self.revealAndAutoAdvance(index: index + 1)
             }
+        } else {
+            // SSR以上は裏面で止め、ユーザーのタップによって初めて公開する。
+            phase = .revealing(index: index, faceUp: false)
         }
-        // SSR以上の場合はここで何もしない = 画面はタップ待ちのまま止まる。
     }
 }

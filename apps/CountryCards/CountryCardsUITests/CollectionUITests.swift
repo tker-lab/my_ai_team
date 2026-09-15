@@ -8,33 +8,32 @@ final class CollectionUITests: XCTestCase {
 
     func testCountryListAndDetailDoNotCrash() throws {
         let app = launchPastTitleScreen(arguments: ["-uiTestReset"])
+        app.buttons["tab_図鑑"].tap()
 
         // 起動直後は図鑑タブ(国別)が表示されているはず。「図鑑」という
         // タイトルの一覧画面から、詳細画面(タイトルが変わる)へ遷移できることを確認する。
-        let listTitle = app.navigationBars["図鑑"]
+        let listTitle = app.staticTexts["EARTH ARCHIVE"]
         XCTAssertTrue(listTitle.waitForExistence(timeout: 5))
 
         // cells[0]は「国連加盟193カ国のみ対象」という注意書きの行なので、
         // 実際に国が並ぶcells[1]をタップする。
-        let firstCell = app.cells.element(boundBy: 1)
+        let firstCell = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "枚")).firstMatch
         XCTAssertTrue(firstCell.waitForExistence(timeout: 5))
         firstCell.tap()
 
         // 詳細画面ではナビゲーションタイトルが国名に変わっているはず(「図鑑」ではなくなる)。
-        let detailAppeared = NSPredicate(format: "identifier != %@", "図鑑")
-        let detailTitle = app.navigationBars.matching(detailAppeared).firstMatch
-        XCTAssertTrue(detailTitle.waitForExistence(timeout: 5), "国の詳細画面へ遷移すること")
+        let backButton = app.buttons["戻る"]
+        XCTAssertTrue(backButton.waitForExistence(timeout: 5), "国の詳細画面へ遷移すること")
 
-        app.navigationBars.firstMatch.buttons.firstMatch.tap() // 戻る
+        backButton.tap()
         XCTAssertTrue(listTitle.waitForExistence(timeout: 5), "一覧画面に戻れること")
 
         // 「要素別」に切り替えて、要素のランキング画面まで開けること。
         app.buttons["要素別"].tap()
-        let firstElementCell = app.cells.element(boundBy: 1)
+        let firstElementCell = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "人口")).firstMatch
         XCTAssertTrue(firstElementCell.waitForExistence(timeout: 5))
         firstElementCell.tap()
-        let elementDetailTitle = app.navigationBars.matching(detailAppeared).firstMatch
-        XCTAssertTrue(elementDetailTitle.waitForExistence(timeout: 5), "要素のランキング画面へ遷移すること")
+        XCTAssertTrue(app.buttons["戻る"].waitForExistence(timeout: 5), "要素のランキング画面へ遷移すること")
     }
 
     /// 【2026-09-14 バグ修正の確認】CO2排出量データが無くカードが9種類しか
@@ -43,8 +42,9 @@ final class CollectionUITests: XCTestCase {
     /// 解放されなかった)。
     func testNineCardCountryUnlocksAllTenTrivia() throws {
         let app = launchPastTitleScreen(arguments: ["-uiTestSeedNineCardCountry"])
+        app.buttons["tab_図鑑"].tap()
 
-        let listTitle = app.navigationBars["図鑑"]
+        let listTitle = app.staticTexts["EARTH ARCHIVE"]
         XCTAssertTrue(listTitle.waitForExistence(timeout: 5))
 
         // 国名「モナコ」の行を探してタップする(一覧の並び順に依存しないように
@@ -52,7 +52,7 @@ final class CollectionUITests: XCTestCase {
         // 一覧は仮想化されており(画面外の行はアクセシビリティツリーに無い)、
         // 見つかるまで下にスクロールする必要がある。
         let monacoCell = app.staticTexts["モナコ"]
-        let list = app.collectionViews.firstMatch.exists ? app.collectionViews.firstMatch : app.tables.firstMatch
+        let list = app.scrollViews.firstMatch
         var attempts = 0
         while !monacoCell.exists, attempts < 40 {
             list.swipeUp()
@@ -61,7 +61,7 @@ final class CollectionUITests: XCTestCase {
         XCTAssertTrue(monacoCell.waitForExistence(timeout: 5), "モナコの行が一覧にあること(スクロール後)")
         monacoCell.tap()
 
-        let detailTitle = app.navigationBars["モナコ"]
+        let detailTitle = app.staticTexts["モナコ"].firstMatch
         XCTAssertTrue(detailTitle.waitForExistence(timeout: 5), "モナコの詳細画面へ遷移すること")
 
         // 豆知識の見出しが「10/10 解放」になっている(分母が実カード枚数の9ではなく

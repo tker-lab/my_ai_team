@@ -47,10 +47,10 @@ struct CardShareButton: View {
     @MainActor
     private func makeShareItems() -> [Any] {
         let renderer = ImageRenderer(content:
-            CardView(card: card, country: country)
-                .frame(width: 160, height: 220)
+            CollectibleCardView(card: card, country: country, size: .share, animationPolicy: .static)
+                .frame(width: 360, height: 504)
         )
-        renderer.scale = UIScreen.main.scale
+        renderer.scale = 3
         let countryName = country?.nameJa ?? card.iso3
         let caption = "国カードバトルで\(countryName)の「\(card.element.displayName)」カード"
             + "(\(card.rarity.displayName))をゲット!"

@@ -7,6 +7,7 @@ final class IAPGachaViewModel: ObservableObject {
     let element: CardElement
     @Published private(set) var results: [GachaPullResult] = []
     @Published private(set) var isPurchasing = false
+    @Published private(set) var isNewByCardIndex: [Bool] = []
 
     private let engine: GachaEngine
     private let owned: OwnedCollection
@@ -28,11 +29,7 @@ final class IAPGachaViewModel: ObservableObject {
         guard success else { return }
 
         let pulls = engine.drawMultiplePulls(count: 10, finalCardGuarantee: .ssrOrAbove)
-        for pull in pulls {
-            for card in pull.cards {
-                owned.receive(card)
-            }
-        }
+        isNewByCardIndex = pulls.flatMap(\.cards).map { owned.receive($0) }
         results = pulls
         owned.recordGachaUse(pullCount: 10)
         GameCenterManager.shared.syncAllScores(owned: owned, database: .shared)

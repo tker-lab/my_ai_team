@@ -6,12 +6,8 @@ struct ElementListView: View {
     @ObservedObject private var owned = OwnedCollection.shared
 
     var body: some View {
-        List {
-            Section {
-                CollectionScopeNoticeView()
-                    .listRowInsets(EdgeInsets())
-                    .listRowSeparator(.hidden)
-            }
+        ScrollView { LazyVStack(spacing: 10) {
+            CollectionScopeNoticeView()
             ForEach(CardElement.allCases) { element in
                 NavigationLink(value: element) {
                     HStack {
@@ -26,10 +22,13 @@ struct ElementListView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    .padding(14)
+                    .background(element.borderColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(element.borderColor.opacity(0.5)))
                 }
+                .buttonStyle(.plain)
             }
-        }
-        .listStyle(.insetGrouped)
+        }.padding(.horizontal) }
         .navigationDestination(for: CardElement.self) { element in
             ElementRankingView(element: element)
         }
