@@ -530,3 +530,5 @@ CEOが実機で触った感想をまとめ、テンプレート②([app_team_req
 - サポート: https://claude.ai/artifact/FUCSUipZdJCzkA2QR3jb3x
 
 App Store Connectの該当欄への入力方法・注意点は上記store_listingファイル参照。
+
+**2026-09-15 サポートページのリンク切れ修正**:プライバシーポリシーへのリンクが相対パス`privacy_policy.html`のままだった不具合を修正、絶対URL(https://claude.ai/artifact/1Vm1i98s9MiddyW39XwRpJ )に変更(commit d0339b9)。サポートページを同一URL https://claude.ai/artifact/FUCSUipZdJCzkA2QR3jb3x に再公開済み(URLは変わらず)。
