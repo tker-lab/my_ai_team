@@ -16,7 +16,7 @@
 - **完了**:MacBookへの環境移行(2026-09-01完了)。手順書は [mac_migration.md](mac_migration.md)
 - **稼働中**:アプリ開発部(2026-09-02にYouTubeネタ帳のNotion構築が完了) → 詳細は [app_team_notion_idea_db.md](app_team_notion_idea_db.md)
 - **Codexが担当中**:PhotoTimer(メモリータイマー)の**App Store公開までの作業一式**(ストア素材・プライバシーポリシー等)。**2026-09-08時点でCEOがCodex側で進行中のため、この窓口からアプリ開発部を起動しないこと。** PhotoTimer関連の見覚えのないコミットはCodex由来 → 詳細は [app_team_photo_timer.md](app_team_photo_timer.md)
-- **Codexのデザイン作業待ち**:Country Cards Collection(旧称:国カードバトル仮称)。実機確認・複数回の修正・豆知識193カ国統合まで完了し、Game Center・AdMobの外部設定も完了(詳細は[app_team_country_cards.md](app_team_country_cards.md))。**2026-09-14深夜、Codexが本体アプリのビュー層ほぼ全体(全体デザイン)を未コミットで編集中と判明。** これが一段落する(commitされる)まで、秘書・app-team側からの追加発注・ビルド・実機反映は保留中。次のアクション:Codexの作業完了後、①広告SDK(AdMob)の組み込み ②その後リリース準備
+- **稼働中**:Country Cards Collection(旧称:国カードバトル仮称)。実機確認・複数回の修正・豆知識193カ国統合まで完了し、Game Center・AdMobの外部設定も完了(詳細は[app_team_country_cards.md](app_team_country_cards.md))。**2026-09-15、CEOよりCodexのデザイン・演出作業完了の報告あり(アイコンのみ利用制限で中断中)。** Codexの変更一式は秘書がチェックポイントとしてcommit済み(`05480d2`)。アイコン確定待ちとは独立して進められるため、広告SDK(AdMob)の組み込みをapp-teamへ発注→次のアクション:実装完了後にチェック工程→実機ビルド・インストールで確認
 - **一時停止**:広報部(発信するアウトプットが揃ってから本格稼働)
 - **将来構想・未着手**:コミュニケーション基盤(Discord構想) → 詳細は [communication_plan.md](communication_plan.md)
 - **将来構想・仕様待ち**:運営状態ダッシュボード(ルール・部署定義・メモリをPC/スマホから確認できるアプリかサイト) → 経緯は [ai_team_operation_design.md](ai_team_operation_design.md) の9章
