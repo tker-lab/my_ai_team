@@ -171,7 +171,7 @@
 **変更したファイルとcommit**
 - 新規:`CountryCards/Services/AdsConfig.swift`(テスト/本番ID切り替え)、`CountryCards/Services/BannerAdView.swift`(バナー広告の実体)
 - 変更:`project.yml`(SPM依存・Info.plist設定追加)、`CountryCards/App/CountryCardsApp.swift`(SDK初期化)、`CountryCards/DesignSystem/EarthDesignSystem.swift`(`AdDock`を実バナーに差し替え)、`CountryCards/Services/RewardedAdCoordinator.swift`(実SDK接続に書き換え)、`CountryCards/Views/Gacha/GachaHomeView.swift`・`GachaPlayView.swift`(開発用ダミー画面の呼び出しを削除)、`CountryCardsUITests/VisualAuditUITests.swift`(テスト軽量化)
-- commitハッシュはこの報告の直後にpushして確定させる
+- commit `8878f40`(push済み)
 
 **既知の未対応点**
 - ATT許諾フロー・UMP(GDPR同意管理)SDKは未実装(上記の判断により今回スコープ外)
