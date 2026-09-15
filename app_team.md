@@ -13,6 +13,7 @@
 ### 1. ライフプランシミュレーター
 - 背景:CEOがFP(ファイナンシャルプランナー)2級保有
 - 概要:詳細は今後のヒアリングで具体化予定
+- 既存資産:CEOが自作したWeb版「家計プランナー」がある(リポジトリ `tker-lab/family-finance-app`、公開URL https://tker-lab.github.io/family-finance-app/)。データはブラウザ内保存(localStorage)で端末ごとに別。2026-09-15、GitHubアカウント名の変更(takataka0307→tker-lab)でURLが変わり空に見えたが、旧URLからデータを取り出して新URLに読み込み、復元済み
 
 ### 2. 離乳食管理アプリ
 - 背景:生後7ヶ月のお子さんがいる。CEO自身の栄養知識を活かしたい分野
