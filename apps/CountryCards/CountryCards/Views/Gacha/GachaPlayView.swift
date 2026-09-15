@@ -97,6 +97,10 @@ struct GachaPlayView: View {
                     .font(.caption).foregroundStyle(EarthColors.secondary)
             }
 
+            if case .failed(let message) = rewardedAd.state {
+                Text(message).font(.caption).foregroundStyle(EarthColors.coral)
+            }
+
             NavigationLink {
                 IAPGachaView(element: element)
             } label: {
