@@ -10,7 +10,8 @@
 このスクリプトが自動でやること:
   - 用語集(youtube_team_glossary.md)の「誤認識しやすい例」に完全一致する箇所を正しい表記に置換
   - 「うつ」のひらがな統一
-  - フィラー(まあ、あのー等)の削除
+  - フィラー(まあ、あのー等)の削除。「あの」は品詞(UniDicフル辞書)で連体詞(指示語)/
+    感動詞-フィラーを判定し、フィラーと推定された場合のみ削除する(完全ではない。後述)
   - BudouX(Google製の日本語分かち書き・改行位置推定ツール)で文節相当の塊に分割し、
     その塊の境界でだけ改行・字幕を区切る(単語・文節の途中で割らない)
   - 1字幕2行以内に収める(収まらない場合は複数の字幕に分割)
@@ -19,6 +20,8 @@
   - 字幕同士が時間的に重ならないようにする
 
 このスクリプトが自動でやらないこと(人:Claudeが目視で仕上げる前提):
+  - 「あの」のフィラー/指示語判定の完全な正確性(POSタグだけでは文脈上の照応関係が分からないため、
+    「あの+具体的な名詞」を指示語として残す簡易ヒューリスティックを使っている。稀に誤判定が残り得る)
   - 用語集に載っていない誤字・言い回しの整形(「言い直しの整理」「文脈的な言い換え」等)
   - 意味の切れ目の最終判断(BudouXは文節の塊は分かるが「文章として意味が完結したか」の
     判断はできないため、機械的な文字数だけで区切ると不自然になる箇所が残り得る)
@@ -38,6 +41,12 @@ from glossary_lib import (parse_glossary, build_substitution_map, normalize_utsu
                            strip_fillers)
 
 import budoux
+import fugashi
+try:
+    import unidic  # フル辞書(あの:感動詞-フィラー/連体詞の判定精度が unidic-lite より高い)
+    _UNIDIC_DIR = unidic.DICDIR
+except Exception:  # フル辞書が未導入の環境向けフォールバック
+    _UNIDIC_DIR = None
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_GLOSSARY = REPO_ROOT / "youtube_team_glossary.md"
@@ -49,7 +58,65 @@ MIN_CUE_DURATION = 0.6    # 短すぎる字幕(誤爆)を避けるための最�
 GAP_BETWEEN_CUES = 0.05   # 字幕同士が重ならないようにするための最小間隔(秒)
 
 
-def apply_corrections(text: str, chars: list[dict], sub_map: dict[str, str]) -> tuple[str, list[dict]]:
+# 「あの」がフィラー(感動詞-フィラー)と判定された場合でも、直後がこの語(または前方一致)なら
+# 強制的にフィラー扱いにする(あの+この語、が意味のある指示表現になることはまず無いため)。
+# 逆に、それ以外の名詞が直後に来る場合は「あの+その名詞」を指示語として残す(例:あの経験)。
+# ※完全な語用論的判定(文脈上の照応関係)はPOSタグだけでは不可能なため、これは簡易ヒューリスティック。
+_ANO_ALWAYS_FILLER_FOLLOWERS = ("皆さん", "皆", "次回", "方", "感じ", "話", "件", "人たち",
+                                 "自分", "軸", "最後", "まとめ")
+
+_fugashi_tagger = None
+
+
+def get_tagger():
+    global _fugashi_tagger
+    if _fugashi_tagger is None:
+        if _UNIDIC_DIR:
+            _fugashi_tagger = fugashi.Tagger(f'-d "{_UNIDIC_DIR}"')
+        else:
+            _fugashi_tagger = fugashi.Tagger()
+    return _fugashi_tagger
+
+
+def smart_strip_ano(text: str, tagger) -> str:
+    """「あの」を、品詞(連体詞=指示語/感動詞-フィラー)で判定して削除する。
+    - 連体詞と判定された場合(例:「あの人」「あの山」)は指示語として必ず残す
+    - フィラーと判定された場合は基本的に削除するが、直後の語が具体的な名詞
+      (かつ _ANO_ALWAYS_FILLER_FOLLOWERS に含まれない)場合は、話者が何かを
+      具体的に指している可能性が高いとみなし残す(例:「あの経験にも感謝」)
+    完全に正確な判定はPOSタグだけではできない(文脈・照応関係の理解が必要なため)。
+    youtube_team_subtitle_workflow.md に既知の限界として明記している。
+    """
+    if "あの" not in text or tagger is None:
+        return text
+    tokens = list(tagger(text))
+    out = []
+    n = len(tokens)
+    for i, tok in enumerate(tokens):
+        surface = tok.surface
+        if surface == "あの":
+            pos1 = tok.feature.pos1
+            if pos1 == "連体詞":
+                out.append(surface)
+                continue
+            # フィラー候補
+            nxt = tokens[i + 1] if i + 1 < n else None
+            nxt_surface = nxt.surface if nxt else ""
+            nxt_pos1 = nxt.feature.pos1 if nxt else ""
+            is_always_filler_follower = any(
+                nxt_surface.startswith(f) or f.startswith(nxt_surface)
+                for f in _ANO_ALWAYS_FILLER_FOLLOWERS
+            )
+            if nxt_pos1 == "名詞" and not is_always_filler_follower:
+                out.append(surface)  # 指示語の可能性が高いので残す
+            # それ以外は削除(何も追加しない)
+            continue
+        out.append(surface)
+    return "".join(out)
+
+
+def apply_corrections(text: str, chars: list[dict], sub_map: dict[str, str],
+                       tagger=None) -> tuple[str, list[dict]]:
     """用語集の置換・うつのひらがな統一・フィラー除去を適用し、
     置換後テキストの各文字に対応するタイムスタンプをdifflibで可能な限り引き継ぐ。
     (置換で増減した部分は前後の実測タイムスタンプから線形補間する)
@@ -60,6 +127,7 @@ def apply_corrections(text: str, chars: list[dict], sub_map: dict[str, str]) -> 
         corrected = corrected.replace(wrong, right)
     corrected = normalize_utsu(corrected)
     corrected = strip_fillers(corrected)
+    corrected = smart_strip_ano(corrected, tagger)
 
     # original(=chars由来の文字列)と corrected を文字単位でdiffし、
     # 一致部分はそのままタイムスタンプを引き継ぎ、置換/追加部分は前後の時刻から補間する。
@@ -108,9 +176,10 @@ def budoux_chunks(text: str, parser) -> list[str]:
 #  それを改行位置に使うと文節の途中で割れたように見える)。
 # → これらの塊は必ず直前の塊にくっつけ、単独で行頭に来ないようにする。
 _BOUND_CONTINUATION_RE = re.compile(
-    r"^(という|といった|っていう|いうの|いうこと|いうよう|ていただ|させていただ|"
+    r"^(という|といった|っていう|いう|ていただ|させていただ|"
     r"ておりま|おります|おりまし|ています|てくれ|てもらい|てもらう|でした|"
-    r"ください|くださっ|んですけど|んですが)"
+    r"ください|くださっ|んですけど|んですが|"
+    r"なる|ございま|ところ|わけ|はずな|はずで|もの|こと(?=[はがもをに、。]|$))"
 )
 # 逆に、指示語(この/その/あの/どの等)だけの短い塊が行末に孤立して残るのを防ぐため、
 # これらは直後の塊にくっつけて「指示語+直後の名詞」を1つの塊として扱う。
@@ -255,11 +324,12 @@ def main():
     sub_map = build_substitution_map(glossary_entries)
 
     parser = budoux.load_default_japanese_parser()
+    tagger = get_tagger()
 
     all_cues: list[dict] = []
     corrected_segments_out = []
     for seg in data["segments"]:
-        corrected_text, corrected_chars = apply_corrections(seg["text"], seg.get("chars", []), sub_map)
+        corrected_text, corrected_chars = apply_corrections(seg["text"], seg.get("chars", []), sub_map, tagger)
         corrected_segments_out.append({"id": seg["id"], "text": corrected_text})
         for sent_text, sent_chars in split_into_sentences(corrected_text, corrected_chars):
             sent_text_stripped = sent_text.strip()
