@@ -1,8 +1,16 @@
 import SwiftUI
+import GoogleMobileAds
 
 @main
 struct CountryCardsApp: App {
     init() {
+        // 広告SDK(Google Mobile Ads SDK)を起動時に初期化する。バナー・リワード
+        // 広告を読み込む前に必ず一度呼んでおく必要がある(Google公式の手順どおり)。
+        MobileAds.shared.start()
+        #if DEBUG
+        print("AdMob: テスト用広告ユニットIDで動作中(本番IDはRelease/App Store提出ビルドのみ使用)")
+        #endif
+
         // UIテストから「-uiTestReset」を付けて起動された時だけ、セーブデータを
         // まっさらにした上で無料ガチャを潤沢に用意する。1日の回数制限
         // (DailyBonusManager)を実装したことで、同じシミュレーター内で

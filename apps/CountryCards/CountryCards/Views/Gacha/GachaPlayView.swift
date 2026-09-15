@@ -49,9 +49,10 @@ struct GachaPlayView: View {
             }
         }
         .onDisappear { cinematicTask?.cancel() }
-        .fullScreenCover(isPresented: $rewardedAd.isPresenting) {
-            RewardedAdDevelopmentView(coordinator: rewardedAd)
-        }
+        // 【2026-09-15】実SDK接続前はここでRewardedAdDevelopmentView(開発用
+        // シミュレーション画面)をfullScreenCoverで表示していたが、実際の
+        // AdMobリワード広告はSDK自身が画面全体に表示するため、SwiftUI側で
+        // シートを用意する必要がなくなった。
     }
 
     /// 無料ガチャの残り回数が0の時に出す画面。

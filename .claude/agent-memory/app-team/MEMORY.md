@@ -36,3 +36,4 @@
 - [XCUITest+xcresulttoolでのビジュアル自己確認手法](xcuitest-screenshot-visual-verification-technique.md) — 一時UIテスト+XCTAttachmentでスクショを機械抽出し、報告前に見た目を自分でチェックできる
 - [git commitは今の瞬間のインデックス全体を確定させる](git-commit-index-not-just-your-add.md) — 自分がaddした分だけと思い込むと並行セッションのstage済み変更を巻き込む。commit直前に必ずgit statusで確認
 - [N個集めたらM個解放、の分母固定バグと直し方](proportional-milestone-unlock-formula.md) — min(M, owned*M/N)の比例配分にすればN=M時は従来と完全一致、N<Mでも自然に成立
+- [AdMob SDKのSwift命名とヘッダー直接確認法](admob-sdk-swift-naming-and-header-verification.md) — GADプレフィックスを外した新命名が標準。xcframeworkのヘッダーgrepが最も確実

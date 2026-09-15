@@ -144,6 +144,42 @@
 - **【一時中断・2026-09-14深夜】発注を見送った理由**:`git status`を確認したところ、Codexが`prototypes/`フォルダの外、**アプリ本体のビュー層ほぼ全部(`RootTabView.swift`・`CardView.swift`・`ProfileView.swift`他多数、`DesignSystem/`ディレクトリ新設等)を未コミットのまま編集中**だと判明した。広告SDKの組み込みもこれらの画面ファイルに手を入れる必要があり、Codexの作業と衝突するリスクが高いため、**Codexの変更がcommitされて一段落するまで、この件のapp-teamへの発注・ビルド・実機反映は保留する**。CEOの「Codexの作業には触れないで」との指示に沿った判断
 - **【再開・2026-09-15】**:CEOより「Codexのデザイン・演出は完了、アイコン作成のみ利用制限で中断中」と報告あり。秘書がCodexの変更一式をチェックポイントとしてcommit(`05480d2`)。アイコン(`AppIconPreviews/EarthArchive/`配下の候補画像)はCodexの作業として保持されているが、最終選定・Assets.xcassetsへの組み込みは未完了・保留のまま。**アイコン確定作業とは独立して進められるため、AdMob SDK組み込みをapp-teamへ発注する。** なお`Services/RewardedAdCoordinator.swift`(視聴完了ボタンでの暫定代用)がCodexのコミットにも含まれていたため、これを実SDK接続に置き換える形で進める
 
+### 広告SDK(AdMob)組み込み完了報告(2026-09-15、実装担当より)
+
+依頼された6項目(SPM導入・Info.plist設定・バナー常時表示・リワード広告の実装・テスト/本番ID切り替え・既存UIテストの確認)を全て実装し、実機ではなくシミュレーターでの自動ビルド・自動UIテスト・スクリーンショット確認まで完了。Codexが手掛けたデザイン・演出ファイル(`DesignSystem/`・`Effects/`・`HomeDashboardView.swift`等)は見た目・演出ロジックとも一切変更していない。
+
+**やったこと**
+- **SDK導入**:Google Mobile Ads SDK(通称AdMob SDK)をSwift Package Manager(SPM。Xcode標準の外部ライブラリ取り込み機構)で追加(`project.yml`にpackage定義、バージョン`13.9.0`を固定指定)。CocoaPodsは使っていない
+- **Info.plist設定**:`GADApplicationIdentifier`(AdMobの「アプリID」、テスト/本番共通)を追加。あわせて`SKAdNetworkItems`(広告配信元をOSへ事前登録する仕組み。Google公式ドキュメント記載の50件をそのまま追加)も設定
+- **バナー広告**:画面下部に常時表示していた既存のプレースホルダー(`AdDock`、Codexが既に多数の画面で共通利用する形で用意していた枠)の中身を、実際のAdMobバナー(`BannerAdView.swift`新設、UIKitの部品をSwiftUIに埋め込む仕組みで実装)に差し替え。**Codexが`AdDock`を1箇所にまとめていたおかげで、呼び出し側の画面(ホーム・図鑑・ガチャ・プロフィール等)は1つも変更せずに済んだ**
+- **リワード広告**:`RewardedAdCoordinator.swift`を実SDK接続に書き換え。呼び出し元(ガチャ画面の「広告を見てガチャを獲得」ボタン)からの呼び方(`requestPresentation()`)は変更なし。視聴完了コールバック(`userDidEarnRewardHandler`)の中でのみ`DailyBonusManager.shared.claimAdBonus()`を呼ぶ作りにし、「読み込み失敗時・途中終了時は付与しない」という既存の意図をそのまま維持した。開発用のダミー広告画面(`RewardedAdDevelopmentView`)は削除
+- **SDK初期化**:`CountryCardsApp.swift`の起動時に`MobileAds.shared.start()`を追加(Google公式手順どおり、広告読み込み前に一度呼ぶ必要がある)
+
+**テスト用IDと本番IDの切り替え方法**:`Services/AdsConfig.swift`に一元化。Xcodeのビルド設定が「Debug」(通常の開発ビルド・シミュレーター/実機への都度インストールはこちら)の時は自動的にGoogle公式のテスト用ID、「Release」(App Store提出用)の時のみ本番ID(依頼文にあった3つのID)を使う。**切り替えは`#if DEBUG`によるコンパイル時の自動判定のため、担当者が手動で書き換える必要は無い。** 本番IDのままシミュレーター等で広告を叩き続けると無効クリック判定でAdMobアカウントが止まるリスクがあるため、この自動切り替えを入れている
+
+**ATT(トラッキング許可)対応の有無と理由**:**対応していない(意図的に見送り)。** `NSUserTrackingUsageDescription`(許可ダイアログの説明文)は追加せず、`ATTrackingManager.requestTrackingAuthorization()`も呼んでいない。理由:
+1. このAPIを呼ばない限りAppleは説明文の記載を必須にしないため、審査に抵触しない
+2. IDFA(端末ごとの広告識別子。他アプリと結びつけた広告の追跡に使われる)を取得・利用しなければ、Appleの定義する「トラッキング」に該当せずATT許諾は不要になる。広告はIDFAに基づかない形(非パーソナライズに近い扱い)で配信される
+3. 個人開発の初版として、許諾ダイアログの文面調整やGDPR同意フロー(UMP SDK。EU圏のユーザー向けの追加の同意画面。今回は未実装)まで手を広げる優先度は低いと判断した
+
+広告収益を本格的に伸ばしたくなった場合、ATT許諾フロー・UMP(同意管理)SDKの追加を再検討する余地がある(今回は未着手・既知の制約として記録)。
+
+**既存の自動UIテストへの影響**:`CountryCardsUITests/VisualAuditUITests.swift`の`testRewardedAdCancelAndCompletion`が、削除した開発用ダミー画面のボタン(`rewardedAdCancel`・`rewardedAdComplete`)を操作する内容だったため壊れていた。**実際のAdMob広告本体の画面はGoogle側が独自に描く画面(こちら側のアクセシビリティ識別子が効かない)になるため、「視聴完了までタップで自動確認する」形のテストは組めなくなった。** `testRewardedAdAcquireButtonIsPresented`に差し替え、入口ボタンが表示され押せる状態になっていることの確認までに軽量化した(視聴完了時のみ付与するロジック自体は`DailyBonusManager`側の責務で変更していないため、置き換えによる新たなリスクは無いと判断)。他の既存UIテスト(ガチャ・対戦・図鑑・タイトル画面・オンボーディング、計17本)は無変更で全て成功を確認済み
+
+**動作確認の方法**:シミュレーター上で自動ビルド・自動UIテストを実行し、テスト内で撮ったスクリーンショットを機械的に抽出して目視確認(実機は使っていない)。ホーム画面・ガチャ画面の両方で、画面下部にGoogleのテスト用バナー広告(「Test mode」の表示がある本物の広告枠)が実際に表示されていることを確認済み
+
+**変更したファイルとcommit**
+- 新規:`CountryCards/Services/AdsConfig.swift`(テスト/本番ID切り替え)、`CountryCards/Services/BannerAdView.swift`(バナー広告の実体)
+- 変更:`project.yml`(SPM依存・Info.plist設定追加)、`CountryCards/App/CountryCardsApp.swift`(SDK初期化)、`CountryCards/DesignSystem/EarthDesignSystem.swift`(`AdDock`を実バナーに差し替え)、`CountryCards/Services/RewardedAdCoordinator.swift`(実SDK接続に書き換え)、`CountryCards/Views/Gacha/GachaHomeView.swift`・`GachaPlayView.swift`(開発用ダミー画面の呼び出しを削除)、`CountryCardsUITests/VisualAuditUITests.swift`(テスト軽量化)
+- commitハッシュはこの報告の直後にpushして確定させる
+
+**既知の未対応点**
+- ATT許諾フロー・UMP(GDPR同意管理)SDKは未実装(上記の判断により今回スコープ外)
+- リワード広告の「視聴完了までの流れ」を自動UIテストで最後まで確認する手段は無い(Google側の広告画面が自作の識別子の外にあるため。手動での実機確認を推奨)
+- バナー広告のクリックイベント(`BannerViewDelegate`)は未実装(表示のみで動作要件は満たすため今回は省略)
+
+**部署メモリへの追記**:「Google Mobile Ads SDK(AdMob)は近年、Swiftの命名からGADプレフィックスを外した新しい名前(BannerView・RewardedAd・Request等)に統一されており、公式ドキュメントのSwiftタブもこちらが最新である」という知見と、「ヘッダーファイル(xcframework内)を直接grepしてNS_SWIFT_NAMEを確認すれば、ドキュメントを跨いで推測するより確実にSwift側のAPI名を特定できる」という手法を記録した(他部署でも、外部iOS SDK導入時に応用できる汎用的な知見)。
+
 ## ガチャの回数・入手手段(2026-09-12 CEO決定)
 - **ログインボーナス**:1日1回。**ただし初回ダウンロードから1週間だけ特別に1日3回**
 - **広告視聴**:1日3回まで(視聴のたびに1回分)
@@ -338,7 +374,7 @@ Phase 1に加え、就寝中に追加した決定事項もほぼ全て着手済�
 9. Game Centerにサインインした状態で①〜⑧を行い、ランキングに反映されるか(**Apple Developer PortalでのGame Center機能有効化、App Store Connectでのリーダーボード3件作成はCEO本人のWeb操作が必要**)
 
 ## 残っている既知の制約
-- 広告SDK未組み込み(視聴完了ボタンで暫定代用)
+- ~~広告SDK未組み込み(視聴完了ボタンで暫定代用)~~ → 2026-09-15完了(下記「広告SDK(AdMob)組み込み完了報告」参照)
 - REST Countries公式への切り替え未実施(現在はcountries.dev代替。tker1996@gmail.comでの登録メール確認が完了すれば、部署が正式版で作り直せる)
 - 豆知識は8カ国分のみ実データ、残り185カ国は要リサーチ(2026-09-13、CEO指示によりリサーチを先行発注。下記参照)
 

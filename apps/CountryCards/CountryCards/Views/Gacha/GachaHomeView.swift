@@ -47,7 +47,6 @@ struct GachaHomeView: View {
             .sheet(isPresented: $showingIAPGacha) {
                 SheetWithAdDock { IAPGachaElementListView() }
             }
-            .fullScreenCover(isPresented: $rewardedAd.isPresenting) { RewardedAdDevelopmentView(coordinator: rewardedAd) }
             .overlay(alignment: .top) {
                 if let amount = dailyBonus.justGrantedLoginBonus {
                     GameToast(message: "ログインボーナス・無料ガチャ +\(amount)回", kind: .success)

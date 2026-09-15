@@ -208,14 +208,17 @@ struct ElementSigil: View {
     }
 }
 
+/// 画面下部に常時表示するバナー広告の枠。
+/// 【2026-09-15】広告SDK(Google Mobile Ads)接続前は「広告SDK未接続」の文字だけの
+/// プレースホルダーだったが、実際のバナー広告(BannerAdView、Servicesディレクトリ)
+/// に置き換えた。呼び出し側(RootTabView・SheetWithAdDock等)は変更不要。
 struct AdDock: View {
     var body: some View {
-        Text("ADVERTISEMENT  •  広告SDK未接続")
-            .font(.system(size: 9, weight: .medium, design: .monospaced)).tracking(1)
-            .foregroundStyle(EarthColors.disabled).frame(width: 320, height: 50)
+        BannerAdView()
+            .frame(width: 320, height: 50)
             .frame(maxWidth: .infinity)
             .background(EarthColors.abyss).overlay(alignment: .top) { Rectangle().fill(EarthColors.line.opacity(0.5)).frame(height: 1) }
-            .accessibilityLabel("広告領域、広告SDK未接続")
+            .accessibilityLabel("広告バナー")
     }
 }
 
