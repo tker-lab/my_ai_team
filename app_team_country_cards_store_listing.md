@@ -84,6 +84,13 @@ App名「Country Cards Collection」の下に表示される一言。CEO決定�
 
 **このHTML2枚の公開方法(secretary向けメモ)**:App Store ConnectのApp情報にはURLを入力する欄があるため、どこかにHTMLをホスティングする必要がある(GitHub Pages等)。現時点ではリポジトリ内のファイルとして置いてあるだけなので、審査提出前にどこかで公開URLを用意する作業が別途必要。
 
+**【2026-09-15 公開完了】** Artifactツール(Claudeの成果物公開機能)で公開し、非公開設定(リンクを知っている人のみアクセス可)のまま以下の公開URLを発行した。App Store Connectの「プライバシーポリシーURL」「サポートURL」欄にはこのURLを入力する。
+- プライバシーポリシー: https://claude.ai/artifact/1Vm1i98s9MiddyW39XwRpJ
+- サポート: https://claude.ai/artifact/FUCSUipZdJCzkA2QR3jb3x
+
+公開用の中間ファイル(`<title>`と`<style>`のみ残し、`<!doctype html>`・`<html>`・`<head>`・`<body>`タグを除いた版。内容は無変更)は`apps/CountryCards/StoreAssets/artifact_publish/`に保管(元の`privacy_policy.html`・`support.html`は変更していない)。
+注意点:サポートページ内の「プライバシーポリシーはこちら」リンクは元ファイルのまま`privacy_policy.html`という相対パスになっており、Artifact上では別URLに飛べないため機能しない(内容不変更の指示のため今回は手を加えていない。気になるようであれば次回修正を依頼)。
+
 ## 4. App Review(審査担当者)向け申し送りメモ
 
 App Store Connectの「App Review情報」→「メモ」欄に、以下の内容を貼り付ける想定(英語提出が推奨されることが多いが、日本のみ配信のため日本語のままでも通る可能性が高い。心配であれば秘書側で英訳を添える運用でもよい)。

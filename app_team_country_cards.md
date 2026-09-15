@@ -524,3 +524,9 @@ CEOが実機で触った感想をまとめ、テンプレート②([app_team_req
 
 ## ストア掲載準備(2026-09-15、アイコン以外)
 詳細は[app_team_country_cards_store_listing.md](app_team_country_cards_store_listing.md)参照(ストア掲載文言・ガチャ確率開示の確認結果・プライバシーポリシー/サポートページ・スクリーンショット・App Review向けメモ・年齢制限アンケート回答案)。
+
+**2026-09-15 プライバシーポリシー・サポートページの公開URL発行完了**(Artifactツールで公開、非公開設定):
+- プライバシーポリシー: https://claude.ai/artifact/1Vm1i98s9MiddyW39XwRpJ
+- サポート: https://claude.ai/artifact/FUCSUipZdJCzkA2QR3jb3x
+
+App Store Connectの該当欄への入力方法・注意点は上記store_listingファイル参照。
