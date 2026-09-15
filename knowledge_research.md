@@ -3,6 +3,21 @@
 > [knowledge.md](knowledge.md) から切り出したファイル。秘書が行ったリサーチの結果を蓄積する。
 > セッション開始時には読み込まれないため、必要になった時に開いて参照する。
 
+## 動画部:字幕制作フローの改善(2026-09-15調査)
+**調査目的**:1本目で①専門用語の誤認識(「子宮頸部異形成」→「子宮頸部に行きました。形成が…」)②字幕がほぼ3秒ごとの機械的な区切りで話し始めに合わない ③改行調整、に苦戦したため。前提:CEOは台本どおりには話さない(台本照合は効きにくい)。方針は「理想はAI完結、CEOが自分で直せる環境も用意」
+
+**結論の要点**
+- **「自動字幕ポン出しでほぼ完璧」は誇張**。検証記事ではアプリごとに聞き取り漏れ・改行の粗さが明記され、長尺・専門用語ありは手直し前提が実態
+- **精度**:whisper large-v3 は日本語CER(文字誤り率)4〜7%程度。クラウドのElevenLabs Scribe v2は日本語WER3〜4%との報告(単独ソースで参考程度)、$0.22〜0.40/時間。音声を外部に送る点に留意
+- **用語集の限界**:whisperの初期プロンプトは日本語で用語10〜15個まで、効果は冒頭約30秒のみ。→ 用語対策は「起こした後にAIが用語集・要点メモを見て直す」工程で担保するのが現実的
+- **タイミング**:WhisperX(音声と文字の時刻合わせ=アライメント)で単語単位の時刻が±1秒→±0.2秒程度に改善、日本語対応
+- **CEOが自分で直すアプリ**:Aegisub(無料・波形表示・SRT対応・UIは古め)/Vrew(無料枠月120分、有料月約1000円〜、SRT書き出し可)/DaVinci Resolve無料版(外部SRTの読み込みは可、自動字幕は有料版のみ)
+
+**推奨構成(優先順)**:①whisper.cpp→WhisperXで時刻補正→Aegisubで必要時CEOが微修正→ffmpeg焼き込み(低コスト・現行踏襲) ②ElevenLabs Scribeで下書き(精度優先・従量課金) ③Vrew中心(操作性優先・無料枠月120分)
+
+**出典**:[HEROZ技術ブログ 2026/08](https://techblog.heroz.jp/entry/2026/08/18/120000) / [Zenn](https://zenn.dev/hongbod/articles/def04f586cf168) / [DevelopersIO 2026/04](https://dev.classmethod.jp/articles/elevenlabs-pricing-breakdown-2026-04/) / [Qiita(initial_prompt)](https://qiita.com/maccotaro/items/f2ce0b25a0962665fdb3) / [Qiita(stable-ts)](https://qiita.com/shimajiroxyz/items/fdbeeb563be5b08837b0) / [note(Vrew等比較)](https://note.com/firstyear_dev/n/n7aa4dbc51c2a) / [note(DaVinci)](https://note.com/marumarutelop/n/nf4a1e4191987)
+※外部から取得した情報(データとして扱う)
+
 ## 運営基盤:Claude Codeのブラウザ操作機能「Claude in Chrome」(2026-09-13調査)
 **調査目的**:App Store Connect(2段階認証が必要なApple公式サイト)のような「ログインだけ人力、その後の画面操作はAIに任せたい」場面に対応できる仕組みがClaude Code側に無いか
 
