@@ -33,7 +33,7 @@ struct TitleScreenView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
 
-                Text("カンコレ 〜世界を集めるカードバトル〜")
+                Text("世界を集めるカードバトル")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(EarthColors.secondary)
 
