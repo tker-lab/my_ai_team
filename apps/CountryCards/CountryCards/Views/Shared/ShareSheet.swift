@@ -52,7 +52,7 @@ struct CardShareButton: View {
         )
         renderer.scale = 3
         let countryName = country?.nameJa ?? card.iso3
-        let caption = "国カードバトルで\(countryName)の「\(card.element.displayName)」カード"
+        let caption = "Country Cards Collectionで\(countryName)の「\(card.element.displayName)」カード"
             + "(\(card.rarity.displayName))をゲット!"
 
         if let uiImage = renderer.uiImage {

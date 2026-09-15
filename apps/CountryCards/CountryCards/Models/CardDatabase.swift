@@ -47,7 +47,7 @@ final class CardDatabase: ObservableObject {
     private init() {
         guard let url = Bundle.main.url(forResource: "cards", withExtension: "json") else {
             // アプリに同梱し忘れると即クラッシュするが、Phase 1時点では
-            // 「カードデータが無い国カードバトルアプリ」は成立しないため、
+            // 「カードデータが無いCountry Cards Collection」は成立しないため、
             // 気づかずリリースしてしまうより早期に落として気づけるほうを選んだ。
             fatalError("cards.jsonが見つかりません。scripts/generate_cards.pyを実行し、"
                 + "CountryCards/Resources/cards.json が生成されているか確認してください。")
