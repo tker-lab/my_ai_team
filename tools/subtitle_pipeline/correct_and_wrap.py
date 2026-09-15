@@ -164,10 +164,51 @@ def apply_corrections(text: str, chars: list[dict], sub_map: dict[str, str],
     return corrected, result_chars  # type: ignore[return-value]
 
 
-def budoux_chunks(text: str, parser) -> list[str]:
+def enforce_word_boundaries(chunks: list[str], tagger) -> list[str]:
+    """BudouXの塊の境界が、単語(形態素)の内部を割ってしまっていないかをfugashiで検査し、
+    割ってしまっている境界があれば両側の塊を結合する(=単語の内部では絶対に改行しない、を保証する)。
+
+    例:「置いといて」がBudouXで「置いと」/「いて」に分割された場合、fugashiの形態素解析では
+    「置い」+「とい」+「て」という区切りになり、BudouXの境界(...置いと|いて...)は
+    形態素「とい」の内部を割っていることが分かる → 両側を結合して「置いといて」を1つの塊に戻す。
+    """
+    if tagger is None or len(chunks) <= 1:
+        return chunks
+    full_text = "".join(chunks)
+    if not full_text:
+        return chunks
+    # fugashiが認識する「ここなら区切ってよい」形態素境界の文字オフセット集合を作る
+    valid_boundaries = {0, len(full_text)}
+    offset = 0
+    for tok in tagger(full_text):
+        offset += len(tok.surface)
+        valid_boundaries.add(offset)
+    # chunksの境界オフセットを計算し、形態素境界に無い場合は前後の塊を結合する
+    result: list[str] = []
+    buf = ""
+    cursor = 0
+    for chunk in chunks:
+        buf += chunk
+        cursor += len(chunk)
+        if cursor in valid_boundaries:
+            result.append(buf)
+            buf = ""
+        # cursor が形態素境界に無い場合は次のchunkも buf に足して結合を続ける
+    if buf:
+        # 最後まで結合しきれなかった残り(理論上は起きない想定だが念のため)
+        if result:
+            result[-1] += buf
+        else:
+            result.append(buf)
+    return result
+
+
+def budoux_chunks(text: str, parser, tagger=None) -> list[str]:
     """BudouXで文節相当の塊に分割する。句読点はBudouXの塊にそのまま含まれる。"""
     chunks = [c for c in parser.parse(text) if c]
-    return _merge_unsplittable(chunks)
+    chunks = _merge_unsplittable(chunks)
+    chunks = enforce_word_boundaries(chunks, tagger)
+    return chunks
 
 
 # BudouXの塊分割が細かすぎて、そのまま改行位置に使うと不自然な割れ方になるケースへの補正。
@@ -179,7 +220,8 @@ _BOUND_CONTINUATION_RE = re.compile(
     r"^(という|といった|っていう|いう|ていただ|させていただ|"
     r"ておりま|おります|おりまし|ています|てくれ|てもらい|てもらう|でした|"
     r"ください|くださっ|んですけど|んですが|"
-    r"なる|ございま|ところ|わけ|はずな|はずで|もの|こと(?=[はがもをに、。]|$))"
+    r"な(る|り|っ|れ|ろ)|ございま|ところ|わけ|はずな|はずで|もの|べき|"
+    r"ない(?=[はかもでっ、。]|$)|こと(?=[はがもをに、。]|$))"
 )
 # 逆に、指示語(この/その/あの/どの等)だけの短い塊が行末に孤立して残るのを防ぐため、
 # これらは直後の塊にくっつけて「指示語+直後の名詞」を1つの塊として扱う。
@@ -335,7 +377,7 @@ def main():
             sent_text_stripped = sent_text.strip()
             if not sent_text_stripped:
                 continue
-            chunks = budoux_chunks(sent_text, parser)
+            chunks = budoux_chunks(sent_text, parser, tagger)
             cues = pack_chunks_into_cues(chunks, sent_chars)
             all_cues.extend(cues)
 

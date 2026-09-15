@@ -42,10 +42,18 @@ DEFAULT_WHISPER_CLI = REPO_ROOT / "tools/whisper.cpp/build/bin/whisper-cli"
 DEFAULT_MODEL = REPO_ROOT / "tools/whisper.cpp/models/ggml-large-v3.bin"
 DEFAULT_VAD_MODEL = REPO_ROOT / "tools/whisper.cpp/models/for-tests-silero-v6.2.0-ggml.bin"
 
+# whisper.cppは音声によって「読点・句点を一切打たない」出力モードに入ってしまうことがある
+# (2026-09-16、IMG_3163.MOVの文字起こしで全編句読点0個という不具合を確認。5分のIMG_3156.MOVでは
+# 発生しなかったため、音声の何らかの特徴に依存して起きる。原因は特定できていないが、
+# 句読点入りの日本語文を初期プロンプトとして与え、--carry-initial-promptで全編に効かせ続けると
+# 再現しなくなることを確認した。用語集をプロンプトに渡す手法は効果が冒頭約30秒に限られるが、
+# この「句読点を打つスタイルの指定」はcarry-initial-promptで全編に効くため、デフォルトで常に付与する)
+DEFAULT_PROMPT = "以下は、YouTube動画の日本語の字幕です。読点や句点を適切に使い、自然な日本語で書き起こしてください。例えば、こんにちは。今日は良い天気ですね。"
+
 
 def run_whisper_cpp(wav_path: Path, out_prefix: Path, language: str,
                      model: Path, whisper_cli: Path, vad_model: Path,
-                     use_vad: bool = True) -> Path:
+                     use_vad: bool = True, prompt: str = DEFAULT_PROMPT) -> Path:
     """whisper.cppを実行し、full JSON(-ojf)を書き出す。返り値はJSONファイルのパス。"""
     cmd = [
         str(whisper_cli),
@@ -56,6 +64,8 @@ def run_whisper_cpp(wav_path: Path, out_prefix: Path, language: str,
         "-of", str(out_prefix),
         "-pp",
     ]
+    if prompt:
+        cmd += ["--prompt", prompt, "--carry-initial-prompt"]
     if use_vad and vad_model.exists():
         cmd += ["--vad", "--vad-model", str(vad_model)]
     print("[transcribe] running:", " ".join(cmd), file=sys.stderr)
@@ -152,6 +162,9 @@ def main():
     ap.add_argument("--whisper-cli", type=Path, default=DEFAULT_WHISPER_CLI)
     ap.add_argument("--vad-model", type=Path, default=DEFAULT_VAD_MODEL)
     ap.add_argument("--no-vad", action="store_true")
+    ap.add_argument("--prompt", default=DEFAULT_PROMPT,
+                     help="whisper.cppの初期プロンプト(句読点を打たせるためのデフォルト文が入っている。"
+                          "空文字列を渡すと無効化できる)")
     ap.add_argument("--skip-align", action="store_true", help="WhisperXをスキップしwhisper.cppの結果のみ出力(動作確認用)")
     args = ap.parse_args()
 
@@ -159,7 +172,7 @@ def main():
 
     json_path = run_whisper_cpp(args.wav_path, args.out_prefix, args.language,
                                  args.model, args.whisper_cli, args.vad_model,
-                                 use_vad=not args.no_vad)
+                                 use_vad=not args.no_vad, prompt=args.prompt)
     segments = whisper_cpp_json_to_segments(json_path)
     print(f"[transcribe] {len(segments)} segments from whisper.cpp", file=sys.stderr)
 
