@@ -180,6 +180,8 @@
 
 **部署メモリへの追記**:「Google Mobile Ads SDK(AdMob)は近年、Swiftの命名からGADプレフィックスを外した新しい名前(BannerView・RewardedAd・Request等)に統一されており、公式ドキュメントのSwiftタブもこちらが最新である」という知見と、「ヘッダーファイル(xcframework内)を直接grepしてNS_SWIFT_NAMEを確認すれば、ドキュメントを跨いで推測するより確実にSwift側のAPI名を特定できる」という手法を記録した(他部署でも、外部iOS SDK導入時に応用できる汎用的な知見)。
 
+**修正(2026-09-15、チェック担当指摘対応)**:`GachaPlayView.swift`の`exhaustedOptionsView`(広告視聴で獲得を試みる場所)で、広告の読み込み・表示失敗時にエラーメッセージが出ない指摘に対応。`GachaHomeView.swift`の既存パターンと同じ表示を追加。関連UIテスト(GachaFlowUITests全5件・VisualAuditUITestsの`testRewardedAdAcquireButtonIsPresented`)成功を確認。commit `d2178d4`(push済み)
+
 ## ガチャの回数・入手手段(2026-09-12 CEO決定)
 - **ログインボーナス**:1日1回。**ただし初回ダウンロードから1週間だけ特別に1日3回**
 - **広告視聴**:1日3回まで(視聴のたびに1回分)
