@@ -1,6 +1,17 @@
 # tools/ 配下はWhisperモデル(音声認識AI)や効果音など大容量バイナリ(3.4GB)。
-# Mac移行時は運ばず、Mac側で入れ直す前提のため除外。
-tools/
+# Mac移行時は運ばず、Mac側で入れ直す前提のため除外(直下の各フォルダを個別に除外する形にして、
+# tools/subtitle_pipeline/ のスクリプト資産だけはGit管理に残す)。
+tools/*
+!tools/subtitle_pipeline/
+# subtitle_pipeline配下でも生成物・一時ファイル・大容量ファイルは除外
+tools/subtitle_pipeline/**/__pycache__/
+tools/subtitle_pipeline/**/*.wav
+tools/subtitle_pipeline/**/*.mp3
+tools/subtitle_pipeline/**/*.srt
+tools/subtitle_pipeline/**/*.mp4
+tools/subtitle_pipeline/**/*.mov
+tools/subtitle_pipeline/**/*.bin
+tools/subtitle_pipeline/output/
 
 # ローカル権限設定(端末ごとの許可設定。共有しない)
 .claude/settings.local.json

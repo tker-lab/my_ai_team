@@ -1,0 +1,3 @@
+- [1本目v5の編集状況棚卸し(2026-09-15)](video1_v5_status.md) — kotaro_MASTER_v5.mp4の実物確認結果と残タスク
+- [効果音の有無を機械的に確認する方法](audio_sfx_verification_technique.md) — 音声相互相関でSFX/BGMの混入を検証する手順
+- [字幕自動化パイプラインの構築(2026-09-15)](subtitle_pipeline_setup.md) — whisper.cpp+WhisperX+BudouXの構成・既知の限界・使い方

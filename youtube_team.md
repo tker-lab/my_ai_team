@@ -105,10 +105,11 @@
 - 服は上下とも無地・落ち着いた色にする(柄物・ブランドロゴは視線が逸れるため避ける)
 - 照明は斜め前方からの暖色系の柔らかい光にする(真上からの硬い光は避ける)
 
-## 字幕制作フローの改善(2026-09-15検討・着手はCEOの手が空いてから)
-- 目標:**週2本(1本6〜10分程度)**。理想はAI完結、CEOが自分で字幕を直せる環境も用意する
-- CEOは台本どおりには話さない → 誤字対策は台本照合ではなく「用語集+話の要点メモ」をAIの誤字直しに渡す形にする
-- 推奨構成:今の文字起こしAI(無料・Mac内で完結)+時刻合わせの追加(WhisperX)+CEOが直したい時用の字幕アプリ(Aegisub)。誤字が減らなければ文字起こしだけ有料クラウド(月数百円程度)に差し替える。調査の詳細は [knowledge_research.md](knowledge_research.md)
+## 字幕制作フロー(2026-09-15に案1を構築・CEO決定)
+- 目標:**週2本(1本6〜13分程度)**。理想はAI完結、CEOが自分で字幕を直せる環境も用意する
+- CEOは台本どおりには話さない → 誤字対策は台本照合ではなく「用語集+話の要点メモ」で行う
+- 案1(無料・Mac内で完結)で運用開始。誤字が減らなければ文字起こしだけ有料クラウド(ElevenLabs Scribe・月70〜100円程度)に切り替える。調査は [knowledge_research.md](knowledge_research.md)
+- 手順書は [youtube_team_subtitle_workflow.md](youtube_team_subtitle_workflow.md)、用語集は [youtube_team_glossary.md](youtube_team_glossary.md)、要点メモの雛形は [youtube_team_episode_notes_template.md](youtube_team_episode_notes_template.md)
 
 ## チェック工程:作成担当とチェック担当を分離(2026-08-15確定)
 
