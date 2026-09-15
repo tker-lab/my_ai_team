@@ -1,10 +1,10 @@
-# Country Cards Collection(旧称:国カードバトル仮称、通称カンコレ)
+# Country Cards Collection(旧称:国カードバトル仮称)
 
 > アプリ開発部のプロジェクトファイル。構想・初回依頼書の段階(2026-09-12開始)。
 > 元になった調査は [knowledge_research.md](knowledge_research.md) の「カードバトル用の無料API調査」。
 
 ## 正式名称・ストア登録(2026-09-13 CEO決定・秘書がブラウザ操作で実施)
-- **App名**:Country Cards Collection(通称カンコレ)。サブタイトルで「カードバトル」を補う方針(名前欄は30文字上限のため)
+- **App名**:Country Cards Collection。サブタイトルで「カードバトル」を補う方針(名前欄は30文字上限のため)
 - **Bundle ID**:`com.aiteam.CountryCards`(Apple Developer Portalに登録済み、Game Center機能有効化済み)
 - **App Store Connect**:App記録作成済み(App ID: 6811454348)
 - **Game Center リーダーボード3件、作成・ローカライズ(日本語)済み**:
@@ -14,6 +14,7 @@
 - 上記はClaude in Chrome(ブラウザ操作連携)を使い、秘書がCEOのログイン後に代行して設定した
 - **2026-09-15 修正完了**:StoreAssetsのお問い合わせ先プレースホルダーをPhotoTimerと同じ`tker1996@dmail.com`に統一/`CFBundleDisplayName`(ホーム画面アイコン下の表示名)を旧称「国カードバトル」から正式名称「Country Cards Collection」に変更(project.yml→xcodegen generate→ビルド成功まで確認。UIテストに旧名称アサーションは無く修正不要)。変更ファイル:`StoreAssets/privacy_policy.html`・`StoreAssets/support.html`・`project.yml`(commit c539551)。なお`Views/Shared/ShareSheet.swift`のシェア文言に旧称「国カードバトル」が残っている(今回のCFBundleDisplayName修正の依頼範囲外のため未着手、要CEO確認)
 - **2026-09-15 旧称の追加修正完了**:`ShareSheet.swift`のシェア文言「国カードバトルで〜」→「Country Cards Collectionで〜」に修正。grep確認で見つかった`CardDatabase.swift`・`scripts/generate_cards.py`のコード内コメント2箇所(明らかに本アプリを指す言及)も合わせて統一。xcodegen generate→ビルド成功、関連UIテスト(GachaFlowUITests・5件)実行して全て成功。判断保留:`TitleScreenView.swift`のタイトル画面サブタイトル「カンコレ 〜世界を集めるカードバトル〜」は「国カードバトル」という旧称そのものではなく、正式名称「Country Cards Collection」の下に添えたキャッチコピー的表現のため今回は変更せず。意図した通称・煽り文句なら現状維持、旧称の名残と感じるならご指示ください。変更ファイル:`Views/Shared/ShareSheet.swift`・`Models/CardDatabase.swift`・`scripts/generate_cards.py`(commit 3975a08)
+- **【決定・2026-09-15】愛称「カンコレ」の使用を取りやめ。** 理由:「艦これ」(艦隊これくしょん、DMM/KADOKAWA Games)という国民的タイトルの通称と発音が完全に一致し、ジャンルも「コレクション系」で近いため、誤認・混同のリスクがあるとCEOが判断。アプリ本体(タイトル画面サブタイトル)・StoreAssets(プライバシーポリシー・サポートページ)・ストア掲載文言案から「カンコレ」表記を削除する対応をapp-teamへ発注
 ## 経緯
 - CEOが「Wikipediaガチャ」(Wikipedia記事をカード化して戦わせる個人開発のWebゲーム)を見て、同じような仕組みで題材を変えたら面白いと着想した
 - 無料APIの候補から「国」と「ご飯」に関心。まずは国で作ると決定(2026-09-12)
