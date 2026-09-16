@@ -18,8 +18,8 @@ struct AboutView: View {
                     detail: "国連加盟193カ国のリスト。"
                 )
                 sourceRow(
-                    title: "countries.dev(REST Countries互換の無料データ)",
-                    detail: "公用語の数・隣接国の数。本家REST Countries(v5)はアカウント登録が必要になったため、キー不要な代替データを暫定的に使用しています。"
+                    title: "REST Countries",
+                    detail: "公用語の数・陸続きの隣接国の数に使用しています。"
                 )
                 sourceRow(
                     title: "flagcdn.com",

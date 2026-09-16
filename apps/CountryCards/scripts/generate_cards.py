@@ -5,12 +5,12 @@
 
 何をするスクリプトか(アプリ開発初心者のCEO向け解説):
   このアプリのカードは「国 × 要素(人口・GDPなど)」の組み合わせで1枚になる。
-  そのカードの元になる数値を、無料の公的API(世界銀行・Wikidata・countries.dev)
+  そのカードの元になる数値を、無料の公的API(世界銀行・Wikidata・REST Countries)
   から自動で取ってきて、アプリに埋め込むための1つのJSONファイル
   (../CountryCards/Resources/cards.json)にまとめるのがこのスクリプトの役目。
 
-  実行方法: python3 generate_cards.py
-  (このフォルダ内で完結する。インターネット接続が必要。世界銀行APIキー不要)
+  実行方法: REST_COUNTRIES_API_KEYを環境変数に設定して python3 generate_cards.py
+  (このフォルダ内で完結する。インターネット接続とREST Countries APIキーが必要)
 
   年1回程度、データを更新したくなったらこのスクリプトを再実行するだけでよい
   (詳細はapp_team_country_cards.mdの「データ更新の仕組み」を参照)。
@@ -18,6 +18,9 @@
 
 import json
 import math
+import os
+import subprocess
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -27,7 +30,7 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).parent
 OUTPUT_PATH = SCRIPT_DIR.parent / "CountryCards" / "Resources" / "cards.json"
 
-# 世界銀行・Wikidata・countries.dev のいずれも「誰が/何のために呼んでいるか」を
+# 世界銀行・Wikidata・REST Countries のいずれも「誰が/何のために呼んでいるか」を
 # 名乗るのが行儀のよい使い方なので、連絡先入りのUser-Agentを共通で使う。
 USER_AGENT = "CountryCardsApp-DataPipeline/0.1 (contact: tker1996@gmail.com)"
 
@@ -235,45 +238,91 @@ def fetch_world_bank_indicator(indicator_code, target_iso3s):
 
 
 # ---------------------------------------------------------------------------
-# 3. countries.dev から「公用語の数」「隣接国の数」を取得する
+# 3. REST Countries公式APIから「公用語の数」「隣接国の数」を取得する
 # ---------------------------------------------------------------------------
-# 当初はREST Countries(v5)を使う想定だったが、v5化に伴いAPIキー+アカウント登録
-# (メール確認込み)が必須になった。今回はCEOが就寝中でメール確認の操作を代行
-# できないため、【暫定判断】として同じ出典データ(REST Countriesの旧v2オープン
-# データ)をキー不要で提供している非公式ミラー "countries.dev" を使う。
-#   - 採用理由: 「陸続きの国境のみを隣接国として数える」という元のREST Countries
-#     の定義を保っており(Wikidataの隣接国データは海の国境も混じり不正確だった
-#     ため不採用にした経緯がある)、キー不要ですぐ使える。
-#   - リスク: 非公式の第三者ミラーなので将来サービスが止まる可能性がある。ただし
-#     このアプリはガチャのたびに通信せず、生成時に取得した値をアプリに埋め込む
-#     方式なので、影響は「次回のデータ更新時にまた使えるか」だけに留まる。
-#   - 次回データ更新時の推奨: 本家REST Countries(v5)のアカウント登録
-#     (tker1996@gmail.com)をCEOにメール確認だけ済ませてもらい、以後はそちらの
-#     公式APIに切り替えるのが望ましい。
-REST_COUNTRIES_ALT_BASE = "https://countries.dev/alpha/"
+# APIキーはGitへ保存せず、実行時の環境変数からだけ読む。URLのクエリにキーを
+# 入れると履歴やログへ残りやすいため、公式推奨のAuthorizationヘッダーを使う。
+REST_COUNTRIES_BASE = "https://api.restcountries.com/countries/v5"
+REST_COUNTRIES_KEYCHAIN_SERVICE = "CountryCards.RESTCountries"
+REST_COUNTRIES_KEYCHAIN_ACCOUNT = "REST_COUNTRIES_API_KEY"
+
+
+def load_rest_countries_api_key():
+    """実行時の秘密情報を環境変数、またはmacOS Keychainから取得する。
+
+    APIキーはソースコードや生成物に保存しない。Keychainの標準出力・標準エラーは
+    呼び出し元へ流さず、失敗理由にもキーの内容を含めない。
+    """
+    api_key = os.environ.get("REST_COUNTRIES_API_KEY", "").strip()
+    if api_key:
+        return api_key
+
+    # macOS以外ではsecurityコマンドが存在しないため、環境変数の案内を維持する。
+    if sys.platform != "darwin":
+        return ""
+
+    try:
+        result = subprocess.run(
+            [
+                "security",
+                "find-generic-password",
+                "-s",
+                REST_COUNTRIES_KEYCHAIN_SERVICE,
+                "-a",
+                REST_COUNTRIES_KEYCHAIN_ACCOUNT,
+                "-w",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return ""
+
+    return result.stdout.strip()
 
 
 def fetch_official_languages_and_borders(iso3_list):
-    """{iso3: {"languages": int, "borders": int}} を返す。取得できなかった国は
-    キーごと含めない(=その国のカードを作らない、という仕様どおりの挙動)。"""
+    """公式APIから {iso3: {"languages": int, "borders": int}} を返す。"""
+    api_key = load_rest_countries_api_key()
+    if not api_key:
+        raise RuntimeError(
+            "REST_COUNTRIES_API_KEYが未設定です。APIキーはファイルへ書かず、"
+            "環境変数に設定してから再実行してください。macOSではKeychainの"
+            "service=CountryCards.RESTCountries / account=REST_COUNTRIES_API_KEY"
+            "からも読み取れます。"
+        )
+    headers = {"Authorization": f"Bearer {api_key}"}
     result = {}
-    for i, iso3 in enumerate(iso3_list):
-        try:
-            data = http_get_json(REST_COUNTRIES_ALT_BASE + iso3, retries=2, timeout=15)
-            languages = data.get("languages")
-            borders = data.get("borders")
-            entry = {}
-            if isinstance(languages, list):
-                entry["languages"] = len(languages)
-            if isinstance(borders, list):
-                entry["borders"] = len(borders)
-            if entry:
-                result[iso3] = entry
-        except Exception as e:  # noqa: BLE001
-            print(f"  [警告] {iso3} のcountries.dev取得に失敗、この国はスキップ: {e}")
-        # 無料の非公式サービスに配慮し、少しだけ間隔をあける。
-        if i % 20 == 19:
-            time.sleep(0.3)
+    target = set(iso3_list)
+    for offset in (0, 100, 200):
+        query = urllib.parse.urlencode({
+            "limit": 100,
+            "offset": offset,
+            "response_fields": "codes.alpha_3,languages,borders",
+        })
+        payload = http_get_json(
+            f"{REST_COUNTRIES_BASE}?{query}", headers=headers, retries=3, timeout=30
+        )
+        data = payload.get("data", {})
+        for country in data.get("objects", []):
+            iso3 = country.get("codes", {}).get("alpha_3")
+            if iso3 not in target:
+                continue
+            languages = country.get("languages")
+            borders = country.get("borders")
+            if not isinstance(languages, list) or not isinstance(borders, list):
+                raise RuntimeError(f"REST Countriesの必須項目が不正です: {iso3}")
+            result[iso3] = {"languages": len(languages), "borders": len(borders)}
+        if not data.get("meta", {}).get("more", False):
+            break
+
+    missing = sorted(target - set(result))
+    if missing:
+        raise RuntimeError(
+            f"REST Countries公式APIで国連加盟国を全件取得できませんでした: {missing}"
+        )
     return result
 
 
@@ -369,7 +418,7 @@ def main():
         element_raw_values[element_id] = filtered
         print(f"      - {name_ja}({code}): {len(filtered)}カ国分取得")
 
-    print("[3/5] countries.devから公用語の数・隣接国の数を取得中(193カ国分、少し時間がかかる)...")
+    print("[3/5] REST Countries公式APIから公用語の数・隣接国の数を取得中...")
     rest_data = fetch_official_languages_and_borders(sorted(countries.keys()))
     lang_values = {iso3: d["languages"] for iso3, d in rest_data.items() if "languages" in d}
     border_values = {iso3: d["borders"] for iso3, d in rest_data.items() if "borders" in d}

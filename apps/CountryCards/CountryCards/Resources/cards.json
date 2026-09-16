@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-12",
+  "generatedAt": "2026-09-15",
   "worldBankLastUpdated": "2026-07-13",
   "note": "国連加盟193カ国のみを対象にしています。データが無い国・要素の組み合わせにはカードがありません。",
   "elements": [
@@ -61,7 +61,7 @@
       "id": "neighboringCountries",
       "nameJa": "隣接国の数",
       "unit": "カ国",
-      "cardCount": 155
+      "cardCount": 193
     }
   ],
   "countries": [
@@ -16784,13 +16784,13 @@
       "element": "officialLanguages",
       "value": 3,
       "year": null,
-      "score": 22.22,
-      "rarity": "SSR",
+      "score": 14.29,
+      "rarity": "SR",
       "isSpecial": false
     },
     {
-      "id": "AGO_officialLanguages",
-      "iso3": "AGO",
+      "id": "ALB_officialLanguages",
+      "iso3": "ALB",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -16799,8 +16799,8 @@
       "isSpecial": false
     },
     {
-      "id": "ALB_officialLanguages",
-      "iso3": "ALB",
+      "id": "DZA_officialLanguages",
+      "iso3": "DZA",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -16819,8 +16819,18 @@
       "isSpecial": false
     },
     {
-      "id": "ARE_officialLanguages",
-      "iso3": "ARE",
+      "id": "AGO_officialLanguages",
+      "iso3": "AGO",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "UR",
+      "isSpecial": false
+    },
+    {
+      "id": "ATG_officialLanguages",
+      "iso3": "ATG",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -16834,23 +16844,13 @@
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
+      "score": 7.14,
       "rarity": "N",
       "isSpecial": false
     },
     {
       "id": "ARM_officialLanguages",
       "iso3": "ARM",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "UR",
-      "isSpecial": false
-    },
-    {
-      "id": "ATG_officialLanguages",
-      "iso3": "ATG",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -16889,58 +16889,8 @@
       "isSpecial": false
     },
     {
-      "id": "BDI_officialLanguages",
-      "iso3": "BDI",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "BEL_officialLanguages",
-      "iso3": "BEL",
-      "element": "officialLanguages",
-      "value": 3,
-      "year": null,
-      "score": 22.22,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "BEN_officialLanguages",
-      "iso3": "BEN",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "BFA_officialLanguages",
-      "iso3": "BFA",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "BGD_officialLanguages",
-      "iso3": "BGD",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "BGR_officialLanguages",
-      "iso3": "BGR",
+      "id": "BHS_officialLanguages",
+      "iso3": "BHS",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -16959,58 +16909,8 @@
       "isSpecial": false
     },
     {
-      "id": "BHS_officialLanguages",
-      "iso3": "BHS",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "BIH_officialLanguages",
-      "iso3": "BIH",
-      "element": "officialLanguages",
-      "value": 3,
-      "year": null,
-      "score": 22.22,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "BLR_officialLanguages",
-      "iso3": "BLR",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "BLZ_officialLanguages",
-      "iso3": "BLZ",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "BOL_officialLanguages",
-      "iso3": "BOL",
-      "element": "officialLanguages",
-      "value": 3,
-      "year": null,
-      "score": 22.22,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "BRA_officialLanguages",
-      "iso3": "BRA",
+      "id": "BGD_officialLanguages",
+      "iso3": "BGD",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17029,8 +16929,38 @@
       "isSpecial": false
     },
     {
-      "id": "BRN_officialLanguages",
-      "iso3": "BRN",
+      "id": "BLR_officialLanguages",
+      "iso3": "BLR",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "BEL_officialLanguages",
+      "iso3": "BEL",
+      "element": "officialLanguages",
+      "value": 3,
+      "year": null,
+      "score": 14.29,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "BLZ_officialLanguages",
+      "iso3": "BLZ",
+      "element": "officialLanguages",
+      "value": 3,
+      "year": null,
+      "score": 14.29,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "BEN_officialLanguages",
+      "iso3": "BEN",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17049,48 +16979,38 @@
       "isSpecial": false
     },
     {
+      "id": "BOL_officialLanguages",
+      "iso3": "BOL",
+      "element": "officialLanguages",
+      "value": 4,
+      "year": null,
+      "score": 21.43,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "BIH_officialLanguages",
+      "iso3": "BIH",
+      "element": "officialLanguages",
+      "value": 3,
+      "year": null,
+      "score": 14.29,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
       "id": "BWA_officialLanguages",
       "iso3": "BWA",
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
+      "score": 7.14,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "CAF_officialLanguages",
-      "iso3": "CAF",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "CAN_officialLanguages",
-      "iso3": "CAN",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "CHE_officialLanguages",
-      "iso3": "CHE",
-      "element": "officialLanguages",
-      "value": 4,
-      "year": null,
-      "score": 33.33,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "CHL_officialLanguages",
-      "iso3": "CHL",
+      "id": "BRA_officialLanguages",
+      "iso3": "BRA",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17099,8 +17019,48 @@
       "isSpecial": false
     },
     {
-      "id": "CHN_officialLanguages",
-      "iso3": "CHN",
+      "id": "BRN_officialLanguages",
+      "iso3": "BRN",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "BGR_officialLanguages",
+      "iso3": "BGR",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "BFA_officialLanguages",
+      "iso3": "BFA",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "BDI_officialLanguages",
+      "iso3": "BDI",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "CPV_officialLanguages",
+      "iso3": "CPV",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17109,8 +17069,8 @@
       "isSpecial": false
     },
     {
-      "id": "CIV_officialLanguages",
-      "iso3": "CIV",
+      "id": "KHM_officialLanguages",
+      "iso3": "KHM",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17124,28 +17084,58 @@
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
+      "score": 7.14,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "COD_officialLanguages",
-      "iso3": "COD",
-      "element": "officialLanguages",
-      "value": 5,
-      "year": null,
-      "score": 44.44,
-      "rarity": "UR",
-      "isSpecial": false
-    },
-    {
-      "id": "COG_officialLanguages",
-      "iso3": "COG",
+      "id": "CAN_officialLanguages",
+      "iso3": "CAN",
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
+      "score": 7.14,
       "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "CAF_officialLanguages",
+      "iso3": "CAF",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "TCD_officialLanguages",
+      "iso3": "TCD",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "CHL_officialLanguages",
+      "iso3": "CHL",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "CHN_officialLanguages",
+      "iso3": "CHN",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
       "isSpecial": false
     },
     {
@@ -17162,15 +17152,25 @@
       "id": "COM_officialLanguages",
       "iso3": "COM",
       "element": "officialLanguages",
-      "value": 2,
+      "value": 3,
       "year": null,
-      "score": 11.11,
-      "rarity": "N",
+      "score": 14.29,
+      "rarity": "SR",
       "isSpecial": false
     },
     {
-      "id": "CPV_officialLanguages",
-      "iso3": "CPV",
+      "id": "COG_officialLanguages",
+      "iso3": "COG",
+      "element": "officialLanguages",
+      "value": 3,
+      "year": null,
+      "score": 14.29,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "CRI_officialLanguages",
+      "iso3": "CRI",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17179,8 +17179,8 @@
       "isSpecial": false
     },
     {
-      "id": "CRI_officialLanguages",
-      "iso3": "CRI",
+      "id": "HRV_officialLanguages",
+      "iso3": "HRV",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17202,10 +17202,10 @@
       "id": "CYP_officialLanguages",
       "iso3": "CYP",
       "element": "officialLanguages",
-      "value": 3,
+      "value": 2,
       "year": null,
-      "score": 22.22,
-      "rarity": "SSR",
+      "score": 7.14,
+      "rarity": "N",
       "isSpecial": false
     },
     {
@@ -17214,13 +17214,23 @@
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
+      "score": 7.14,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "DEU_officialLanguages",
-      "iso3": "DEU",
+      "id": "COD_officialLanguages",
+      "iso3": "COD",
+      "element": "officialLanguages",
+      "value": 5,
+      "year": null,
+      "score": 28.57,
+      "rarity": "UR",
+      "isSpecial": false
+    },
+    {
+      "id": "DNK_officialLanguages",
+      "iso3": "DNK",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17234,7 +17244,7 @@
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
+      "score": 7.14,
       "rarity": "N",
       "isSpecial": false
     },
@@ -17249,28 +17259,8 @@
       "isSpecial": false
     },
     {
-      "id": "DNK_officialLanguages",
-      "iso3": "DNK",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
       "id": "DOM_officialLanguages",
       "iso3": "DOM",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "DZA_officialLanguages",
-      "iso3": "DZA",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17299,22 +17289,32 @@
       "isSpecial": false
     },
     {
-      "id": "ERI_officialLanguages",
-      "iso3": "ERI",
-      "element": "officialLanguages",
-      "value": 9,
-      "year": null,
-      "score": 88.89,
-      "rarity": "UR",
-      "isSpecial": false
-    },
-    {
-      "id": "ESP_officialLanguages",
-      "iso3": "ESP",
+      "id": "SLV_officialLanguages",
+      "iso3": "SLV",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
       "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "GNQ_officialLanguages",
+      "iso3": "GNQ",
+      "element": "officialLanguages",
+      "value": 3,
+      "year": null,
+      "score": 14.29,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "ERI_officialLanguages",
+      "iso3": "ERI",
+      "element": "officialLanguages",
+      "value": 3,
+      "year": null,
+      "score": 14.29,
       "rarity": "SR",
       "isSpecial": false
     },
@@ -17329,6 +17329,16 @@
       "isSpecial": false
     },
     {
+      "id": "SWZ_officialLanguages",
+      "iso3": "SWZ",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
       "id": "ETH_officialLanguages",
       "iso3": "ETH",
       "element": "officialLanguages",
@@ -17339,38 +17349,28 @@
       "isSpecial": false
     },
     {
+      "id": "FJI_officialLanguages",
+      "iso3": "FJI",
+      "element": "officialLanguages",
+      "value": 3,
+      "year": null,
+      "score": 14.29,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
       "id": "FIN_officialLanguages",
       "iso3": "FIN",
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
+      "score": 7.14,
       "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "FJI_officialLanguages",
-      "iso3": "FJI",
-      "element": "officialLanguages",
-      "value": 4,
-      "year": null,
-      "score": 33.33,
-      "rarity": "SSR",
       "isSpecial": false
     },
     {
       "id": "FRA_officialLanguages",
       "iso3": "FRA",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "FSM_officialLanguages",
-      "iso3": "FSM",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17389,8 +17389,8 @@
       "isSpecial": false
     },
     {
-      "id": "GBR_officialLanguages",
-      "iso3": "GBR",
+      "id": "GMB_officialLanguages",
+      "iso3": "GMB",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17409,6 +17409,16 @@
       "isSpecial": false
     },
     {
+      "id": "DEU_officialLanguages",
+      "iso3": "DEU",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
       "id": "GHA_officialLanguages",
       "iso3": "GHA",
       "element": "officialLanguages",
@@ -17419,53 +17429,13 @@
       "isSpecial": false
     },
     {
-      "id": "GIN_officialLanguages",
-      "iso3": "GIN",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "GMB_officialLanguages",
-      "iso3": "GMB",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "GNB_officialLanguages",
-      "iso3": "GNB",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "GNQ_officialLanguages",
-      "iso3": "GNQ",
-      "element": "officialLanguages",
-      "value": 4,
-      "year": null,
-      "score": 33.33,
-      "rarity": "UR",
-      "isSpecial": false
-    },
-    {
       "id": "GRC_officialLanguages",
       "iso3": "GRC",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
       "score": 0.0,
-      "rarity": "N",
+      "rarity": "SR",
       "isSpecial": false
     },
     {
@@ -17475,7 +17445,7 @@
       "value": 1,
       "year": null,
       "score": 0.0,
-      "rarity": "N",
+      "rarity": "SR",
       "isSpecial": false
     },
     {
@@ -17485,6 +17455,26 @@
       "value": 1,
       "year": null,
       "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "GIN_officialLanguages",
+      "iso3": "GIN",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "GNB_officialLanguages",
+      "iso3": "GNB",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
       "rarity": "N",
       "isSpecial": false
     },
@@ -17499,32 +17489,22 @@
       "isSpecial": false
     },
     {
+      "id": "HTI_officialLanguages",
+      "iso3": "HTI",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
       "id": "HND_officialLanguages",
       "iso3": "HND",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
       "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "HRV_officialLanguages",
-      "iso3": "HRV",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "HTI_officialLanguages",
-      "iso3": "HTI",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
       "rarity": "N",
       "isSpecial": false
     },
@@ -17539,8 +17519,8 @@
       "isSpecial": false
     },
     {
-      "id": "IDN_officialLanguages",
-      "iso3": "IDN",
+      "id": "ISL_officialLanguages",
+      "iso3": "ISL",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17552,19 +17532,19 @@
       "id": "IND_officialLanguages",
       "iso3": "IND",
       "element": "officialLanguages",
-      "value": 2,
+      "value": 3,
       "year": null,
-      "score": 11.11,
-      "rarity": "N",
+      "score": 14.29,
+      "rarity": "SSR",
       "isSpecial": false
     },
     {
-      "id": "IRL_officialLanguages",
-      "iso3": "IRL",
+      "id": "IDN_officialLanguages",
+      "iso3": "IDN",
       "element": "officialLanguages",
-      "value": 2,
+      "value": 1,
       "year": null,
-      "score": 11.11,
+      "score": 0.0,
       "rarity": "N",
       "isSpecial": false
     },
@@ -17582,19 +17562,19 @@
       "id": "IRQ_officialLanguages",
       "iso3": "IRQ",
       "element": "officialLanguages",
-      "value": 2,
+      "value": 3,
       "year": null,
-      "score": 11.11,
-      "rarity": "N",
+      "score": 14.29,
+      "rarity": "SSR",
       "isSpecial": false
     },
     {
-      "id": "ISL_officialLanguages",
-      "iso3": "ISL",
+      "id": "IRL_officialLanguages",
+      "iso3": "IRL",
       "element": "officialLanguages",
-      "value": 1,
+      "value": 2,
       "year": null,
-      "score": 0.0,
+      "score": 7.14,
       "rarity": "N",
       "isSpecial": false
     },
@@ -17604,13 +17584,23 @@
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
+      "score": 7.14,
       "rarity": "N",
       "isSpecial": false
     },
     {
       "id": "ITA_officialLanguages",
       "iso3": "ITA",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "CIV_officialLanguages",
+      "iso3": "CIV",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17621,6 +17611,16 @@
     {
       "id": "JAM_officialLanguages",
       "iso3": "JAM",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "JPN_officialLanguages",
+      "iso3": "JPN",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17639,22 +17639,12 @@
       "isSpecial": false
     },
     {
-      "id": "JPN_officialLanguages",
-      "iso3": "JPN",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
       "id": "KAZ_officialLanguages",
       "iso3": "KAZ",
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
+      "score": 7.14,
       "rarity": "N",
       "isSpecial": false
     },
@@ -17664,27 +17654,7 @@
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "KGZ_officialLanguages",
-      "iso3": "KGZ",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "KHM_officialLanguages",
-      "iso3": "KHM",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
+      "score": 7.14,
       "rarity": "N",
       "isSpecial": false
     },
@@ -17692,29 +17662,9 @@
       "id": "KIR_officialLanguages",
       "iso3": "KIR",
       "element": "officialLanguages",
-      "value": 1,
+      "value": 2,
       "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "KNA_officialLanguages",
-      "iso3": "KNA",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "KOR_officialLanguages",
-      "iso3": "KOR",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
+      "score": 7.14,
       "rarity": "N",
       "isSpecial": false
     },
@@ -17729,8 +17679,28 @@
       "isSpecial": false
     },
     {
+      "id": "KGZ_officialLanguages",
+      "iso3": "KGZ",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
       "id": "LAO_officialLanguages",
       "iso3": "LAO",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "LVA_officialLanguages",
+      "iso3": "LVA",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17744,8 +17714,18 @@
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
-      "rarity": "SR",
+      "score": 7.14,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "LSO_officialLanguages",
+      "iso3": "LSO",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "N",
       "isSpecial": false
     },
     {
@@ -17769,16 +17749,6 @@
       "isSpecial": false
     },
     {
-      "id": "LCA_officialLanguages",
-      "iso3": "LCA",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
       "id": "LIE_officialLanguages",
       "iso3": "LIE",
       "element": "officialLanguages",
@@ -17786,26 +17756,6 @@
       "year": null,
       "score": 0.0,
       "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "LKA_officialLanguages",
-      "iso3": "LKA",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "LSO_officialLanguages",
-      "iso3": "LSO",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "SR",
       "isSpecial": false
     },
     {
@@ -17824,48 +17774,8 @@
       "element": "officialLanguages",
       "value": 3,
       "year": null,
-      "score": 22.22,
+      "score": 14.29,
       "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "LVA_officialLanguages",
-      "iso3": "LVA",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "MAR_officialLanguages",
-      "iso3": "MAR",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "MCO_officialLanguages",
-      "iso3": "MCO",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "MDA_officialLanguages",
-      "iso3": "MDA",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
       "isSpecial": false
     },
     {
@@ -17874,43 +17784,33 @@
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
-      "rarity": "SR",
+      "score": 7.14,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MWI_officialLanguages",
+      "iso3": "MWI",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MYS_officialLanguages",
+      "iso3": "MYS",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "N",
       "isSpecial": false
     },
     {
       "id": "MDV_officialLanguages",
       "iso3": "MDV",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "MEX_officialLanguages",
-      "iso3": "MEX",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "MHL_officialLanguages",
-      "iso3": "MHL",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "MKD_officialLanguages",
-      "iso3": "MKD",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -17934,47 +17834,17 @@
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "MMR_officialLanguages",
-      "iso3": "MMR",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
+      "score": 7.14,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "MNE_officialLanguages",
-      "iso3": "MNE",
+      "id": "MHL_officialLanguages",
+      "iso3": "MHL",
       "element": "officialLanguages",
-      "value": 4,
+      "value": 2,
       "year": null,
-      "score": 33.33,
-      "rarity": "UR",
-      "isSpecial": false
-    },
-    {
-      "id": "MNG_officialLanguages",
-      "iso3": "MNG",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "MOZ_officialLanguages",
-      "iso3": "MOZ",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
+      "score": 7.14,
       "rarity": "N",
       "isSpecial": false
     },
@@ -17992,6 +17862,16 @@
       "id": "MUS_officialLanguages",
       "iso3": "MUS",
       "element": "officialLanguages",
+      "value": 3,
+      "year": null,
+      "score": 14.29,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "MEX_officialLanguages",
+      "iso3": "MEX",
+      "element": "officialLanguages",
       "value": 1,
       "year": null,
       "score": 0.0,
@@ -17999,18 +17879,78 @@
       "isSpecial": false
     },
     {
-      "id": "MWI_officialLanguages",
-      "iso3": "MWI",
+      "id": "FSM_officialLanguages",
+      "iso3": "FSM",
       "element": "officialLanguages",
-      "value": 2,
+      "value": 1,
       "year": null,
-      "score": 11.11,
-      "rarity": "SR",
+      "score": 0.0,
+      "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "MYS_officialLanguages",
-      "iso3": "MYS",
+      "id": "MDA_officialLanguages",
+      "iso3": "MDA",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MCO_officialLanguages",
+      "iso3": "MCO",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MNG_officialLanguages",
+      "iso3": "MNG",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MNE_officialLanguages",
+      "iso3": "MNE",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MAR_officialLanguages",
+      "iso3": "MAR",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MOZ_officialLanguages",
+      "iso3": "MOZ",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MMR_officialLanguages",
+      "iso3": "MMR",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -18022,10 +17962,60 @@
       "id": "NAM_officialLanguages",
       "iso3": "NAM",
       "element": "officialLanguages",
+      "value": 9,
+      "year": null,
+      "score": 57.14,
+      "rarity": "UR",
+      "isSpecial": false
+    },
+    {
+      "id": "NRU_officialLanguages",
+      "iso3": "NRU",
+      "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
-      "rarity": "SR",
+      "score": 7.14,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "NPL_officialLanguages",
+      "iso3": "NPL",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "NLD_officialLanguages",
+      "iso3": "NLD",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "NZL_officialLanguages",
+      "iso3": "NZL",
+      "element": "officialLanguages",
+      "value": 3,
+      "year": null,
+      "score": 14.29,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "NIC_officialLanguages",
+      "iso3": "NIC",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
       "isSpecial": false
     },
     {
@@ -18049,8 +18039,8 @@
       "isSpecial": false
     },
     {
-      "id": "NIC_officialLanguages",
-      "iso3": "NIC",
+      "id": "PRK_officialLanguages",
+      "iso3": "PRK",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -18059,8 +18049,8 @@
       "isSpecial": false
     },
     {
-      "id": "NLD_officialLanguages",
-      "iso3": "NLD",
+      "id": "MKD_officialLanguages",
+      "iso3": "MKD",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -18072,40 +18062,10 @@
       "id": "NOR_officialLanguages",
       "iso3": "NOR",
       "element": "officialLanguages",
-      "value": 3,
+      "value": 5,
       "year": null,
-      "score": 22.22,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "NPL_officialLanguages",
-      "iso3": "NPL",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "NRU_officialLanguages",
-      "iso3": "NRU",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "NZL_officialLanguages",
-      "iso3": "NZL",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "SR",
+      "score": 28.57,
+      "rarity": "UR",
       "isSpecial": false
     },
     {
@@ -18124,7 +18084,17 @@
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
+      "score": 7.14,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "PLW_officialLanguages",
+      "iso3": "PLW",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
       "rarity": "SR",
       "isSpecial": false
     },
@@ -18139,58 +18109,48 @@
       "isSpecial": false
     },
     {
+      "id": "PNG_officialLanguages",
+      "iso3": "PNG",
+      "element": "officialLanguages",
+      "value": 3,
+      "year": null,
+      "score": 14.29,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "PRY_officialLanguages",
+      "iso3": "PRY",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
       "id": "PER_officialLanguages",
       "iso3": "PER",
       "element": "officialLanguages",
-      "value": 1,
+      "value": 3,
       "year": null,
-      "score": 0.0,
-      "rarity": "N",
+      "score": 14.29,
+      "rarity": "SSR",
       "isSpecial": false
     },
     {
       "id": "PHL_officialLanguages",
       "iso3": "PHL",
       "element": "officialLanguages",
-      "value": 1,
+      "value": 2,
       "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "PLW_officialLanguages",
-      "iso3": "PLW",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "PNG_officialLanguages",
-      "iso3": "PNG",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
+      "score": 7.14,
+      "rarity": "SR",
       "isSpecial": false
     },
     {
       "id": "POL_officialLanguages",
       "iso3": "POL",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "PRK_officialLanguages",
-      "iso3": "PRK",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -18206,16 +18166,6 @@
       "year": null,
       "score": 0.0,
       "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "PRY_officialLanguages",
-      "iso3": "PRY",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "SR",
       "isSpecial": false
     },
     {
@@ -18254,13 +18204,13 @@
       "element": "officialLanguages",
       "value": 3,
       "year": null,
-      "score": 22.22,
+      "score": 14.29,
       "rarity": "SSR",
       "isSpecial": false
     },
     {
-      "id": "SAU_officialLanguages",
-      "iso3": "SAU",
+      "id": "KNA_officialLanguages",
+      "iso3": "KNA",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -18269,63 +18219,33 @@
       "isSpecial": false
     },
     {
-      "id": "SDN_officialLanguages",
-      "iso3": "SDN",
+      "id": "LCA_officialLanguages",
+      "iso3": "LCA",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "VCT_officialLanguages",
+      "iso3": "VCT",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "WSM_officialLanguages",
+      "iso3": "WSM",
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
+      "score": 7.14,
       "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "SEN_officialLanguages",
-      "iso3": "SEN",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "SGP_officialLanguages",
-      "iso3": "SGP",
-      "element": "officialLanguages",
-      "value": 4,
-      "year": null,
-      "score": 33.33,
-      "rarity": "UR",
-      "isSpecial": false
-    },
-    {
-      "id": "SLB_officialLanguages",
-      "iso3": "SLB",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "SLE_officialLanguages",
-      "iso3": "SLE",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "SLV_officialLanguages",
-      "iso3": "SLV",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
       "isSpecial": false
     },
     {
@@ -18339,13 +18259,23 @@
       "isSpecial": false
     },
     {
-      "id": "SOM_officialLanguages",
-      "iso3": "SOM",
+      "id": "SAU_officialLanguages",
+      "iso3": "SAU",
       "element": "officialLanguages",
-      "value": 2,
+      "value": 1,
       "year": null,
-      "score": 11.11,
-      "rarity": "SR",
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "SEN_officialLanguages",
+      "iso3": "SEN",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
       "isSpecial": false
     },
     {
@@ -18359,8 +18289,18 @@
       "isSpecial": false
     },
     {
-      "id": "SSD_officialLanguages",
-      "iso3": "SSD",
+      "id": "SYC_officialLanguages",
+      "iso3": "SYC",
+      "element": "officialLanguages",
+      "value": 3,
+      "year": null,
+      "score": 14.29,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "SLE_officialLanguages",
+      "iso3": "SLE",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -18369,23 +18309,13 @@
       "isSpecial": false
     },
     {
-      "id": "STP_officialLanguages",
-      "iso3": "STP",
+      "id": "SGP_officialLanguages",
+      "iso3": "SGP",
       "element": "officialLanguages",
-      "value": 1,
+      "value": 4,
       "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "SUR_officialLanguages",
-      "iso3": "SUR",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
+      "score": 21.43,
+      "rarity": "SSR",
       "isSpecial": false
     },
     {
@@ -18409,6 +18339,96 @@
       "isSpecial": false
     },
     {
+      "id": "SLB_officialLanguages",
+      "iso3": "SLB",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "SOM_officialLanguages",
+      "iso3": "SOM",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "ZAF_officialLanguages",
+      "iso3": "ZAF",
+      "element": "officialLanguages",
+      "value": 11,
+      "year": null,
+      "score": 71.43,
+      "rarity": "UR",
+      "isSpecial": false
+    },
+    {
+      "id": "KOR_officialLanguages",
+      "iso3": "KOR",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "SSD_officialLanguages",
+      "iso3": "SSD",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "ESP_officialLanguages",
+      "iso3": "ESP",
+      "element": "officialLanguages",
+      "value": 5,
+      "year": null,
+      "score": 28.57,
+      "rarity": "UR",
+      "isSpecial": false
+    },
+    {
+      "id": "LKA_officialLanguages",
+      "iso3": "LKA",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "SDN_officialLanguages",
+      "iso3": "SDN",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "SUR_officialLanguages",
+      "iso3": "SUR",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
       "id": "SWE_officialLanguages",
       "iso3": "SWE",
       "element": "officialLanguages",
@@ -18419,23 +18439,13 @@
       "isSpecial": false
     },
     {
-      "id": "SWZ_officialLanguages",
-      "iso3": "SWZ",
+      "id": "CHE_officialLanguages",
+      "iso3": "CHE",
       "element": "officialLanguages",
-      "value": 2,
+      "value": 4,
       "year": null,
-      "score": 11.11,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "SYC_officialLanguages",
-      "iso3": "SYC",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "SR",
+      "score": 21.43,
+      "rarity": "SSR",
       "isSpecial": false
     },
     {
@@ -18449,12 +18459,52 @@
       "isSpecial": false
     },
     {
-      "id": "TCD_officialLanguages",
-      "iso3": "TCD",
+      "id": "STP_officialLanguages",
+      "iso3": "STP",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "TJK_officialLanguages",
+      "iso3": "TJK",
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
+      "score": 7.14,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "TZA_officialLanguages",
+      "iso3": "TZA",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "THA_officialLanguages",
+      "iso3": "THA",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "TLS_officialLanguages",
+      "iso3": "TLS",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
       "rarity": "SR",
       "isSpecial": false
     },
@@ -18469,52 +18519,12 @@
       "isSpecial": false
     },
     {
-      "id": "THA_officialLanguages",
-      "iso3": "THA",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "TJK_officialLanguages",
-      "iso3": "TJK",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "TKM_officialLanguages",
-      "iso3": "TKM",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "TLS_officialLanguages",
-      "iso3": "TLS",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
       "id": "TON_officialLanguages",
       "iso3": "TON",
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
+      "score": 7.14,
       "rarity": "SR",
       "isSpecial": false
     },
@@ -18549,22 +18559,22 @@
       "isSpecial": false
     },
     {
-      "id": "TUV_officialLanguages",
-      "iso3": "TUV",
-      "element": "officialLanguages",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "TZA_officialLanguages",
-      "iso3": "TZA",
+      "id": "TKM_officialLanguages",
+      "iso3": "TKM",
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
+      "score": 7.14,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "TUV_officialLanguages",
+      "iso3": "TUV",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
       "rarity": "SR",
       "isSpecial": false
     },
@@ -18574,7 +18584,7 @@
       "element": "officialLanguages",
       "value": 2,
       "year": null,
-      "score": 11.11,
+      "score": 7.14,
       "rarity": "SR",
       "isSpecial": false
     },
@@ -18589,8 +18599,18 @@
       "isSpecial": false
     },
     {
-      "id": "URY_officialLanguages",
-      "iso3": "URY",
+      "id": "ARE_officialLanguages",
+      "iso3": "ARE",
+      "element": "officialLanguages",
+      "value": 1,
+      "year": null,
+      "score": 0.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "GBR_officialLanguages",
+      "iso3": "GBR",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
@@ -18609,23 +18629,33 @@
       "isSpecial": false
     },
     {
-      "id": "UZB_officialLanguages",
-      "iso3": "UZB",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "VCT_officialLanguages",
-      "iso3": "VCT",
+      "id": "URY_officialLanguages",
+      "iso3": "URY",
       "element": "officialLanguages",
       "value": 1,
       "year": null,
       "score": 0.0,
       "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "UZB_officialLanguages",
+      "iso3": "UZB",
+      "element": "officialLanguages",
+      "value": 2,
+      "year": null,
+      "score": 7.14,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "VUT_officialLanguages",
+      "iso3": "VUT",
+      "element": "officialLanguages",
+      "value": 3,
+      "year": null,
+      "score": 14.29,
+      "rarity": "SSR",
       "isSpecial": false
     },
     {
@@ -18649,26 +18679,6 @@
       "isSpecial": false
     },
     {
-      "id": "VUT_officialLanguages",
-      "iso3": "VUT",
-      "element": "officialLanguages",
-      "value": 3,
-      "year": null,
-      "score": 22.22,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "WSM_officialLanguages",
-      "iso3": "WSM",
-      "element": "officialLanguages",
-      "value": 2,
-      "year": null,
-      "score": 11.11,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
       "id": "YEM_officialLanguages",
       "iso3": "YEM",
       "element": "officialLanguages",
@@ -18676,16 +18686,6 @@
       "year": null,
       "score": 0.0,
       "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "ZAF_officialLanguages",
-      "iso3": "ZAF",
-      "element": "officialLanguages",
-      "value": 10,
-      "year": null,
-      "score": 100.0,
-      "rarity": "UR",
       "isSpecial": false
     },
     {
@@ -18702,10 +18702,10 @@
       "id": "ZWE_officialLanguages",
       "iso3": "ZWE",
       "element": "officialLanguages",
-      "value": 3,
+      "value": 15,
       "year": null,
-      "score": 22.22,
-      "rarity": "SSR",
+      "score": 100.0,
+      "rarity": "UR",
       "isSpecial": false
     },
     {
@@ -18714,18 +18714,8 @@
       "element": "neighboringCountries",
       "value": 6,
       "year": null,
-      "score": 33.33,
+      "score": 37.5,
       "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "AGO_neighboringCountries",
-      "iso3": "AGO",
-      "element": "neighboringCountries",
-      "value": 4,
-      "year": null,
-      "score": 20.0,
-      "rarity": "N",
       "isSpecial": false
     },
     {
@@ -18734,8 +18724,18 @@
       "element": "neighboringCountries",
       "value": 4,
       "year": null,
-      "score": 20.0,
+      "score": 25.0,
       "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "DZA_neighboringCountries",
+      "iso3": "DZA",
+      "element": "neighboringCountries",
+      "value": 7,
+      "year": null,
+      "score": 43.75,
+      "rarity": "SR",
       "isSpecial": false
     },
     {
@@ -18744,18 +18744,28 @@
       "element": "neighboringCountries",
       "value": 2,
       "year": null,
-      "score": 6.67,
-      "rarity": "SR",
+      "score": 12.5,
+      "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "ARE_neighboringCountries",
-      "iso3": "ARE",
+      "id": "AGO_neighboringCountries",
+      "iso3": "AGO",
       "element": "neighboringCountries",
-      "value": 2,
+      "value": 4,
       "year": null,
-      "score": 6.67,
-      "rarity": "SR",
+      "score": 25.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "ATG_neighboringCountries",
+      "iso3": "ATG",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "UR",
       "isSpecial": false
     },
     {
@@ -18764,7 +18774,7 @@
       "element": "neighboringCountries",
       "value": 5,
       "year": null,
-      "score": 26.67,
+      "score": 31.25,
       "rarity": "N",
       "isSpecial": false
     },
@@ -18774,8 +18784,18 @@
       "element": "neighboringCountries",
       "value": 4,
       "year": null,
-      "score": 20.0,
+      "score": 25.0,
       "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "AUS_neighboringCountries",
+      "iso3": "AUS",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "UR",
       "isSpecial": false
     },
     {
@@ -18784,7 +18804,7 @@
       "element": "neighboringCountries",
       "value": 8,
       "year": null,
-      "score": 46.67,
+      "score": 50.0,
       "rarity": "SSR",
       "isSpecial": false
     },
@@ -18794,17 +18814,57 @@
       "element": "neighboringCountries",
       "value": 5,
       "year": null,
-      "score": 26.67,
+      "score": 31.25,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "BDI_neighboringCountries",
-      "iso3": "BDI",
+      "id": "BHS_neighboringCountries",
+      "iso3": "BHS",
       "element": "neighboringCountries",
-      "value": 3,
+      "value": 0,
       "year": null,
-      "score": 13.33,
+      "score": 0.0,
+      "rarity": "UR",
+      "isSpecial": false
+    },
+    {
+      "id": "BHR_neighboringCountries",
+      "iso3": "BHR",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "UR",
+      "isSpecial": false
+    },
+    {
+      "id": "BGD_neighboringCountries",
+      "iso3": "BGD",
+      "element": "neighboringCountries",
+      "value": 2,
+      "year": null,
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "BRB_neighboringCountries",
+      "iso3": "BRB",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "UR",
+      "isSpecial": false
+    },
+    {
+      "id": "BLR_neighboringCountries",
+      "iso3": "BLR",
+      "element": "neighboringCountries",
+      "value": 5,
+      "year": null,
+      "score": 31.25,
       "rarity": "N",
       "isSpecial": false
     },
@@ -18814,67 +18874,7 @@
       "element": "neighboringCountries",
       "value": 4,
       "year": null,
-      "score": 20.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "BEN_neighboringCountries",
-      "iso3": "BEN",
-      "element": "neighboringCountries",
-      "value": 4,
-      "year": null,
-      "score": 20.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "BFA_neighboringCountries",
-      "iso3": "BFA",
-      "element": "neighboringCountries",
-      "value": 6,
-      "year": null,
-      "score": 33.33,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "BGD_neighboringCountries",
-      "iso3": "BGD",
-      "element": "neighboringCountries",
-      "value": 2,
-      "year": null,
-      "score": 6.67,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "BGR_neighboringCountries",
-      "iso3": "BGR",
-      "element": "neighboringCountries",
-      "value": 5,
-      "year": null,
-      "score": 26.67,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "BIH_neighboringCountries",
-      "iso3": "BIH",
-      "element": "neighboringCountries",
-      "value": 3,
-      "year": null,
-      "score": 13.33,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "BLR_neighboringCountries",
-      "iso3": "BLR",
-      "element": "neighboringCountries",
-      "value": 5,
-      "year": null,
-      "score": 26.67,
+      "score": 25.0,
       "rarity": "N",
       "isSpecial": false
     },
@@ -18884,8 +18884,28 @@
       "element": "neighboringCountries",
       "value": 2,
       "year": null,
-      "score": 6.67,
-      "rarity": "SR",
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "BEN_neighboringCountries",
+      "iso3": "BEN",
+      "element": "neighboringCountries",
+      "value": 4,
+      "year": null,
+      "score": 25.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "BTN_neighboringCountries",
+      "iso3": "BTN",
+      "element": "neighboringCountries",
+      "value": 2,
+      "year": null,
+      "score": 12.5,
+      "rarity": "N",
       "isSpecial": false
     },
     {
@@ -18894,7 +18914,27 @@
       "element": "neighboringCountries",
       "value": 5,
       "year": null,
-      "score": 26.67,
+      "score": 31.25,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "BIH_neighboringCountries",
+      "iso3": "BIH",
+      "element": "neighboringCountries",
+      "value": 3,
+      "year": null,
+      "score": 18.75,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "BWA_neighboringCountries",
+      "iso3": "BWA",
+      "element": "neighboringCountries",
+      "value": 4,
+      "year": null,
+      "score": 25.0,
       "rarity": "N",
       "isSpecial": false
     },
@@ -18902,9 +18942,9 @@
       "id": "BRA_neighboringCountries",
       "iso3": "BRA",
       "element": "neighboringCountries",
-      "value": 11,
+      "value": 10,
       "year": null,
-      "score": 66.67,
+      "score": 62.5,
       "rarity": "UR",
       "isSpecial": false
     },
@@ -18914,37 +18954,67 @@
       "element": "neighboringCountries",
       "value": 1,
       "year": null,
+      "score": 6.25,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "BGR_neighboringCountries",
+      "iso3": "BGR",
+      "element": "neighboringCountries",
+      "value": 5,
+      "year": null,
+      "score": 31.25,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "BFA_neighboringCountries",
+      "iso3": "BFA",
+      "element": "neighboringCountries",
+      "value": 6,
+      "year": null,
+      "score": 37.5,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "BDI_neighboringCountries",
+      "iso3": "BDI",
+      "element": "neighboringCountries",
+      "value": 3,
+      "year": null,
+      "score": 18.75,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "CPV_neighboringCountries",
+      "iso3": "CPV",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
       "score": 0.0,
       "rarity": "UR",
       "isSpecial": false
     },
     {
-      "id": "BTN_neighboringCountries",
-      "iso3": "BTN",
+      "id": "KHM_neighboringCountries",
+      "iso3": "KHM",
       "element": "neighboringCountries",
-      "value": 2,
+      "value": 3,
       "year": null,
-      "score": 6.67,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "BWA_neighboringCountries",
-      "iso3": "BWA",
-      "element": "neighboringCountries",
-      "value": 4,
-      "year": null,
-      "score": 20.0,
+      "score": 18.75,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "CAF_neighboringCountries",
-      "iso3": "CAF",
+      "id": "CMR_neighboringCountries",
+      "iso3": "CMR",
       "element": "neighboringCountries",
       "value": 6,
       "year": null,
-      "score": 33.33,
+      "score": 37.5,
       "rarity": "SR",
       "isSpecial": false
     },
@@ -18954,18 +19024,28 @@
       "element": "neighboringCountries",
       "value": 1,
       "year": null,
-      "score": 0.0,
-      "rarity": "UR",
+      "score": 6.25,
+      "rarity": "SR",
       "isSpecial": false
     },
     {
-      "id": "CHE_neighboringCountries",
-      "iso3": "CHE",
+      "id": "CAF_neighboringCountries",
+      "iso3": "CAF",
       "element": "neighboringCountries",
-      "value": 5,
+      "value": 6,
       "year": null,
-      "score": 26.67,
-      "rarity": "N",
+      "score": 37.5,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "TCD_neighboringCountries",
+      "iso3": "TCD",
+      "element": "neighboringCountries",
+      "value": 6,
+      "year": null,
+      "score": 37.5,
+      "rarity": "SR",
       "isSpecial": false
     },
     {
@@ -18974,7 +19054,7 @@
       "element": "neighboringCountries",
       "value": 3,
       "year": null,
-      "score": 13.33,
+      "score": 18.75,
       "rarity": "N",
       "isSpecial": false
     },
@@ -18989,33 +19069,23 @@
       "isSpecial": false
     },
     {
-      "id": "CIV_neighboringCountries",
-      "iso3": "CIV",
+      "id": "COL_neighboringCountries",
+      "iso3": "COL",
       "element": "neighboringCountries",
       "value": 5,
       "year": null,
-      "score": 26.67,
+      "score": 31.25,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "CMR_neighboringCountries",
-      "iso3": "CMR",
+      "id": "COM_neighboringCountries",
+      "iso3": "COM",
       "element": "neighboringCountries",
-      "value": 6,
+      "value": 0,
       "year": null,
-      "score": 33.33,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "COD_neighboringCountries",
-      "iso3": "COD",
-      "element": "neighboringCountries",
-      "value": 9,
-      "year": null,
-      "score": 53.33,
-      "rarity": "UR",
+      "score": 0.0,
+      "rarity": "SSR",
       "isSpecial": false
     },
     {
@@ -19024,17 +19094,7 @@
       "element": "neighboringCountries",
       "value": 5,
       "year": null,
-      "score": 26.67,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "COL_neighboringCountries",
-      "iso3": "COL",
-      "element": "neighboringCountries",
-      "value": 5,
-      "year": null,
-      "score": 26.67,
+      "score": 31.25,
       "rarity": "N",
       "isSpecial": false
     },
@@ -19044,267 +19104,7 @@
       "element": "neighboringCountries",
       "value": 2,
       "year": null,
-      "score": 6.67,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "CYP_neighboringCountries",
-      "iso3": "CYP",
-      "element": "neighboringCountries",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "UR",
-      "isSpecial": false
-    },
-    {
-      "id": "DEU_neighboringCountries",
-      "iso3": "DEU",
-      "element": "neighboringCountries",
-      "value": 9,
-      "year": null,
-      "score": 53.33,
-      "rarity": "UR",
-      "isSpecial": false
-    },
-    {
-      "id": "DJI_neighboringCountries",
-      "iso3": "DJI",
-      "element": "neighboringCountries",
-      "value": 3,
-      "year": null,
-      "score": 13.33,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "DNK_neighboringCountries",
-      "iso3": "DNK",
-      "element": "neighboringCountries",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "UR",
-      "isSpecial": false
-    },
-    {
-      "id": "DOM_neighboringCountries",
-      "iso3": "DOM",
-      "element": "neighboringCountries",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "UR",
-      "isSpecial": false
-    },
-    {
-      "id": "DZA_neighboringCountries",
-      "iso3": "DZA",
-      "element": "neighboringCountries",
-      "value": 7,
-      "year": null,
-      "score": 40.0,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "ECU_neighboringCountries",
-      "iso3": "ECU",
-      "element": "neighboringCountries",
-      "value": 2,
-      "year": null,
-      "score": 6.67,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "EGY_neighboringCountries",
-      "iso3": "EGY",
-      "element": "neighboringCountries",
-      "value": 3,
-      "year": null,
-      "score": 13.33,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "ERI_neighboringCountries",
-      "iso3": "ERI",
-      "element": "neighboringCountries",
-      "value": 3,
-      "year": null,
-      "score": 13.33,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "ESP_neighboringCountries",
-      "iso3": "ESP",
-      "element": "neighboringCountries",
-      "value": 5,
-      "year": null,
-      "score": 26.67,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "EST_neighboringCountries",
-      "iso3": "EST",
-      "element": "neighboringCountries",
-      "value": 2,
-      "year": null,
-      "score": 6.67,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "ETH_neighboringCountries",
-      "iso3": "ETH",
-      "element": "neighboringCountries",
-      "value": 6,
-      "year": null,
-      "score": 33.33,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "FIN_neighboringCountries",
-      "iso3": "FIN",
-      "element": "neighboringCountries",
-      "value": 3,
-      "year": null,
-      "score": 13.33,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "FRA_neighboringCountries",
-      "iso3": "FRA",
-      "element": "neighboringCountries",
-      "value": 8,
-      "year": null,
-      "score": 46.67,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "GAB_neighboringCountries",
-      "iso3": "GAB",
-      "element": "neighboringCountries",
-      "value": 3,
-      "year": null,
-      "score": 13.33,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "GBR_neighboringCountries",
-      "iso3": "GBR",
-      "element": "neighboringCountries",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "GEO_neighboringCountries",
-      "iso3": "GEO",
-      "element": "neighboringCountries",
-      "value": 4,
-      "year": null,
-      "score": 20.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "GHA_neighboringCountries",
-      "iso3": "GHA",
-      "element": "neighboringCountries",
-      "value": 3,
-      "year": null,
-      "score": 13.33,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "GIN_neighboringCountries",
-      "iso3": "GIN",
-      "element": "neighboringCountries",
-      "value": 6,
-      "year": null,
-      "score": 33.33,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "GMB_neighboringCountries",
-      "iso3": "GMB",
-      "element": "neighboringCountries",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "GNB_neighboringCountries",
-      "iso3": "GNB",
-      "element": "neighboringCountries",
-      "value": 2,
-      "year": null,
-      "score": 6.67,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "GNQ_neighboringCountries",
-      "iso3": "GNQ",
-      "element": "neighboringCountries",
-      "value": 2,
-      "year": null,
-      "score": 6.67,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "GRC_neighboringCountries",
-      "iso3": "GRC",
-      "element": "neighboringCountries",
-      "value": 4,
-      "year": null,
-      "score": 20.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "GTM_neighboringCountries",
-      "iso3": "GTM",
-      "element": "neighboringCountries",
-      "value": 4,
-      "year": null,
-      "score": 20.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "GUY_neighboringCountries",
-      "iso3": "GUY",
-      "element": "neighboringCountries",
-      "value": 3,
-      "year": null,
-      "score": 13.33,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "HND_neighboringCountries",
-      "iso3": "HND",
-      "element": "neighboringCountries",
-      "value": 3,
-      "year": null,
-      "score": 13.33,
+      "score": 12.5,
       "rarity": "N",
       "isSpecial": false
     },
@@ -19314,7 +19114,307 @@
       "element": "neighboringCountries",
       "value": 5,
       "year": null,
-      "score": 26.67,
+      "score": 31.25,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "CUB_neighboringCountries",
+      "iso3": "CUB",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "CYP_neighboringCountries",
+      "iso3": "CYP",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "CZE_neighboringCountries",
+      "iso3": "CZE",
+      "element": "neighboringCountries",
+      "value": 4,
+      "year": null,
+      "score": 25.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "COD_neighboringCountries",
+      "iso3": "COD",
+      "element": "neighboringCountries",
+      "value": 9,
+      "year": null,
+      "score": 56.25,
+      "rarity": "UR",
+      "isSpecial": false
+    },
+    {
+      "id": "DNK_neighboringCountries",
+      "iso3": "DNK",
+      "element": "neighboringCountries",
+      "value": 1,
+      "year": null,
+      "score": 6.25,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "DJI_neighboringCountries",
+      "iso3": "DJI",
+      "element": "neighboringCountries",
+      "value": 3,
+      "year": null,
+      "score": 18.75,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "DMA_neighboringCountries",
+      "iso3": "DMA",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "DOM_neighboringCountries",
+      "iso3": "DOM",
+      "element": "neighboringCountries",
+      "value": 1,
+      "year": null,
+      "score": 6.25,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "ECU_neighboringCountries",
+      "iso3": "ECU",
+      "element": "neighboringCountries",
+      "value": 2,
+      "year": null,
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "EGY_neighboringCountries",
+      "iso3": "EGY",
+      "element": "neighboringCountries",
+      "value": 4,
+      "year": null,
+      "score": 25.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "SLV_neighboringCountries",
+      "iso3": "SLV",
+      "element": "neighboringCountries",
+      "value": 2,
+      "year": null,
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "GNQ_neighboringCountries",
+      "iso3": "GNQ",
+      "element": "neighboringCountries",
+      "value": 2,
+      "year": null,
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "ERI_neighboringCountries",
+      "iso3": "ERI",
+      "element": "neighboringCountries",
+      "value": 3,
+      "year": null,
+      "score": 18.75,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "EST_neighboringCountries",
+      "iso3": "EST",
+      "element": "neighboringCountries",
+      "value": 2,
+      "year": null,
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "SWZ_neighboringCountries",
+      "iso3": "SWZ",
+      "element": "neighboringCountries",
+      "value": 2,
+      "year": null,
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "ETH_neighboringCountries",
+      "iso3": "ETH",
+      "element": "neighboringCountries",
+      "value": 6,
+      "year": null,
+      "score": 37.5,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "FJI_neighboringCountries",
+      "iso3": "FJI",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "FIN_neighboringCountries",
+      "iso3": "FIN",
+      "element": "neighboringCountries",
+      "value": 3,
+      "year": null,
+      "score": 18.75,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "FRA_neighboringCountries",
+      "iso3": "FRA",
+      "element": "neighboringCountries",
+      "value": 8,
+      "year": null,
+      "score": 50.0,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "GAB_neighboringCountries",
+      "iso3": "GAB",
+      "element": "neighboringCountries",
+      "value": 3,
+      "year": null,
+      "score": 18.75,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "GMB_neighboringCountries",
+      "iso3": "GMB",
+      "element": "neighboringCountries",
+      "value": 1,
+      "year": null,
+      "score": 6.25,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "GEO_neighboringCountries",
+      "iso3": "GEO",
+      "element": "neighboringCountries",
+      "value": 4,
+      "year": null,
+      "score": 25.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "DEU_neighboringCountries",
+      "iso3": "DEU",
+      "element": "neighboringCountries",
+      "value": 9,
+      "year": null,
+      "score": 56.25,
+      "rarity": "UR",
+      "isSpecial": false
+    },
+    {
+      "id": "GHA_neighboringCountries",
+      "iso3": "GHA",
+      "element": "neighboringCountries",
+      "value": 3,
+      "year": null,
+      "score": 18.75,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "GRC_neighboringCountries",
+      "iso3": "GRC",
+      "element": "neighboringCountries",
+      "value": 4,
+      "year": null,
+      "score": 25.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "GRD_neighboringCountries",
+      "iso3": "GRD",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "GTM_neighboringCountries",
+      "iso3": "GTM",
+      "element": "neighboringCountries",
+      "value": 4,
+      "year": null,
+      "score": 25.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "GIN_neighboringCountries",
+      "iso3": "GIN",
+      "element": "neighboringCountries",
+      "value": 6,
+      "year": null,
+      "score": 37.5,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "GNB_neighboringCountries",
+      "iso3": "GNB",
+      "element": "neighboringCountries",
+      "value": 2,
+      "year": null,
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "GUY_neighboringCountries",
+      "iso3": "GUY",
+      "element": "neighboringCountries",
+      "value": 3,
+      "year": null,
+      "score": 18.75,
       "rarity": "N",
       "isSpecial": false
     },
@@ -19324,8 +19424,18 @@
       "element": "neighboringCountries",
       "value": 1,
       "year": null,
-      "score": 0.0,
-      "rarity": "SSR",
+      "score": 6.25,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "HND_neighboringCountries",
+      "iso3": "HND",
+      "element": "neighboringCountries",
+      "value": 3,
+      "year": null,
+      "score": 18.75,
+      "rarity": "N",
       "isSpecial": false
     },
     {
@@ -19334,7 +19444,27 @@
       "element": "neighboringCountries",
       "value": 7,
       "year": null,
-      "score": 40.0,
+      "score": 43.75,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "ISL_neighboringCountries",
+      "iso3": "ISL",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "IND_neighboringCountries",
+      "iso3": "IND",
+      "element": "neighboringCountries",
+      "value": 6,
+      "year": null,
+      "score": 37.5,
       "rarity": "SR",
       "isSpecial": false
     },
@@ -19344,28 +19474,8 @@
       "element": "neighboringCountries",
       "value": 3,
       "year": null,
-      "score": 13.33,
+      "score": 18.75,
       "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "IND_neighboringCountries",
-      "iso3": "IND",
-      "element": "neighboringCountries",
-      "value": 8,
-      "year": null,
-      "score": 46.67,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "IRL_neighboringCountries",
-      "iso3": "IRL",
-      "element": "neighboringCountries",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "SSR",
       "isSpecial": false
     },
     {
@@ -19374,8 +19484,8 @@
       "element": "neighboringCountries",
       "value": 7,
       "year": null,
-      "score": 40.0,
-      "rarity": "SR",
+      "score": 43.75,
+      "rarity": "SSR",
       "isSpecial": false
     },
     {
@@ -19384,17 +19494,27 @@
       "element": "neighboringCountries",
       "value": 6,
       "year": null,
-      "score": 33.33,
+      "score": 37.5,
       "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "IRL_neighboringCountries",
+      "iso3": "IRL",
+      "element": "neighboringCountries",
+      "value": 1,
+      "year": null,
+      "score": 6.25,
+      "rarity": "N",
       "isSpecial": false
     },
     {
       "id": "ISR_neighboringCountries",
       "iso3": "ISR",
       "element": "neighboringCountries",
-      "value": 4,
+      "value": 5,
       "year": null,
-      "score": 20.0,
+      "score": 31.25,
       "rarity": "N",
       "isSpecial": false
     },
@@ -19404,17 +19524,47 @@
       "element": "neighboringCountries",
       "value": 6,
       "year": null,
-      "score": 33.33,
+      "score": 37.5,
       "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "CIV_neighboringCountries",
+      "iso3": "CIV",
+      "element": "neighboringCountries",
+      "value": 5,
+      "year": null,
+      "score": 31.25,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "JAM_neighboringCountries",
+      "iso3": "JAM",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "JPN_neighboringCountries",
+      "iso3": "JPN",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SSR",
       "isSpecial": false
     },
     {
       "id": "JOR_neighboringCountries",
       "iso3": "JOR",
       "element": "neighboringCountries",
-      "value": 4,
+      "value": 5,
       "year": null,
-      "score": 20.0,
+      "score": 31.25,
       "rarity": "N",
       "isSpecial": false
     },
@@ -19424,7 +19574,7 @@
       "element": "neighboringCountries",
       "value": 5,
       "year": null,
-      "score": 26.67,
+      "score": 31.25,
       "rarity": "N",
       "isSpecial": false
     },
@@ -19434,35 +19584,15 @@
       "element": "neighboringCountries",
       "value": 5,
       "year": null,
-      "score": 26.67,
+      "score": 31.25,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "KGZ_neighboringCountries",
-      "iso3": "KGZ",
+      "id": "KIR_neighboringCountries",
+      "iso3": "KIR",
       "element": "neighboringCountries",
-      "value": 4,
-      "year": null,
-      "score": 20.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "KHM_neighboringCountries",
-      "iso3": "KHM",
-      "element": "neighboringCountries",
-      "value": 3,
-      "year": null,
-      "score": 13.33,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "KOR_neighboringCountries",
-      "iso3": "KOR",
-      "element": "neighboringCountries",
-      "value": 1,
+      "value": 0,
       "year": null,
       "score": 0.0,
       "rarity": "SSR",
@@ -19474,8 +19604,18 @@
       "element": "neighboringCountries",
       "value": 2,
       "year": null,
-      "score": 6.67,
-      "rarity": "SR",
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "KGZ_neighboringCountries",
+      "iso3": "KGZ",
+      "element": "neighboringCountries",
+      "value": 4,
+      "year": null,
+      "score": 25.0,
+      "rarity": "N",
       "isSpecial": false
     },
     {
@@ -19484,87 +19624,7 @@
       "element": "neighboringCountries",
       "value": 5,
       "year": null,
-      "score": 26.67,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "LBN_neighboringCountries",
-      "iso3": "LBN",
-      "element": "neighboringCountries",
-      "value": 2,
-      "year": null,
-      "score": 6.67,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "LBR_neighboringCountries",
-      "iso3": "LBR",
-      "element": "neighboringCountries",
-      "value": 3,
-      "year": null,
-      "score": 13.33,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "LBY_neighboringCountries",
-      "iso3": "LBY",
-      "element": "neighboringCountries",
-      "value": 6,
-      "year": null,
-      "score": 33.33,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "LIE_neighboringCountries",
-      "iso3": "LIE",
-      "element": "neighboringCountries",
-      "value": 2,
-      "year": null,
-      "score": 6.67,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "LKA_neighboringCountries",
-      "iso3": "LKA",
-      "element": "neighboringCountries",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "LSO_neighboringCountries",
-      "iso3": "LSO",
-      "element": "neighboringCountries",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "LTU_neighboringCountries",
-      "iso3": "LTU",
-      "element": "neighboringCountries",
-      "value": 4,
-      "year": null,
-      "score": 20.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "LUX_neighboringCountries",
-      "iso3": "LUX",
-      "element": "neighboringCountries",
-      "value": 3,
-      "year": null,
-      "score": 13.33,
+      "score": 31.25,
       "rarity": "N",
       "isSpecial": false
     },
@@ -19574,118 +19634,88 @@
       "element": "neighboringCountries",
       "value": 4,
       "year": null,
-      "score": 20.0,
+      "score": 25.0,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "MAR_neighboringCountries",
-      "iso3": "MAR",
+      "id": "LBN_neighboringCountries",
+      "iso3": "LBN",
       "element": "neighboringCountries",
-      "value": 3,
+      "value": 2,
       "year": null,
-      "score": 13.33,
+      "score": 12.5,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "MCO_neighboringCountries",
-      "iso3": "MCO",
+      "id": "LSO_neighboringCountries",
+      "iso3": "LSO",
       "element": "neighboringCountries",
       "value": 1,
       "year": null,
-      "score": 0.0,
-      "rarity": "SSR",
+      "score": 6.25,
+      "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "MDA_neighboringCountries",
-      "iso3": "MDA",
-      "element": "neighboringCountries",
-      "value": 2,
-      "year": null,
-      "score": 6.67,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "MEX_neighboringCountries",
-      "iso3": "MEX",
+      "id": "LBR_neighboringCountries",
+      "iso3": "LBR",
       "element": "neighboringCountries",
       "value": 3,
       "year": null,
-      "score": 13.33,
+      "score": 18.75,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "MKD_neighboringCountries",
-      "iso3": "MKD",
-      "element": "neighboringCountries",
-      "value": 5,
-      "year": null,
-      "score": 26.67,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "MLI_neighboringCountries",
-      "iso3": "MLI",
-      "element": "neighboringCountries",
-      "value": 7,
-      "year": null,
-      "score": 40.0,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "MMR_neighboringCountries",
-      "iso3": "MMR",
-      "element": "neighboringCountries",
-      "value": 5,
-      "year": null,
-      "score": 26.67,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "MNE_neighboringCountries",
-      "iso3": "MNE",
-      "element": "neighboringCountries",
-      "value": 5,
-      "year": null,
-      "score": 26.67,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "MNG_neighboringCountries",
-      "iso3": "MNG",
-      "element": "neighboringCountries",
-      "value": 2,
-      "year": null,
-      "score": 6.67,
-      "rarity": "SR",
-      "isSpecial": false
-    },
-    {
-      "id": "MOZ_neighboringCountries",
-      "iso3": "MOZ",
+      "id": "LBY_neighboringCountries",
+      "iso3": "LBY",
       "element": "neighboringCountries",
       "value": 6,
       "year": null,
-      "score": 33.33,
+      "score": 37.5,
       "rarity": "SR",
       "isSpecial": false
     },
     {
-      "id": "MRT_neighboringCountries",
-      "iso3": "MRT",
+      "id": "LIE_neighboringCountries",
+      "iso3": "LIE",
+      "element": "neighboringCountries",
+      "value": 2,
+      "year": null,
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "LTU_neighboringCountries",
+      "iso3": "LTU",
       "element": "neighboringCountries",
       "value": 4,
       "year": null,
-      "score": 20.0,
+      "score": 25.0,
       "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "LUX_neighboringCountries",
+      "iso3": "LUX",
+      "element": "neighboringCountries",
+      "value": 3,
+      "year": null,
+      "score": 18.75,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MDG_neighboringCountries",
+      "iso3": "MDG",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SSR",
       "isSpecial": false
     },
     {
@@ -19694,7 +19724,7 @@
       "element": "neighboringCountries",
       "value": 3,
       "year": null,
-      "score": 13.33,
+      "score": 18.75,
       "rarity": "N",
       "isSpecial": false
     },
@@ -19704,7 +19734,157 @@
       "element": "neighboringCountries",
       "value": 3,
       "year": null,
-      "score": 13.33,
+      "score": 18.75,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MDV_neighboringCountries",
+      "iso3": "MDV",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "MLI_neighboringCountries",
+      "iso3": "MLI",
+      "element": "neighboringCountries",
+      "value": 7,
+      "year": null,
+      "score": 43.75,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "MLT_neighboringCountries",
+      "iso3": "MLT",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "MHL_neighboringCountries",
+      "iso3": "MHL",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "MRT_neighboringCountries",
+      "iso3": "MRT",
+      "element": "neighboringCountries",
+      "value": 4,
+      "year": null,
+      "score": 25.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MUS_neighboringCountries",
+      "iso3": "MUS",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "MEX_neighboringCountries",
+      "iso3": "MEX",
+      "element": "neighboringCountries",
+      "value": 3,
+      "year": null,
+      "score": 18.75,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "FSM_neighboringCountries",
+      "iso3": "FSM",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "MDA_neighboringCountries",
+      "iso3": "MDA",
+      "element": "neighboringCountries",
+      "value": 2,
+      "year": null,
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MCO_neighboringCountries",
+      "iso3": "MCO",
+      "element": "neighboringCountries",
+      "value": 1,
+      "year": null,
+      "score": 6.25,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MNG_neighboringCountries",
+      "iso3": "MNG",
+      "element": "neighboringCountries",
+      "value": 2,
+      "year": null,
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MNE_neighboringCountries",
+      "iso3": "MNE",
+      "element": "neighboringCountries",
+      "value": 5,
+      "year": null,
+      "score": 31.25,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MAR_neighboringCountries",
+      "iso3": "MAR",
+      "element": "neighboringCountries",
+      "value": 3,
+      "year": null,
+      "score": 18.75,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "MOZ_neighboringCountries",
+      "iso3": "MOZ",
+      "element": "neighboringCountries",
+      "value": 6,
+      "year": null,
+      "score": 37.5,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "MMR_neighboringCountries",
+      "iso3": "MMR",
+      "element": "neighboringCountries",
+      "value": 5,
+      "year": null,
+      "score": 31.25,
       "rarity": "N",
       "isSpecial": false
     },
@@ -19714,7 +19894,57 @@
       "element": "neighboringCountries",
       "value": 4,
       "year": null,
-      "score": 20.0,
+      "score": 25.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "NRU_neighboringCountries",
+      "iso3": "NRU",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "NPL_neighboringCountries",
+      "iso3": "NPL",
+      "element": "neighboringCountries",
+      "value": 2,
+      "year": null,
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "NLD_neighboringCountries",
+      "iso3": "NLD",
+      "element": "neighboringCountries",
+      "value": 2,
+      "year": null,
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "NZL_neighboringCountries",
+      "iso3": "NZL",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "NIC_neighboringCountries",
+      "iso3": "NIC",
+      "element": "neighboringCountries",
+      "value": 2,
+      "year": null,
+      "score": 12.5,
       "rarity": "N",
       "isSpecial": false
     },
@@ -19724,8 +19954,8 @@
       "element": "neighboringCountries",
       "value": 7,
       "year": null,
-      "score": 40.0,
-      "rarity": "SR",
+      "score": 43.75,
+      "rarity": "SSR",
       "isSpecial": false
     },
     {
@@ -19734,28 +19964,28 @@
       "element": "neighboringCountries",
       "value": 4,
       "year": null,
-      "score": 20.0,
+      "score": 25.0,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "NIC_neighboringCountries",
-      "iso3": "NIC",
+      "id": "PRK_neighboringCountries",
+      "iso3": "PRK",
       "element": "neighboringCountries",
-      "value": 2,
+      "value": 3,
       "year": null,
-      "score": 6.67,
-      "rarity": "SR",
+      "score": 18.75,
+      "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "NLD_neighboringCountries",
-      "iso3": "NLD",
+      "id": "MKD_neighboringCountries",
+      "iso3": "MKD",
       "element": "neighboringCountries",
-      "value": 2,
+      "value": 5,
       "year": null,
-      "score": 6.67,
-      "rarity": "SR",
+      "score": 31.25,
+      "rarity": "N",
       "isSpecial": false
     },
     {
@@ -19764,17 +19994,7 @@
       "element": "neighboringCountries",
       "value": 3,
       "year": null,
-      "score": 13.33,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "NPL_neighboringCountries",
-      "iso3": "NPL",
-      "element": "neighboringCountries",
-      "value": 2,
-      "year": null,
-      "score": 6.67,
+      "score": 18.75,
       "rarity": "N",
       "isSpecial": false
     },
@@ -19784,7 +20004,7 @@
       "element": "neighboringCountries",
       "value": 3,
       "year": null,
-      "score": 13.33,
+      "score": 18.75,
       "rarity": "N",
       "isSpecial": false
     },
@@ -19794,8 +20014,18 @@
       "element": "neighboringCountries",
       "value": 4,
       "year": null,
-      "score": 20.0,
+      "score": 25.0,
       "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "PLW_neighboringCountries",
+      "iso3": "PLW",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
       "isSpecial": false
     },
     {
@@ -19804,17 +20034,7 @@
       "element": "neighboringCountries",
       "value": 2,
       "year": null,
-      "score": 6.67,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "PER_neighboringCountries",
-      "iso3": "PER",
-      "element": "neighboringCountries",
-      "value": 5,
-      "year": null,
-      "score": 26.67,
+      "score": 12.5,
       "rarity": "N",
       "isSpecial": false
     },
@@ -19824,38 +20044,8 @@
       "element": "neighboringCountries",
       "value": 1,
       "year": null,
-      "score": 0.0,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "POL_neighboringCountries",
-      "iso3": "POL",
-      "element": "neighboringCountries",
-      "value": 7,
-      "year": null,
-      "score": 40.0,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "PRK_neighboringCountries",
-      "iso3": "PRK",
-      "element": "neighboringCountries",
-      "value": 3,
-      "year": null,
-      "score": 13.33,
+      "score": 6.25,
       "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "PRT_neighboringCountries",
-      "iso3": "PRT",
-      "element": "neighboringCountries",
-      "value": 1,
-      "year": null,
-      "score": 0.0,
-      "rarity": "SSR",
       "isSpecial": false
     },
     {
@@ -19864,7 +20054,47 @@
       "element": "neighboringCountries",
       "value": 3,
       "year": null,
-      "score": 13.33,
+      "score": 18.75,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "PER_neighboringCountries",
+      "iso3": "PER",
+      "element": "neighboringCountries",
+      "value": 5,
+      "year": null,
+      "score": 31.25,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "PHL_neighboringCountries",
+      "iso3": "PHL",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "POL_neighboringCountries",
+      "iso3": "POL",
+      "element": "neighboringCountries",
+      "value": 7,
+      "year": null,
+      "score": 43.75,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "PRT_neighboringCountries",
+      "iso3": "PRT",
+      "element": "neighboringCountries",
+      "value": 1,
+      "year": null,
+      "score": 6.25,
       "rarity": "N",
       "isSpecial": false
     },
@@ -19874,8 +20104,8 @@
       "element": "neighboringCountries",
       "value": 1,
       "year": null,
-      "score": 0.0,
-      "rarity": "SSR",
+      "score": 6.25,
+      "rarity": "N",
       "isSpecial": false
     },
     {
@@ -19884,8 +20114,8 @@
       "element": "neighboringCountries",
       "value": 5,
       "year": null,
-      "score": 26.67,
-      "rarity": "N",
+      "score": 31.25,
+      "rarity": "SR",
       "isSpecial": false
     },
     {
@@ -19894,7 +20124,7 @@
       "element": "neighboringCountries",
       "value": 14,
       "year": null,
-      "score": 86.67,
+      "score": 87.5,
       "rarity": "UR",
       "isSpecial": false
     },
@@ -19904,7 +20134,57 @@
       "element": "neighboringCountries",
       "value": 4,
       "year": null,
-      "score": 20.0,
+      "score": 25.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "KNA_neighboringCountries",
+      "iso3": "KNA",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "LCA_neighboringCountries",
+      "iso3": "LCA",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "VCT_neighboringCountries",
+      "iso3": "VCT",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "WSM_neighboringCountries",
+      "iso3": "WSM",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "SMR_neighboringCountries",
+      "iso3": "SMR",
+      "element": "neighboringCountries",
+      "value": 1,
+      "year": null,
+      "score": 6.25,
       "rarity": "N",
       "isSpecial": false
     },
@@ -19914,17 +20194,7 @@
       "element": "neighboringCountries",
       "value": 7,
       "year": null,
-      "score": 40.0,
-      "rarity": "SSR",
-      "isSpecial": false
-    },
-    {
-      "id": "SDN_neighboringCountries",
-      "iso3": "SDN",
-      "element": "neighboringCountries",
-      "value": 7,
-      "year": null,
-      "score": 40.0,
+      "score": 43.75,
       "rarity": "SSR",
       "isSpecial": false
     },
@@ -19934,8 +20204,28 @@
       "element": "neighboringCountries",
       "value": 5,
       "year": null,
-      "score": 26.67,
-      "rarity": "N",
+      "score": 31.25,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "SRB_neighboringCountries",
+      "iso3": "SRB",
+      "element": "neighboringCountries",
+      "value": 8,
+      "year": null,
+      "score": 50.0,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "SYC_neighboringCountries",
+      "iso3": "SYC",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
       "isSpecial": false
     },
     {
@@ -19944,25 +20234,45 @@
       "element": "neighboringCountries",
       "value": 2,
       "year": null,
-      "score": 6.67,
+      "score": 12.5,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "SLV_neighboringCountries",
-      "iso3": "SLV",
+      "id": "SGP_neighboringCountries",
+      "iso3": "SGP",
       "element": "neighboringCountries",
-      "value": 2,
+      "value": 0,
       "year": null,
-      "score": 6.67,
+      "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "SVK_neighboringCountries",
+      "iso3": "SVK",
+      "element": "neighboringCountries",
+      "value": 5,
+      "year": null,
+      "score": 31.25,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "SVN_neighboringCountries",
+      "iso3": "SVN",
+      "element": "neighboringCountries",
+      "value": 4,
+      "year": null,
+      "score": 25.0,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "SMR_neighboringCountries",
-      "iso3": "SMR",
+      "id": "SLB_neighboringCountries",
+      "iso3": "SLB",
       "element": "neighboringCountries",
-      "value": 1,
+      "value": 0,
       "year": null,
       "score": 0.0,
       "rarity": "SR",
@@ -19974,18 +20284,28 @@
       "element": "neighboringCountries",
       "value": 3,
       "year": null,
-      "score": 13.33,
+      "score": 18.75,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "SRB_neighboringCountries",
-      "iso3": "SRB",
+      "id": "ZAF_neighboringCountries",
+      "iso3": "ZAF",
       "element": "neighboringCountries",
-      "value": 8,
+      "value": 6,
       "year": null,
-      "score": 46.67,
-      "rarity": "SSR",
+      "score": 37.5,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "KOR_neighboringCountries",
+      "iso3": "KOR",
+      "element": "neighboringCountries",
+      "value": 1,
+      "year": null,
+      "score": 6.25,
+      "rarity": "N",
       "isSpecial": false
     },
     {
@@ -19994,37 +20314,47 @@
       "element": "neighboringCountries",
       "value": 6,
       "year": null,
-      "score": 33.33,
+      "score": 37.5,
       "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "ESP_neighboringCountries",
+      "iso3": "ESP",
+      "element": "neighboringCountries",
+      "value": 5,
+      "year": null,
+      "score": 31.25,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "LKA_neighboringCountries",
+      "iso3": "LKA",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "SDN_neighboringCountries",
+      "iso3": "SDN",
+      "element": "neighboringCountries",
+      "value": 7,
+      "year": null,
+      "score": 43.75,
+      "rarity": "SSR",
       "isSpecial": false
     },
     {
       "id": "SUR_neighboringCountries",
       "iso3": "SUR",
       "element": "neighboringCountries",
-      "value": 4,
+      "value": 3,
       "year": null,
-      "score": 20.0,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "SVK_neighboringCountries",
-      "iso3": "SVK",
-      "element": "neighboringCountries",
-      "value": 5,
-      "year": null,
-      "score": 26.67,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "SVN_neighboringCountries",
-      "iso3": "SVN",
-      "element": "neighboringCountries",
-      "value": 4,
-      "year": null,
-      "score": 20.0,
+      "score": 18.75,
       "rarity": "N",
       "isSpecial": false
     },
@@ -20034,18 +20364,18 @@
       "element": "neighboringCountries",
       "value": 2,
       "year": null,
-      "score": 6.67,
+      "score": 12.5,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "SWZ_neighboringCountries",
-      "iso3": "SWZ",
+      "id": "CHE_neighboringCountries",
+      "iso3": "CHE",
       "element": "neighboringCountries",
-      "value": 2,
+      "value": 5,
       "year": null,
-      "score": 6.67,
-      "rarity": "N",
+      "score": 31.25,
+      "rarity": "SR",
       "isSpecial": false
     },
     {
@@ -20054,38 +20384,18 @@
       "element": "neighboringCountries",
       "value": 5,
       "year": null,
-      "score": 26.67,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "TCD_neighboringCountries",
-      "iso3": "TCD",
-      "element": "neighboringCountries",
-      "value": 6,
-      "year": null,
-      "score": 33.33,
+      "score": 31.25,
       "rarity": "SR",
       "isSpecial": false
     },
     {
-      "id": "TGO_neighboringCountries",
-      "iso3": "TGO",
+      "id": "STP_neighboringCountries",
+      "iso3": "STP",
       "element": "neighboringCountries",
-      "value": 3,
+      "value": 0,
       "year": null,
-      "score": 13.33,
-      "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "THA_neighboringCountries",
-      "iso3": "THA",
-      "element": "neighboringCountries",
-      "value": 4,
-      "year": null,
-      "score": 20.0,
-      "rarity": "N",
+      "score": 0.0,
+      "rarity": "SR",
       "isSpecial": false
     },
     {
@@ -20094,17 +20404,27 @@
       "element": "neighboringCountries",
       "value": 4,
       "year": null,
-      "score": 20.0,
+      "score": 25.0,
       "rarity": "N",
       "isSpecial": false
     },
     {
-      "id": "TKM_neighboringCountries",
-      "iso3": "TKM",
+      "id": "TZA_neighboringCountries",
+      "iso3": "TZA",
+      "element": "neighboringCountries",
+      "value": 8,
+      "year": null,
+      "score": 50.0,
+      "rarity": "SSR",
+      "isSpecial": false
+    },
+    {
+      "id": "THA_neighboringCountries",
+      "iso3": "THA",
       "element": "neighboringCountries",
       "value": 4,
       "year": null,
-      "score": 20.0,
+      "score": 25.0,
       "rarity": "N",
       "isSpecial": false
     },
@@ -20113,6 +20433,36 @@
       "iso3": "TLS",
       "element": "neighboringCountries",
       "value": 1,
+      "year": null,
+      "score": 6.25,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "TGO_neighboringCountries",
+      "iso3": "TGO",
+      "element": "neighboringCountries",
+      "value": 3,
+      "year": null,
+      "score": 18.75,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "TON_neighboringCountries",
+      "iso3": "TON",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "TTO_neighboringCountries",
+      "iso3": "TTO",
+      "element": "neighboringCountries",
+      "value": 0,
       "year": null,
       "score": 0.0,
       "rarity": "SR",
@@ -20124,7 +20474,7 @@
       "element": "neighboringCountries",
       "value": 2,
       "year": null,
-      "score": 6.67,
+      "score": 12.5,
       "rarity": "N",
       "isSpecial": false
     },
@@ -20134,18 +20484,28 @@
       "element": "neighboringCountries",
       "value": 8,
       "year": null,
-      "score": 46.67,
+      "score": 50.0,
       "rarity": "SSR",
       "isSpecial": false
     },
     {
-      "id": "TZA_neighboringCountries",
-      "iso3": "TZA",
+      "id": "TKM_neighboringCountries",
+      "iso3": "TKM",
       "element": "neighboringCountries",
-      "value": 8,
+      "value": 4,
       "year": null,
-      "score": 46.67,
-      "rarity": "SSR",
+      "score": 25.0,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "TUV_neighboringCountries",
+      "iso3": "TUV",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
+      "rarity": "SR",
       "isSpecial": false
     },
     {
@@ -20154,8 +20514,8 @@
       "element": "neighboringCountries",
       "value": 5,
       "year": null,
-      "score": 26.67,
-      "rarity": "N",
+      "score": 31.25,
+      "rarity": "SR",
       "isSpecial": false
     },
     {
@@ -20164,17 +20524,27 @@
       "element": "neighboringCountries",
       "value": 7,
       "year": null,
-      "score": 40.0,
+      "score": 43.75,
       "rarity": "SSR",
       "isSpecial": false
     },
     {
-      "id": "URY_neighboringCountries",
-      "iso3": "URY",
+      "id": "ARE_neighboringCountries",
+      "iso3": "ARE",
       "element": "neighboringCountries",
       "value": 2,
       "year": null,
-      "score": 6.67,
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "GBR_neighboringCountries",
+      "iso3": "GBR",
+      "element": "neighboringCountries",
+      "value": 1,
+      "year": null,
+      "score": 6.25,
       "rarity": "N",
       "isSpecial": false
     },
@@ -20184,7 +20554,17 @@
       "element": "neighboringCountries",
       "value": 2,
       "year": null,
-      "score": 6.67,
+      "score": 12.5,
+      "rarity": "N",
+      "isSpecial": false
+    },
+    {
+      "id": "URY_neighboringCountries",
+      "iso3": "URY",
+      "element": "neighboringCountries",
+      "value": 2,
+      "year": null,
+      "score": 12.5,
       "rarity": "N",
       "isSpecial": false
     },
@@ -20194,7 +20574,17 @@
       "element": "neighboringCountries",
       "value": 5,
       "year": null,
-      "score": 26.67,
+      "score": 31.25,
+      "rarity": "SR",
+      "isSpecial": false
+    },
+    {
+      "id": "VUT_neighboringCountries",
+      "iso3": "VUT",
+      "element": "neighboringCountries",
+      "value": 0,
+      "year": null,
+      "score": 0.0,
       "rarity": "SR",
       "isSpecial": false
     },
@@ -20204,7 +20594,7 @@
       "element": "neighboringCountries",
       "value": 3,
       "year": null,
-      "score": 13.33,
+      "score": 18.75,
       "rarity": "N",
       "isSpecial": false
     },
@@ -20214,7 +20604,7 @@
       "element": "neighboringCountries",
       "value": 3,
       "year": null,
-      "score": 13.33,
+      "score": 18.75,
       "rarity": "N",
       "isSpecial": false
     },
@@ -20224,18 +20614,8 @@
       "element": "neighboringCountries",
       "value": 2,
       "year": null,
-      "score": 6.67,
+      "score": 12.5,
       "rarity": "N",
-      "isSpecial": false
-    },
-    {
-      "id": "ZAF_neighboringCountries",
-      "iso3": "ZAF",
-      "element": "neighboringCountries",
-      "value": 6,
-      "year": null,
-      "score": 33.33,
-      "rarity": "SR",
       "isSpecial": false
     },
     {
@@ -20244,8 +20624,8 @@
       "element": "neighboringCountries",
       "value": 8,
       "year": null,
-      "score": 46.67,
-      "rarity": "SSR",
+      "score": 50.0,
+      "rarity": "UR",
       "isSpecial": false
     },
     {
@@ -20254,7 +20634,7 @@
       "element": "neighboringCountries",
       "value": 4,
       "year": null,
-      "score": 20.0,
+      "score": 25.0,
       "rarity": "N",
       "isSpecial": false
     },

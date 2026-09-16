@@ -3,7 +3,7 @@ import SwiftUI
 /// カードの「お題」となる要素(人口・GDPなど)。
 ///
 /// 10種類のうち8種類は世界銀行のデータ、残り2種類(公用語の数・隣接国の数)は
-/// countries.dev(REST Countries互換の無料データ)から作る。
+/// REST Countries公式データから作る。
 /// どちらの由来でも同じ enum で扱えるようにしてある(データの出どころの違いを
 /// アプリ側のコードに持ち込まないため)。
 enum CardElement: String, Codable, CaseIterable, Identifiable, Hashable {
