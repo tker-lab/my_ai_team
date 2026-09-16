@@ -38,3 +38,4 @@
 - [N個集めたらM個解放、の分母固定バグと直し方](proportional-milestone-unlock-formula.md) — min(M, owned*M/N)の比例配分にすればN=M時は従来と完全一致、N<Mでも自然に成立
 - [AdMob SDKのSwift命名とヘッダー直接確認法](admob-sdk-swift-naming-and-header-verification.md) — GADプレフィックスを外した新命名が標準。xcframeworkのヘッダーgrepが最も確実
 - [指定機種のシミュレーターが無い時はデバイスタイプを新規作成できる](store-screenshot-simulator-device-class.md) — simctl list devicetypesにあれば`simctl create`でその場で作れる。ストア提出用スクショで有効
+- [全件配列+部分集合の二重カウント落とし穴](full-array-plus-subset-double-count-trap.md) — 全件.count+部分集合.countは二重カウントになりやすい。CountryCardsの合計カード数表示(1923→1924)で発見
