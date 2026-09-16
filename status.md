@@ -23,7 +23,7 @@
 
 ## 次にやること候補
 - アプリ開発部:**PhotoTimerの公開作業はCodex側で進行中(上記参照)。この窓口では動かさない。** 公開が終わった段階で、次のアプリに移るかどうかをCEOに確認する
-- 動画部:**CEOが子育て・研修で多忙のため、再開はCEOの手が空いてから(2026-09-15)。** v5の実物確認は完了(13分・字幕の全編チェック等が残り)。字幕の自動化の仕組み(案1)は2026-09-16に構築・試運転済み(手順書は youtube_team_subtitle_workflow.md)。再開時は1本目の仕上げから。未決:カット候補の自動リストアップは案のみ。詳細は [youtube_team_video1.md](youtube_team_video1.md)・[youtube_team.md](youtube_team.md) → サムネイル/タイトルの検討・カットイン用効果音の選定 ※撮り直し2箇所は実施済みと判明(2026-09-02)。詳細は [youtube_team_video1.md](youtube_team_video1.md)
+- 動画部:**CEOが子育て・研修で多忙のため、再開はCEOの手が空いてから(2026-09-15)。** v5の実物確認は完了(13分・字幕の全編チェック等が残り)。字幕の自動化の仕組み(案1)は2026-09-16に構築・試運転済み(手順書は youtube_team_subtitle_workflow.md)。再開時は1本目の仕上げから。未決:カット候補の自動リストアップは案のみ。詳細は [youtube_team_video1.md](youtube_team_video1.md)・[youtube_team.md](youtube_team.md)
 - 顧問:(停止中。再開時は)UN Comtradeの2014年以降の再取得、MLA再取得の完了確認。Macにデータ本体が無いためフル再取得4.5〜5時間が必要
 
 ## 運営基盤の整備状況(2026-08-22時点)
