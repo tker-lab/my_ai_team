@@ -116,7 +116,14 @@ final class CardDatabase: ObservableObject {
     }
 
     /// 全カード種類数(特別カードを含む)。図鑑トップのコンプリート率表示に使う。
+    ///
+    /// 注意:`cards`配列はcards.json内の全カード(特別カードも含む)をそのまま
+    /// 保持しており、`specialCards`はその中から特別カードだけを抜き出した
+    /// 「部分集合」に過ぎない。そのため`cards.count + specialCards.count`と
+    /// 足し算すると特別カード分を二重に数えてしまうバグがあった(1923枚のはずが
+    /// 1924枚と表示される不具合の原因)。`cards.count`だけで全カード数(特別
+    /// カード込み)が求まる。
     var totalCardCountIncludingSpecial: Int {
-        cards.count + specialCards.count
+        cards.count
     }
 }
