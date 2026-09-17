@@ -717,11 +717,11 @@ final class PhotoTimerUITests: XCTestCase {
         app.launch()
         let recorder = ScreenshotRecorder(scenario: "v4_denied")
 
-        let allowButton = app.buttons["写真へのアクセスを許可する"]
+        let allowButton = app.buttons["続ける"]
         guard allowButton.waitForExistence(timeout: 10) else {
-            recorder.appendManifestLines(["「写真へのアクセスを許可する」ボタンが出なかった(すでに許可/拒否済みの可能性)。このテストはprivacy未決定の端末で実行する前提。"])
+            recorder.appendManifestLines(["「続ける」ボタンが出なかった(すでに許可/拒否済みの可能性)。このテストはprivacy未決定の端末で実行する前提。"])
             recorder.writeManifest()
-            XCTFail("権限が未決定(notDetermined)の状態で実行する想定のテストだが、許可依頼ボタンが出てこなかった")
+            XCTFail("権限が未決定(notDetermined)の状態で実行する想定のテストだが、続行ボタンが出てこなかった")
             return
         }
         allowButton.tap()
@@ -1755,7 +1755,7 @@ final class PhotoTimerUITests: XCTestCase {
     ///     既定の割り込みハンドラが先に「許可しない」を選んでしまうことがある(タイミング競合)。
     ///     → 最小間隔(10ms)でボタンの存在だけをポーリングし、見つかった瞬間にタップする。
     private static func ensurePhotosAccessGranted(app: XCUIApplication, recorder: ScreenshotRecorder) throws {
-        let allowButton = app.buttons["写真へのアクセスを許可する"]
+        let allowButton = app.buttons["続ける"]
         // すでに許可済みならこのボタンは出てこない(数秒で見切りをつけて先に進む)。
         guard allowButton.waitForExistence(timeout: 5) else {
             // 【バグ修正】許可済み(=このボタンが出ない)経路でdismissAnyStrayRunningTimerの

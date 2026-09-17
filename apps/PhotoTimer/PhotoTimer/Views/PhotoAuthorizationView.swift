@@ -44,7 +44,9 @@ struct PhotoAuthorizationView: View {
                 Button {
                     Task { await manager.requestAccess() }
                 } label: {
-                    Text("写真へのアクセスを許可する").fontDesign(theme.fontDesign)
+                    // Apple HIG: このボタンはOSの権限選択を誘導する表現にせず、
+                    // 次の手順へ進む意味のラベルにする。
+                    Text("続ける").fontDesign(theme.fontDesign)
                 }
                 .buttonStyle(.borderedProminent)
             }
