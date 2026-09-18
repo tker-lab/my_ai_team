@@ -201,8 +201,13 @@ App Store Connectの「App Review情報」→「メモ」欄に、以下の内�
 4. App Review情報:サインインが必要のチェックを外し、連絡先(姓名・電話番号・メール)、メモ欄に本ファイル4節の申し送り文を入力・保存。Game Centerのチェックボックスも有効化
 5. 「アプリのプライバシー」申告アンケート:プライバシーポリシーURL(同上)を設定した上で、6種類のデータタイプ(デバイスID/製品の操作/広告データ/クラッシュデータ/パフォーマンスデータ/その他の診断データ)を申告し「公開」まで完了。判断根拠はGoogle公式ドキュメント([developers.google.com/admob/ios/privacy/data-disclosure](https://developers.google.com/admob/ios/privacy/data-disclosure))を参照し、いずれも「ユーザの個人情報に関連付けられない」「トラッキング目的で使用しない」で統一(ATT/IDFA不使用の設計と整合)
 
+### 【2026-09-18 完了】Releaseビルドのアーカイブ・アップロード
+`xcodebuild archive`(Release構成、`generic/platform=iOS`)→`xcodebuild -exportArchive`(method: `app-store-connect`, destination: `upload`, teamID: `ZW257YHSQM`)でApp Store Connectへ直接アップロード完了。「Upload succeeded」を確認済み。
+- 軽微な警告2件(GoogleMobileAds・UserMessagingPlatformのdSYMが同梱されていない)が出たが、いずれもサードパーティ製バイナリフレームワーク側の制約でブロッカーにはならない(クラッシュ発生時にそのフレームワーク部分だけシンボル化されない程度の影響)
+- Apple側の処理完了まで数分〜1時間程度かかる見込み。処理完了後、App Store Connectの「iOSアプリ バージョン1.0」→「ビルド」欄で選択可能になる
+
 ### 未完了・次回再開時にやること
-1. Releaseビルドのアーカイブ→App Store Connectへのアップロード(Xcode Organizer経由、またはCLI)
-2. 最終確認後、CEOの承認を得てから「審査へ提出」
+1. ビルドの処理完了を確認し、バージョン1.0ページの「ビルド」欄で選択・保存する
+2. 最終確認後、**CEOの承認を得てから**「審査へ提出」ボタンを押す(これだけは必ず事前確認する)
 
 再開時はこのリストの1から進める。
