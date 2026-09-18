@@ -16,7 +16,7 @@
 - **完了**:MacBookへの環境移行(2026-09-01完了)。手順書は [mac_migration.md](mac_migration.md)
 - **稼働中**:アプリ開発部(2026-09-02にYouTubeネタ帳のNotion構築が完了) → 詳細は [app_team_notion_idea_db.md](app_team_notion_idea_db.md)
 - **Codexが担当中**:PhotoTimer(メモリータイマー)の**App Store公開までの作業一式**(ストア素材・プライバシーポリシー等)。**2026-09-08時点でCEOがCodex側で進行中のため、この窓口からアプリ開発部を起動しないこと。** PhotoTimer関連の見覚えのないコミットはCodex由来 → 詳細は [app_team_photo_timer.md](app_team_photo_timer.md)
-- **稼働中**:Country Cards Collection(旧称:国カードバトル仮称)。**2026-09-15、広告SDK(AdMob)の実装・チェック工程・実機インストールまで完了**(バナー常時表示・リワード広告とも実接続、テスト/本番ID切替は自動)。詳細は[app_team_country_cards.md](app_team_country_cards.md)。残タスク:①Codex側のアプリアイコン最終選定(利用制限で中断中、独立して進行可)②ATT/UMP(GDPR同意管理)は未実装③リリース準備(ストア掲載情報・審査提出)
+- **審査待ち**:Country Cards Collection(旧称:国カードバトル仮称)。**2026-09-18、App Reviewへ提出完了(ステータス「1.0 審査待ち」、最大48時間)。** REST Countries公式データへの切り替え(1,923枚フル収録)・広告SDK(AdMob)・アイコン確定(Codex)・ストア掲載文言/スクリーンショット/プライバシー申告・Releaseビルドのアップロードまで全て完了。詳細は[app_team_country_cards.md](app_team_country_cards.md)・[app_team_country_cards_store_listing.md](app_team_country_cards_store_listing.md)。審査結果(承認/却下)を待つのみ。承認されれば自動リリース設定のため即座に公開される
 - **一時停止**:広報部(発信するアウトプットが揃ってから本格稼働)
 - **将来構想・未着手**:コミュニケーション基盤(Discord構想) → 詳細は [communication_plan.md](communication_plan.md)
 - **将来構想・仕様待ち**:運営状態ダッシュボード(ルール・部署定義・メモリをPC/スマホから確認できるアプリかサイト) → 経緯は [ai_team_operation_design.md](ai_team_operation_design.md) の9章
