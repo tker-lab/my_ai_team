@@ -15,7 +15,7 @@
 - **サブ・ぼちぼち相談**:ライフサポート部(都度カジュアルに相談に乗る程度)
 - **完了**:MacBookへの環境移行(2026-09-01完了)。手順書は [mac_migration.md](mac_migration.md)
 - **稼働中**:アプリ開発部(2026-09-02にYouTubeネタ帳のNotion構築が完了) → 詳細は [app_team_notion_idea_db.md](app_team_notion_idea_db.md)
-- **Codexが担当中**:PhotoTimer(メモリータイマー)の**App Store公開までの作業一式**(ストア素材・プライバシーポリシー等)。**2026-09-08時点でCEOがCodex側で進行中のため、この窓口からアプリ開発部を起動しないこと。** PhotoTimer関連の見覚えのないコミットはCodex由来 → 詳細は [app_team_photo_timer.md](app_team_photo_timer.md)
+- **審査待ち**:PhotoTimer(メモリータイマー)。Appleの指摘（写真アクセス前のボタン文言・IAPプロモーション画像）に対応し、Build 3をApp Store Connectへアップロード。不要なIAPプロモーション画像を削除し、IAP本体とBuild 3を同時に**2026-09-21 14:44に再提出済み**。現在はApp Reviewの審査待ち → 詳細は [app_team_photo_timer.md](app_team_photo_timer.md)
 - **審査待ち(差し戻し対応済み)**:Country Cards Collection(旧称:国カードバトル仮称)。2026-09-18にApp Reviewへ提出後、**2026-09-19「Guideline 2.1 - Information Needed」の差し戻しを受領**(却下ではなく追加情報要求)。アプリ概要・操作方法・外部サービス一覧(REST Countries/世界銀行/flagcdn/AdMob/Game Center)・地域差(配信は日本のみ)・規制業種該当なしの回答文(英語)をapp-teamが作成し、CEOが実機で撮った画面録画(元63.5MB→6MBに圧縮)を添付して**同日19:10にResolution Centerへ返信・再提出済み**。REST Countries公式データへの切り替え(1,923枚フル収録)・広告SDK(AdMob)・アイコン確定(Codex)・ストア掲載文言/スクリーンショット/プライバシー申告・Releaseビルドのアップロードは提出前に完了済み。詳細は[app_team_country_cards.md](app_team_country_cards.md)・[app_team_country_cards_store_listing.md](app_team_country_cards_store_listing.md)。次のApple側の回答(承認/再質問/却下)を待つのみ。承認されれば自動リリース設定のため即座に公開される
 - **一時停止**:広報部(発信するアウトプットが揃ってから本格稼働)
 - **将来構想・未着手**:コミュニケーション基盤(Discord構想) → 詳細は [communication_plan.md](communication_plan.md)
