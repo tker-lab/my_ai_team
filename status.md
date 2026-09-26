@@ -15,8 +15,8 @@
 - **サブ・ぼちぼち相談**:ライフサポート部(都度カジュアルに相談に乗る程度)
 - **完了**:MacBookへの環境移行(2026-09-01完了)。手順書は [mac_migration.md](mac_migration.md)
 - **稼働中**:アプリ開発部(2026-09-02にYouTubeネタ帳のNotion構築が完了) → 詳細は [app_team_notion_idea_db.md](app_team_notion_idea_db.md)
-- **審査待ち**:PhotoTimer(メモリータイマー)。Appleの指摘（写真アクセス前のボタン文言・IAPプロモーション画像）に対応し、Build 3をApp Store Connectへアップロード。不要なIAPプロモーション画像を削除し、IAP本体とBuild 3を同時に**2026-09-21 14:44に再提出済み**。現在はApp Reviewの審査待ち → 詳細は [app_team_photo_timer.md](app_team_photo_timer.md)
-- **審査待ち(差し戻し対応済み)**:Country Cards Collection(旧称:国カードバトル仮称)。2026-09-18にApp Reviewへ提出後、**2026-09-19「Guideline 2.1 - Information Needed」の差し戻しを受領**(却下ではなく追加情報要求)。アプリ概要・操作方法・外部サービス一覧(REST Countries/世界銀行/flagcdn/AdMob/Game Center)・地域差(配信は日本のみ)・規制業種該当なしの回答文(英語)をapp-teamが作成し、CEOが実機で撮った画面録画(元63.5MB→6MBに圧縮)を添付して**同日19:10にResolution Centerへ返信・再提出済み**。REST Countries公式データへの切り替え(1,923枚フル収録)・広告SDK(AdMob)・アイコン確定(Codex)・ストア掲載文言/スクリーンショット/プライバシー申告・Releaseビルドのアップロードは提出前に完了済み。詳細は[app_team_country_cards.md](app_team_country_cards.md)・[app_team_country_cards_store_listing.md](app_team_country_cards_store_listing.md)。次のApple側の回答(承認/再質問/却下)を待つのみ。承認されれば自動リリース設定のため即座に公開される
+- **審査待ち**:PhotoTimer(メモリータイマー)。Appleの指摘（写真アクセス前のボタン文言・IAPプロモーション画像）に対応し、Build 3をApp Store Connectへアップロード。IAPの任意プロモーション画像を削除したうえで、IAP本体とBuild 3を**2026-09-23 10:38に再提出済み**。現在はApp Reviewの審査待ち → 詳細は [app_team_photo_timer.md](app_team_photo_timer.md)
+- **公開完了**:Country Cards Collection(旧称:国カードバトル仮称)。2026-09-18にApp Reviewへ提出後、2026-09-19「Guideline 2.1 - Information Needed」の差し戻し(追加情報要求)を受け、アプリ概要・操作方法・外部サービス一覧・地域差・規制業種該当なしの回答文(英語)+実機画面録画を添付してApp-teamが同日19:10に再提出。2026-09-21 10:35にAppleが審査継続の返信、その後**「審査ステータス:承認済み」→自動リリース設定により正式公開**。2026-09-26にApp Store公開ページ(apps.apple.com)で配信中であることを確認済み(無料・13歳以上・8.1MB)。詳細は[app_team_country_cards.md](app_team_country_cards.md)・[app_team_country_cards_store_listing.md](app_team_country_cards_store_listing.md)。次のアクションは特になし(反響を見て今後の運用を検討)
 - **一時停止**:広報部(発信するアウトプットが揃ってから本格稼働)
 - **将来構想・未着手**:コミュニケーション基盤(Discord構想) → 詳細は [communication_plan.md](communication_plan.md)
 - **将来構想・仕様待ち**:運営状態ダッシュボード(ルール・部署定義・メモリをPC/スマホから確認できるアプリかサイト) → 経緯は [ai_team_operation_design.md](ai_team_operation_design.md) の9章
